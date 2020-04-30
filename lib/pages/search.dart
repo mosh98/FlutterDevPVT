@@ -1,52 +1,58 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/cupertino.dart';
 
-//TODO: kladdig klass, ska städa lite
+
 class Search extends StatelessWidget{
+
+  final textFieldController = TextEditingController();
+  String change = '';
 
   @override
   Widget build(BuildContext context) {
-    textFieldController.addListener(_printLatestValue);
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.grey[850],
-        centerTitle: true,
-        title: Text('Search'),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            padding: const EdgeInsets.all(20.0),
-            child: TextFormField(
-              decoration: InputDecoration(
-                hintText: "Search"
+        appBar: AppBar(
+          backgroundColor: Colors.grey[850],
+          centerTitle: true,
+          title: Text('Search'),
+        ),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.all(20.0),
+              child: TextField(
+                decoration: InputDecoration(
+                    hintText: "Search"
+                ),
+                keyboardType: TextInputType.text,
+                controller: textFieldController,
+                onSubmitted: (String input){
+                  _getUser(input);
+                },
               ),
-              keyboardType: TextInputType.text,
-              controller: textFieldController,
-            ),
-          )
-        ],
-      )
+            )
+          ],
+        )
     );
   }
 
-
-  //TODO
   /**
-   * Borde denna metod egentligen ligga i main?
-   *
-   *  @override
-      void dispose(){
-      textFieldController.dispose();
-      print("testing, disposed.");
-      }
-   *
-   * https://flutter.dev/docs/cookbook/forms/retrieve-input
+   * Request the user that the user has searched for and decodes json to Flutter map.
    */
-  final textFieldController = TextEditingController();
+  void _getUser(String input) async {
+    final response =
+        await http.get('https://pvt-dogpark.herokuapp.com/user/find?name=$input');
 
-  _printLatestValue(){
-    print("testing: ${textFieldController.text}");
+    if(response.statusCode == 200){
+      Map<String, dynamic> user = json.decode(response.body);
+      print(user.toString());
+
+    }else{
+      print('Failed to fetch username'); //todo: något annat ska ju hända egentligen
+    }
   }
-}
 
+}
