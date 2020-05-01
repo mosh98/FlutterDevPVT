@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'placeHolderHome.dart';
+import 'signup.dart';
 
 class LoginPage extends StatelessWidget{
   @override
@@ -53,7 +55,8 @@ class LoginPageState extends State<LoginP> with SingleTickerProviderStateMixin{
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 new Image(
-                  image: new AssetImage('assets/images/loginpicturetransparentjpeg.jpg'),
+                  image: new AssetImage('assets/loginpicture.jpg'),
+                  height: 100.0,
 
                 ),
                 new Form(
@@ -71,7 +74,7 @@ class LoginPageState extends State<LoginP> with SingleTickerProviderStateMixin{
                       child: Container(
                         padding: const EdgeInsets.all(40.0), //flyttar in texten så den inte är från början av skärmen till slutet
                         child: new Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
                             new TextFormField(
                               decoration: new InputDecoration(
@@ -91,29 +94,40 @@ class LoginPageState extends State<LoginP> with SingleTickerProviderStateMixin{
                               padding: const EdgeInsets.only(top: 40.0),
                             ),
                             new MaterialButton(
+                              padding: const EdgeInsets.all(10.0),
                               height: 40.0,
                               minWidth: 100.0,
                               color: Colors.teal,
                               textColor: Colors.white,
                               child: new Text("Sign in"),
-                              onPressed: ()=>{}, //todo: ska diregera till nästa sida
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                    MaterialPageRoute<Null>(
+                                        builder: (BuildContext context) {
+                                          return new PlaceHolderApp();
+                                        }));
+                              },
                               splashColor: Colors.redAccent, //färgen när man trycker på knappen
                             ),
-                            new Padding(padding: const EdgeInsets.only(top:10.0)),
                             new Text(
                                 "OR"
                             ),
-                            new Padding(padding: const EdgeInsets.only(top:10.0)),
                             new MaterialButton(
+                              padding: const EdgeInsets.all(10.0),
                               height: 40.0,
                               minWidth: 100.0,
                               color: Colors.teal,
                               textColor: Colors.white,
                               child: new Text("Register new user"),
-                              onPressed: ()=>{}, //todo: ska diregera till nästa sida
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                    MaterialPageRoute<Null>(
+                                        builder: (BuildContext context) {
+                                          return new Signup();
+                                        }));
+                              },
                               splashColor: Colors.redAccent, //färgen när man trycker på knappen
                             ),
-                            new Padding(padding: const EdgeInsets.only(top:10.0)),
                             new Text(
                                 "Forgot your password? Retrieve it here"
                             )

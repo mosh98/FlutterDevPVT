@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
+
+class Signup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appTitle = 'Sign up';
