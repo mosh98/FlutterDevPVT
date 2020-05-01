@@ -26,8 +26,9 @@ class MapPage extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Hundparker'),
-          backgroundColor: Colors.green[700],
+          backgroundColor: Colors.grey[850],
+          centerTitle: true,
+          title: Text('Map'),
         ),
         body: GoogleMap(
           markers: Set.from(
@@ -66,6 +67,4 @@ class MapPage extends StatelessWidget {
       throw Exception('Failed to fetch hund.json');
     }
   }
-
-
 }
