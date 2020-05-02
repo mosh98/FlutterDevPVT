@@ -54,5 +54,4 @@ class Search extends StatelessWidget{
       print('Failed to fetch username'); //todo: något annat ska ju hända egentligen
     }
   }
-
 }

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import 'mapPage.dart';
 import 'messages.dart';
-import 'StartPage.dart';
 
 class PlaceHolderApp extends StatefulWidget {
   @override
@@ -17,7 +16,6 @@ class HomePageState extends State<PlaceHolderApp> {
   ProfilePage profilePage;
   Messages messages;
   Search search;
-  StartPage start;
   List<Widget> pages;
   Widget currentPage;
   int selectedIndex = 0;
@@ -28,7 +26,6 @@ class HomePageState extends State<PlaceHolderApp> {
     profilePage = ProfilePage();
     messages = Messages();
     search = Search();
-    start = StartPage();
 
     //TODO: LA IN LOGIN-PAGE MEN VET INTE HUR JAG SKA FÅ DET SOM HOMEPAGE.
     pages = [profilePage, mapPage, search, messages];
