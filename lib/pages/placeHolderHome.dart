@@ -27,7 +27,6 @@ class HomePageState extends State<PlaceHolderApp> {
     messages = Messages();
     search = Search();
 
-    //TODO: LA IN LOGIN-PAGE MEN VET INTE HUR JAG SKA FÅ DET SOM HOMEPAGE.
     pages = [profilePage, mapPage, search, messages];
     super.initState();
   }
