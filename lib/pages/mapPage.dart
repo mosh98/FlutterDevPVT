@@ -66,7 +66,7 @@ class _TheMapScreenState extends State<TheMapScreen> {
                   findParksButton(),
                   SizedBox(height: 10.0),
                   findTrashBinsButton(),
-                  SizedBox(height: 10.0),
+                  SizedBox(height: 10.0), //What it do? why 2 there?
                   homeButton()
                 ],
               )),
@@ -213,7 +213,9 @@ class _TheMapScreenState extends State<TheMapScreen> {
   }
 
   Future<void> _locateTrashBins() async {
+
     if (_searchLocation != null) {
+      //GET DATA
       String url = "https://pvt-dogpark.herokuapp.com/wastebin/find?latitude=";
       url += _searchLocation.latitude.toString() + "&longitude=";
       url += _searchLocation.longitude.toString() + "&distance=";
@@ -226,15 +228,16 @@ class _TheMapScreenState extends State<TheMapScreen> {
 
 
       for (int i = 0; i < dataAsList.length; i++) {
-        _wasteBinMarkers.add(Marker(
+        _wasteBinMarkers.add(
+            Marker(
             markerId: MarkerId('TRASH_BIN_' + i.toString()),
             infoWindow: InfoWindow(title: 'Papperskorg'),
 
             icon: BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueMagenta),
+                BitmapDescriptor.hueMagenta), //ni borde byta färgen/ikonen för trans cans, svårt att skilja vad är vad på appen
             position:
-            LatLng(dataAsList[i]['latitude'], dataAsList[i]['longitude'])));
-
+            LatLng(dataAsList[i]['latitude'], dataAsList[i]['longitude']))
+        );
       }
 
       setState(() {
