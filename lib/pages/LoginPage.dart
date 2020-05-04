@@ -49,7 +49,6 @@ class LoginPageState extends State<LoginP> with SingleTickerProviderStateMixin{
                     TextField(
                       decoration: new InputDecoration(
                         hintText: "Username* ",
-
                       ),
                       keyboardType: TextInputType.text,
                       controller: usernameController,
