@@ -28,6 +28,7 @@ class HomePageState extends State<PlaceHolderApp> {
     search = Search();
 
     pages = [profilePage, mapPage, search, messages];
+    currentPage = pages[selectedIndex];
     super.initState();
   }
 
