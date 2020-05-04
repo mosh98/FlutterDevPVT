@@ -17,7 +17,6 @@ class HomePageState extends State<PlaceHolderApp> {
   Messages messages;
   Search search;
   List<Widget> pages;
-
   Widget currentPage;
   int selectedIndex = 0;
 
