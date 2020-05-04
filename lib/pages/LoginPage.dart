@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'placeHolderHome.dart';
 import 'signup.dart';
 import 'package:http/http.dart' as http;
@@ -8,7 +9,6 @@ import 'package:http/http.dart' as http;
 class LoginPage extends StatelessWidget{
   @override
   Widget build(BuildContext context){
-    //we customize our own build instead of the one inside Statelesswidget
     return new MaterialApp(
         home: new LoginP(),//home screen
         theme: new ThemeData( //colour
@@ -19,16 +19,16 @@ class LoginPage extends StatelessWidget{
 }
 
 class LoginP extends StatefulWidget{
-  //stateful since we want to add stateful widgets
-  @override //=> lambda
-  State createState() => new LoginPageState(); //creates new loginpagestate
+  @override
+  State createState() => new LoginPageState();
 }
 
-class LoginPageState extends State<LoginP> with SingleTickerProviderStateMixin{
+class LoginPageState extends State<LoginP>{
 
   final _formkey = GlobalKey<FormState>();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController(); //TODO: FINNS DET NÅGOT SÄTT ATT ANVÄNDA EN CONTROLLER FÖR FLER TEXTFIELDS?
+  bool wrongCredent = false;
 
   @override
   Widget build(BuildContext context){
@@ -69,12 +69,7 @@ class LoginPageState extends State<LoginP> with SingleTickerProviderStateMixin{
                       textColor: Colors.white,
                       child: new Text("Sign in"),
                       onPressed: () {
-                        Navigator.of(context).push(
-                            MaterialPageRoute<Null>(
-                                builder: (BuildContext context) {
-                                  _getAuthenticationToken(usernameController.text, passwordController.text);
-                                  return new PlaceHolderApp(); //todo: should check first
-                                }));
+                        login();
                       },
                       splashColor: Colors.redAccent, //färgen när man trycker på knappen
                     ),
@@ -91,7 +86,6 @@ class LoginPageState extends State<LoginP> with SingleTickerProviderStateMixin{
                         Navigator.of(context).push(
                             MaterialPageRoute<Null>(
                                 builder: (BuildContext context) {
-
                                   return new Signup();
                                 }));
                       },
@@ -99,6 +93,11 @@ class LoginPageState extends State<LoginP> with SingleTickerProviderStateMixin{
                     ),
                     Text(
                         "Forgot your password? Retrieve it here"
+                    ),
+                    TextField(
+                      decoration: InputDecoration(
+                        errorText: wrongCredent ? 'Wrong username or password' : null,
+                      ),
                     )
                   ],
                 )
@@ -108,23 +107,37 @@ class LoginPageState extends State<LoginP> with SingleTickerProviderStateMixin{
     );
   }
 
-  Future<String> _getAuthenticationToken(String username, String password) async {
-    final http.Response response = await http.post(
-      'https://pvt-dogpark.herokuapp.com/authenticate',
-      headers:<String, String>{
-        'Content-Type' : 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String,String>{
-        'username':username,
-        'password':password
-      })
-    );
+  Future<void> login() async {
+    final formState = _formkey.currentState;
+    if (formState.validate()) {
+      formState.save();
+      try {
+        final http.Response response = await http.post(
+            'https://pvt-dogpark.herokuapp.com/authenticate',
+            headers:<String, String>{
+              'Content-Type' : 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(<String,String>{
+              'username':'testarigen',
+              'password':'hemligare'
+            }) //TODO: HÅRDKODAT NAMN OCH LÖSENORD, ÄNDRA MED .GET FRÅN TEXTFIELD CONTROLLERS.
+        );
 
-    if(response.statusCode == 200){
-      Map<String, dynamic> token = json.decode(response.body);
-      print(token);
-    }else{
-      print('wrong');
+        if(response.statusCode==200){
+          Map<String, dynamic> token = json.decode(response.body);
+          _saveToken(token.toString());
+          Navigator.push(context, MaterialPageRoute(builder: (context) => PlaceHolderApp()));
+        }else{
+          setState((){wrongCredent=true;});
+        }
+      } catch (e) {
+        print(e.message);
+      }
     }
+  }
+
+  Future<void> _saveToken(String token) async{
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', token);
   }
 }
