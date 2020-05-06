@@ -46,17 +46,19 @@ class LoginPageState extends State<LoginP>{
                       image: new AssetImage('assets/loginpicture.jpg'),
                       height: 100.0,
                     ),
-                    TextField(
+                    TextFormField(
                       decoration: new InputDecoration(
                         hintText: "Username* ",
                       ),
+                      validator: UserNameValidator.validate,
                       keyboardType: TextInputType.text,
                       controller: usernameController,
                     ),
-                    TextField(
+                    TextFormField(
                       decoration: new InputDecoration(
                         hintText: "Password* ",
                       ),
+                      validator: PasswordValidator.validate,
                       obscureText: true,
                       keyboardType: TextInputType.text,
                       controller: passwordController,
@@ -139,5 +141,17 @@ class LoginPageState extends State<LoginP>{
   Future<void> _saveToken(String token) async{
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
+  }
+}
+
+class UserNameValidator{
+  static String validate(String input){
+    return input.isEmpty ? 'Username cant be empty' : null;
+  }
+}
+
+class PasswordValidator{
+  static String validate(String input){
+    return input.isEmpty ? 'Password cant be empty' : null;
   }
 }
