@@ -29,10 +29,10 @@ class LoginPageState extends State<LoginP>{
   final usernameController = TextEditingController();
   final passwordController = TextEditingController(); //TODO: FINNS DET NÅGOT SÄTT ATT ANVÄNDA EN CONTROLLER FÖR FLER TEXTFIELDS?
   bool wrongCredent = false;
+  String test = '';
 
   @override
   Widget build(BuildContext context){
-    //scaffold is a structure
     return new Scaffold(
       body: Form(
           key: _formkey,
@@ -47,6 +47,7 @@ class LoginPageState extends State<LoginP>{
                       height: 100.0,
                     ),
                     TextFormField(
+                      key: Key('username'),//REFERENCE FOR TEXTFIELD, USED FOR TESTING
                       decoration: new InputDecoration(
                         hintText: "Username* ",
                       ),
@@ -55,6 +56,7 @@ class LoginPageState extends State<LoginP>{
                       controller: usernameController,
                     ),
                     TextFormField(
+                      key: Key('password'),//REFERENCE FOR TEXTFIELD, USED FOR TESTING
                       decoration: new InputDecoration(
                         hintText: "Password* ",
                       ),
@@ -64,6 +66,7 @@ class LoginPageState extends State<LoginP>{
                       controller: passwordController,
                     ),
                     MaterialButton(
+                      key: Key("signIn"), //REFERENCE FOR BUTTON, USED FOR TESTING
                       padding: EdgeInsets.all(10),
                       height: 40.0,
                       minWidth: 100.0,
@@ -146,12 +149,12 @@ class LoginPageState extends State<LoginP>{
 
 class UserNameValidator{
   static String validate(String input){
-    return input.isEmpty ? 'Username cant be empty' : null;
+    return input.isEmpty || input.trim().isEmpty ? 'Username cant be empty' : null;
   }
 }
 
 class PasswordValidator{
   static String validate(String input){
-    return input.isEmpty ? 'Password cant be empty' : null;
+    return input.isEmpty || input.trim().isEmpty ? 'Password cant be empty' : null;
   }
 }
