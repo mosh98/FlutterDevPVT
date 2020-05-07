@@ -27,94 +27,112 @@ class LoginPageState extends State<LoginP> {
 
   final _formkey = GlobalKey<FormState>();
   final usernameController = TextEditingController();
-  final passwordController = TextEditingController(); //TODO: FINNS DET NÅGOT SÄTT ATT ANVÄNDA EN CONTROLLER FÖR FLER TEXTFIELDS?
+  final passwordController = TextEditingController();
   bool wrongCredent = false;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         body: Form(
           key: _formkey,
-          child: ListView(
+          child: _isLoading ? Center(child:CircularProgressIndicator()) : ListView(
             padding: const EdgeInsets.fromLTRB(25, 170, 25, 15),
             children: <Widget>[
-              Image(
-                image: new AssetImage('assets/loginpicture.jpg'),
-                height: 100.0,
-              ),
-              Container(
-                padding: const EdgeInsets.only(top: 25),
-                child: Column(
-                  children: <Widget>[
-                    TextFormField(
-                      key: Key('username'),//REFERENCE FOR TEXTFIELD, USED FOR TESTING
-                      decoration: new InputDecoration(
-                        hintText: "Username* ",
-                      ),
-                      validator: UserNameValidator.validate,
-                      keyboardType: TextInputType.text,
-                      controller: usernameController,
-                    ),
-                    TextFormField(
-                      key: Key('password'),//REFERENCE FOR TEXTFIELD, USED FOR TESTING
-                      decoration: new InputDecoration(
-                        hintText: "Password* ",
-                      ),
-                      validator: PasswordValidator.validate,
-                      obscureText: true,
-                      keyboardType: TextInputType.text,
-                      controller: passwordController,
-                    ),
-                    _isWrongCredent(),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.only(top:20),
-                child: Column(
-                  children: <Widget>[
-                    MaterialButton(
-                      key: Key("signIn"), //REFERENCE FOR BUTTON, USED FOR TESTING
-                      height: 40.0,
-                      minWidth: 250.0,
-                      color: Colors.black54,
-                      textColor: Colors.white,
-                      child: new Text("Sign in"),
-                      onPressed: () {
-                        login();
-                      },
-                      splashColor: Colors.redAccent,
-                      shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
-                    ),
-                    Text(
-                      "OR",
-                    ),
-                    MaterialButton(
-                      height: 40.0,
-                      minWidth: 250.0,
-                      color: Colors.black54,
-                      textColor: Colors.white,
-                      child: new Text("Register new user"),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                            MaterialPageRoute<Null>(
-                                builder: (BuildContext context) {
-                                  return new Signup();
-                                }));
-                      },
-                      splashColor: Colors.redAccent,
-                      shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
-                    ),
-                    FlatButton(
-                      child: Text("Forgot your password? Retrieve it here."),
-                      onPressed: (){print('test');},
-                    )
-                  ],
-                ),
-              )
+              headerSection(),
+              textFieldSection(),
+              buttonSection(),
             ],
           ),
         )
+    );
+  }
+
+  Container headerSection(){
+    return Container(
+      child:Image(
+        image: new AssetImage('assets/loginpicture.jpg'),
+        height: 100.0,
+      ),
+    );
+  }
+
+  Container textFieldSection(){
+    return Container(
+        padding: const EdgeInsets.only(top: 25),
+        child: Column(
+          children: <Widget>[
+            TextFormField(
+              key: Key('username'),//REFERENCE FOR TEXTFIELD, USED FOR TESTING
+              decoration: new InputDecoration(
+                hintText: "Username* ",
+                icon: Icon(Icons.person),
+              ),
+              validator: UserNameValidator.validate,
+              keyboardType: TextInputType.text,
+              controller: usernameController,
+            ),
+            TextFormField(
+              key: Key('password'),//REFERENCE FOR TEXTFIELD, USED FOR TESTING
+              decoration: new InputDecoration(
+                hintText: "Password* ",
+                icon: Icon(Icons.lock),
+              ),
+              validator: PasswordValidator.validate,
+              obscureText: true,
+              keyboardType: TextInputType.text,
+              controller: passwordController,
+            ),
+            _isWrongCredent(),
+          ],
+        ),
+    );
+  }
+
+  Container buttonSection(){
+    return Container(
+          padding: const EdgeInsets.only(top:20),
+          child: Column(
+            children: <Widget>[
+              MaterialButton(
+                key: Key("signIn"), //REFERENCE FOR BUTTON, USED FOR TESTING
+                height: 40.0,
+                minWidth: 250.0,
+                color: Colors.black54,
+                textColor: Colors.white,
+                child: new Text("Sign in"),
+                onPressed: () {
+                  setState((){_isLoading = true;});
+                  login();
+                },
+                splashColor: Colors.redAccent,
+                shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
+              ),
+              Text(
+                "OR",
+              ),
+              MaterialButton(
+                height: 40.0,
+                minWidth: 250.0,
+                color: Colors.black54,
+                textColor: Colors.white,
+                child: new Text("Register new user"),
+                onPressed: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute<Null>(
+                          builder: (BuildContext context) {
+                            return new Signup();
+                          }));
+                },
+                splashColor: Colors.redAccent,
+                shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
+              ),
+              FlatButton(
+                child: Text("Forgot your password? Retrieve it here."),
+                onPressed: (){print('test');},
+              )
+            ],
+          ),
     );
   }
 
@@ -137,9 +155,15 @@ class LoginPageState extends State<LoginP> {
         if(response.statusCode==200){
           Map<String, dynamic> token = json.decode(response.body);
           _saveToken(token.toString());
-          Navigator.push(context, MaterialPageRoute(builder: (context) => PlaceHolderApp()));
+          setState((){
+            _isLoading = false;
+          });
+          Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => PlaceHolderApp()), (Route<dynamic> route) => false);
         }else{
-          setState((){wrongCredent=true;});
+          setState((){
+            wrongCredent = true;
+            _isLoading = false;
+          });
         }
       } catch (e) {
         print(e.message);
