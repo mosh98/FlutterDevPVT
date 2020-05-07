@@ -29,6 +29,7 @@ class LoginPageState extends State<LoginP> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController(); //TODO: FINNS DET NÅGOT SÄTT ATT ANVÄNDA EN CONTROLLER FÖR FLER TEXTFIELDS?
   bool wrongCredent = false;
+  bool state = false; //switch
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +66,23 @@ class LoginPageState extends State<LoginP> {
                       keyboardType: TextInputType.text,
                       controller: passwordController,
                     ),
-                    _isWrongCredent(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        Text('Remember Username'),
+                        Switch(
+                          value: state,
+                          onChanged: (bool value){
+                            print(value);
+
+                            setState(() {
+                              state = value;
+                              print(state);
+                            });
+                          },
+                        )
+                      ],
+                    )
                   ],
                 ),
               ),
@@ -73,6 +90,12 @@ class LoginPageState extends State<LoginP> {
                 padding: const EdgeInsets.only(top:20),
                 child: Column(
                   children: <Widget>[
+                    TextField(
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        errorText: wrongCredent ? 'Wrong username or password' : null,
+                      ),//todo:fix so you cant type in this field
+                    ),
                     MaterialButton(
                       key: Key("signIn"), //REFERENCE FOR BUTTON, USED FOR TESTING
                       height: 40.0,
@@ -96,14 +119,14 @@ class LoginPageState extends State<LoginP> {
                       textColor: Colors.white,
                       child: new Text("Register new user"),
                       onPressed: () {
-                        Navigator.of(context).push(
-                            MaterialPageRoute<Null>(
-                                builder: (BuildContext context) {
-                                  return new Signup();
-                                }));
-                      },
-                      splashColor: Colors.redAccent,
-                      shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
+                      Navigator.of(context).push(
+                          MaterialPageRoute<Null>(
+                              builder: (BuildContext context) {
+                                return new Signup();
+                              }));
+                    },
+                        splashColor: Colors.redAccent,
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
                     ),
                     FlatButton(
                       child: Text("Forgot your password? Retrieve it here."),
@@ -150,10 +173,6 @@ class LoginPageState extends State<LoginP> {
   Future<void> _saveToken(String token) async{
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
-  }
-
-  Widget _isWrongCredent(){
-    return wrongCredent ? Text('Wrong username or password',style: TextStyle(color:Colors.red),) : Text('');
   }
 }
 
