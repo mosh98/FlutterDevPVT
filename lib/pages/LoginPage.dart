@@ -103,7 +103,7 @@ class LoginPageState extends State<LoginP> {
                 child: new Text("Sign in"),
                 onPressed: () {
                   setState((){_isLoading = true;});
-                  login();
+                  login(usernameController.text, passwordController.text);
                 },
                 splashColor: Colors.redAccent,
                 shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
@@ -136,7 +136,7 @@ class LoginPageState extends State<LoginP> {
     );
   }
 
-  Future<void> login() async {
+  Future<void> login(String username, String password) async {
     final formState = _formkey.currentState;
     if (formState.validate()) {
       formState.save();
@@ -147,9 +147,9 @@ class LoginPageState extends State<LoginP> {
               'Content-Type' : 'application/json; charset=UTF-8',
             },
             body: jsonEncode(<String,String>{
-              'username':'testarigen',
-              'password':'hemligare'
-            }) //TODO: HÅRDKODAT NAMN OCH LÖSENORD, ÄNDRA MED .GET FRÅN TEXTFIELD CONTROLLERS.
+              'username':username,
+              'password':password
+            })
         );
 
         if(response.statusCode==200){
@@ -174,6 +174,7 @@ class LoginPageState extends State<LoginP> {
   Future<void> _saveToken(String token) async{
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
+    await prefs.setString('username', usernameController.text); //TODO: DELETE, ONLY USED FOR TESTING
   }
 
   Widget _isWrongCredent(){

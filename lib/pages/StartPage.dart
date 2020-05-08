@@ -54,7 +54,7 @@ class StartPageState extends State<StatefulStartPage>{
     return Container(
       child: Column(
         children: <Widget>[
-          Text(
+          Text( //TODO: TOO MANY REQUESTS BUG?
             fact.toLowerCase(),
             overflow: TextOverflow.visible,
             style: TextStyle(

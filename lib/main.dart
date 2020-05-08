@@ -6,6 +6,6 @@ import 'pages/StartPage.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  var token;//= prefs.getString('token'); //todo: change back
+  var token = prefs.getString('token'); //TODO: CHANGE TO USERNAME INSTEAD IF NOT GONNA USE TOKEN?
   runApp(MaterialApp(home: token == null ? StartPage() : PlaceHolderApp()));
 }
