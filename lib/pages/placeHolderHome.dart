@@ -64,4 +64,8 @@ class HomePageState extends State<PlaceHolderApp> {
       body: currentPage,
     );
   }
+
+  void setHomePageState(Widget currentPage){
+    this.currentPage = currentPage;
+  }
 }

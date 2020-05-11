@@ -1,3 +1,5 @@
+import 'package:dog_prototype/pages/dogProfile.dart';
+import 'package:dog_prototype/pages/placeHolderHome.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -34,21 +36,12 @@ class ProfilePage extends StatelessWidget {
             ),
           ),
           Expanded(
-            flex: 4,
+            flex: 2,
             child: Row(
-              children: <Widget>[
-                Expanded(
-                    flex: 1,
-                    child: Card()),
-                Expanded(
-                  flex: 1,
-                  child: Column(
-
-                  ),
-                )
-              ],
+              children: <Widget>[Text('My dogs: ')],
             ),
           ),
+
           //dogs
 
           Expanded(
@@ -59,16 +52,25 @@ class ProfilePage extends StatelessWidget {
                 return ListTile(
                   leading: Icon(Icons.pets),
                   title: Text(dognames[index]),
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => DogProfile()));
+                  },
                 );
               },
             ),
           ),
           Expanded(
-            flex: 1,
-            child: Text('lol:'),
-          ),
+              flex: 2,
+              child: Row(
+                children: <Widget>[
+                  Text(
+                    'My pictures:',
+                  ),
+                ],
+              )),
           Expanded(
-            flex: 20,
+            flex: 22,
             child: GridView.builder(
               scrollDirection: Axis.vertical,
               itemCount: images.length,
