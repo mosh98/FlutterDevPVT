@@ -1,12 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-
+import 'package:intl/intl.dart';
 
 class Signup extends StatelessWidget {
   @override
+
+  
   Widget build(BuildContext context) {
     final appTitle = 'Sign up';
-
+  
     return MaterialApp(
       title: appTitle,
       home: Scaffold(
@@ -21,6 +23,29 @@ class Signup extends StatelessWidget {
   }
 }
 
+        double _kPickerSheetHeight = 216.0;
+        Widget _buildBottomPicker(Widget picker) {
+            return Container(
+            height: _kPickerSheetHeight,
+            padding: const EdgeInsets.only(top: 6.0),
+            color: CupertinoColors.white,
+            child: DefaultTextStyle(
+                style: const TextStyle(
+                color: CupertinoColors.black,
+                fontSize: 22.0,
+                ),
+                child: GestureDetector(
+                // Blocks taps from propagating to the modal sheet and popping.
+                onTap: () {},
+                child: SafeArea(
+                    top: false,
+                    child: picker,
+                ),
+                ),
+            ),
+            );
+        }
+
 
 class MyCustomForm extends StatefulWidget {
   @override
@@ -32,7 +57,8 @@ class MyCustomForm extends StatefulWidget {
 class MyCustomFormState extends State<MyCustomForm> {
 
   final _formKey = GlobalKey<FormState>();
-
+  DateTime _dateTime = DateTime.now();
+  final f = new DateFormat('yyyy-MM-dd');
   @override
   Widget build(BuildContext context) {
  
@@ -135,21 +161,45 @@ class MyCustomFormState extends State<MyCustomForm> {
               Padding(
                 padding: const EdgeInsets.only(left:20, right: 20, top: 10),
                 child:
-                TextFormField(
-                  decoration: new InputDecoration(
-                      labelText: 'Date of birth*',
-                      border: new OutlineInputBorder(
-                          borderSide: new BorderSide()
-                      )
-                  ),
-                  keyboardType: TextInputType.text,
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Please enter a valid date';
-                    }
-                    return null;
-                  },
-                ),
+                MaterialButton(
+                      minWidth: 375,
+                      height: 50,
+                      shape: new RoundedRectangleBorder(
+                          
+                          borderRadius: new BorderRadius.circular(5.0),
+                          side: BorderSide(color: Colors.black.withOpacity(0.4)))
+                          ,
+                      onPressed: () {
+                showCupertinoModalPopup<void>(
+                context: context,
+                builder: (BuildContext context) {
+                    return _buildBottomPicker(
+                    CupertinoDatePicker(
+                        mode: CupertinoDatePickerMode.date,
+                        initialDateTime: DateTime(1990),
+                        onDateTimeChanged: (DateTime newDateTime) {
+                        if (mounted) {
+                            setState(() => _dateTime = newDateTime);
+                            print("You Selected Date: ${newDateTime}");
+                            
+                          
+                            
+                        }
+                        },
+                    ),
+                    );
+                },
+                );
+            },       
+                      child: 
+                      Align(
+                  alignment: Alignment.centerLeft,
+                  child:
+                      Text('Date of Birth ${f.format(_dateTime)}',
+                         textAlign: TextAlign.left,
+                         style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4)))
+                )),
+                
               ),
 
               Padding(
