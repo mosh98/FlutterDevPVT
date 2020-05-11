@@ -45,7 +45,6 @@ class Search extends StatelessWidget{
   void _getUser(String input) async {
     final response =
         await http.get('https://pvt-dogpark.herokuapp.com/user/find?name=$input');
-
     if(response.statusCode == 200){
       Map<String, dynamic> user = json.decode(response.body);
       print(user.toString());
