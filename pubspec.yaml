@@ -61,9 +61,11 @@ flutter:
   assets:
   - assets/pernilla.jpg
   - assets/loginpicture.jpg
-  - assets/trashcanicon.png
   - assets/pawn.jpg
-
+  - assets/dogparkicon_white.png
+  - assets/wastebin_black.png
+  - assets/trashbin_icon_black.png
+  - assets/dogparkmarker.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
