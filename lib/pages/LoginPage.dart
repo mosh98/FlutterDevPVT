@@ -19,8 +19,10 @@ class LoginPage extends StatelessWidget{
 }
 
 class LoginP extends StatefulWidget{
+
   @override
   State createState() => new LoginPageState();
+
 }
 
 class LoginPageState extends State<LoginP> {
@@ -48,7 +50,7 @@ class LoginPageState extends State<LoginP> {
     );
   }
 
-  Container headerSection(){
+  Container headerSection() {
     return Container(
       child:Image(
         image: new AssetImage('assets/loginpicture.jpg'),
