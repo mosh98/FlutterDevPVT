@@ -25,6 +25,8 @@ dependencies:
   google_maps_flutter: ^0.5.26
   http: ^0.12.0+2
   location: ^3.0.0
+  screen: ^0.0.5
+
   flutter:
     sdk: flutter
 
@@ -62,10 +64,10 @@ flutter:
   - assets/pernilla.jpg
   - assets/loginpicture.jpg
   - assets/pawn.jpg
-  - assets/dogparkicon_white.png
   - assets/wastebin_black.png
-  - assets/trashbin_icon_black.png
-  - assets/dogparkmarker.png
+  - assets/dogparkicon.png
+  - assets/dogparkicon_color.png
+  - assets/wastebin_color.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
