@@ -1,6 +1,11 @@
+import 'dart:convert';
+
+import 'package:dog_prototype/pages/profile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:email_validator/email_validator.dart';
+import 'package:http/http.dart' as http;
 
 class Signup extends StatelessWidget {
   @override
@@ -58,7 +63,13 @@ class MyCustomFormState extends State<MyCustomForm> {
 
   final _formKey = GlobalKey<FormState>();
   DateTime _dateTime = DateTime.now();
-  final f = new DateFormat('yyyy-MM-dd');
+  final f = new DateFormat('dd-MM-yyyy');
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  String date_of_birth;
+  final genderTypeController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
  
@@ -102,6 +113,8 @@ class MyCustomFormState extends State<MyCustomForm> {
                 padding: const EdgeInsets.only(left:20, right: 20, top: 20),
                 child:
                 TextFormField(
+                  key: Key('email'),
+                  controller: emailController,
                   decoration: new InputDecoration(
                       labelText: 'Email*',
                       border: new OutlineInputBorder(
@@ -109,11 +122,12 @@ class MyCustomFormState extends State<MyCustomForm> {
                       )
                   ),
                   keyboardType: TextInputType.text,
-                  validator: (value) {
-                    if (value.isEmpty) {
+                  validator: (email) {
+                    if (EmailValidator.validate(email) != true) {
                       return 'Please enter a valid mailadress';
                     }
                     return null;
+                    
                   },
                 ),
               ),
@@ -122,6 +136,8 @@ class MyCustomFormState extends State<MyCustomForm> {
                 padding: const EdgeInsets.only(left:20, right: 20, top: 10),
                 child:
                 TextFormField(
+                  key: Key('password'),
+                  controller: passwordController,
                   decoration: new InputDecoration(
                       labelText: 'Choose password*',
                       border: new OutlineInputBorder(
@@ -130,8 +146,8 @@ class MyCustomFormState extends State<MyCustomForm> {
                   ),
                   keyboardType: TextInputType.text,
                   validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Please enter a valid password';
+                    if (value.isEmpty || value.length < 6 || value.length > 16) {
+                      return 'Please enter a valid password which is at least 6 characters long';
                     }
                     return null;
                   },
@@ -142,6 +158,8 @@ class MyCustomFormState extends State<MyCustomForm> {
                 padding: const EdgeInsets.only(left:20, right: 20, top: 10),
                 child:
                 TextFormField(
+                  key: Key('username'),
+                  controller: usernameController,
                   decoration: new InputDecoration(
                       labelText: 'Choose username*',
                       border: new OutlineInputBorder(
@@ -150,7 +168,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                   ),
                   keyboardType: TextInputType.text,
                   validator: (value) {
-                    if (value.isEmpty) {
+                    if (value.isEmpty || value.length > 16) {
                       return 'Please enter a valid username';
                     }
                     return null;
@@ -179,9 +197,11 @@ class MyCustomFormState extends State<MyCustomForm> {
                         initialDateTime: DateTime(1990),
                         onDateTimeChanged: (DateTime newDateTime) {
                         if (mounted) {
-                            setState(() => _dateTime = newDateTime);
+                            setState(() => _dateTime = newDateTime
+                           
+                            );
                             print("You Selected Date: ${newDateTime}");
-                            
+                           date_of_birth = '${f.format(_dateTime)}';  
                           
                             
                         }
@@ -194,7 +214,9 @@ class MyCustomFormState extends State<MyCustomForm> {
                       child: 
                       Align(
                   alignment: Alignment.centerLeft,
+                  key:Key('date_of_birth'),
                   child:
+                  
                       Text('Date of Birth ${f.format(_dateTime)}',
                          textAlign: TextAlign.left,
                          style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4)))
@@ -206,6 +228,8 @@ class MyCustomFormState extends State<MyCustomForm> {
                 padding: const EdgeInsets.only(left:20, right: 20, top: 10),
                 child:
                 TextFormField(
+                  controller: genderTypeController,
+                  key: Key('gender_type'),
                   decoration: new InputDecoration(
                       labelText: 'Gender*',
                       border: new OutlineInputBorder(
@@ -248,6 +272,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                           // If the form is valid, display a Snackbar.
                           Scaffold.of(context)
                               .showSnackBar(SnackBar(content: Text('Processing Data')));
+                              signin(usernameController.text, emailController.text, passwordController.text, date_of_birth, genderTypeController.text);
                         }
                       },
                       color: Colors.white,
@@ -261,8 +286,45 @@ class MyCustomFormState extends State<MyCustomForm> {
           ),
         ),
       ],
-
-
     );
+  }
+
+    Future<void> signin(String username, String email, String password, String date_of_birth, String gender_type) async {
+    final formState = _formKey.currentState;
+ 
+    if (formState.validate()) {
+      formState.save();
+      try {
+        final http.Response response = await http.post(
+            'https://redesigned-backend.herokuapp.com/user/register',
+            headers:<String, String>{
+              'Content-Type' : 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(<String,String>{
+              "username": username, 
+              "email": email, 
+              "password": password, 
+              "date_of_birth": date_of_birth, 
+              "gender_type": gender_type
+            })
+        );
+
+        if(response.statusCode==200){
+            Navigator.of(context).push(
+                      MaterialPageRoute<Null>(
+                          builder: (BuildContext context) {
+                            return new ProfilePage();
+                          }));
+
+        }else{
+
+            print(response.statusCode);
+          
+        }
+      } catch (e) {
+        print(e.message);
+      }
+      
+    }
   }
 }
