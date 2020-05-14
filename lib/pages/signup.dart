@@ -1,11 +1,12 @@
 import 'dart:convert';
 
-import 'package:dog_prototype/pages/profile.dart';
+import 'package:dog_prototype/pages/mapPage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
+import 'package:gender_selector/gender_selector.dart';
 
 class Signup extends StatelessWidget {
   @override
@@ -68,7 +69,7 @@ class MyCustomFormState extends State<MyCustomForm> {
   final passwordController = TextEditingController();
   final emailController = TextEditingController();
   String date_of_birth;
-  final genderTypeController = TextEditingController();
+  String gender_type;
 
   @override
   Widget build(BuildContext context) {
@@ -227,23 +228,16 @@ class MyCustomFormState extends State<MyCustomForm> {
               Padding(
                 padding: const EdgeInsets.only(left:20, right: 20, top: 10),
                 child:
-                TextFormField(
-                  controller: genderTypeController,
-                  key: Key('gender_type'),
-                  decoration: new InputDecoration(
-                      labelText: 'Gender*',
-                      border: new OutlineInputBorder(
-                          borderSide: new BorderSide()
-                      )
-                  ),
-                  keyboardType: TextInputType.text,
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Please enter something';
-                    }
-                    return null;
-                  },
-                ),
+                GenderSelector(
+                onChanged: (gender) {
+                if(gender == Gender.FEMALE) {
+                gender_type = "FEMALE";
+                } else {
+                gender_type = "MALE";
+                }
+                print(gender_type);
+                }
+              )
               ),
 
               Padding(
@@ -272,7 +266,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                           // If the form is valid, display a Snackbar.
                           Scaffold.of(context)
                               .showSnackBar(SnackBar(content: Text('Processing Data')));
-                              signin(usernameController.text, emailController.text, passwordController.text, date_of_birth, genderTypeController.text);
+                              signin(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
                         }
                       },
                       color: Colors.white,
@@ -313,7 +307,7 @@ class MyCustomFormState extends State<MyCustomForm> {
             Navigator.of(context).push(
                       MaterialPageRoute<Null>(
                           builder: (BuildContext context) {
-                            return new ProfilePage();
+                            return new MapPage();
                           }));
 
         }else{
