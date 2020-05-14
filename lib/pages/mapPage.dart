@@ -466,6 +466,12 @@ class DogparkWidgetState extends State<DogparkWidget> {
 						Colors.black);
 				}
 
+				String snackText = "Hittade " + dogparks.length.toString();
+				snackText += (dogparks.length == 1) ? " hundpark." : " hundparker.";
+
+				Scaffold.of(context)
+					.showSnackBar(SnackBar(content: Text(snackText)));
+
 				for (int i = 0; i < dogparks.length; i++) {
 					dogparkMarkers.add(new Marker(
 						markerId: MarkerId('hundpark' + i.toString()),
