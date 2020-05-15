@@ -1,10 +1,13 @@
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:dog_prototype/models/User.dart';
+import 'package:dog_prototype/pages/dogProfile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 import 'StartPage.dart';
 
@@ -27,8 +30,8 @@ class ProfileState extends State<StatefulProfile>{
   SharedPreferences prefs;
   static const List<String> settingsOptions = <String>['Sign out'];
 
-  //TODO: REMOVE FAKEDATA AND FETCH REAL DATA FROM DATABASE
-  List<String> dognames = ['Fido', 'Flurdo', 'Flermo'];
+  Map<int, String> _userDogs = new HashMap<int, String>();
+
   List<String> images = [
     'assets/pernilla.jpg',
     'assets/pernilla.jpg',
@@ -43,6 +46,7 @@ class ProfileState extends State<StatefulProfile>{
   void initState(){
     super.initState();
     _user = _buildUser();
+    _getUserDogs();
   }
 
   @override
@@ -71,7 +75,6 @@ class ProfileState extends State<StatefulProfile>{
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           _headerSection(user),
-
 
           _infoSection(user),
 
@@ -138,12 +141,12 @@ class ProfileState extends State<StatefulProfile>{
           children: <Widget>[
             Text('About', style: TextStyle(fontSize: 16)),
             Padding(padding: EdgeInsets.only(top:10),),
-            Text('Hardcoded desc'),
+            Text(user.desc),
             Padding(padding: EdgeInsets.only(top:10),),
             Row(
               children: <Widget>[
                 Text('My dogs:', style: TextStyle(fontSize: 17)),
-                IconButton(icon: Icon(Icons.add),onPressed: (){_registerDog();},iconSize: 16)
+                IconButton(icon: Icon(Icons.add),onPressed: (){_addDog(user);},iconSize: 16)
               ],
             ),
             _dogBuilder(user)
@@ -152,16 +155,96 @@ class ProfileState extends State<StatefulProfile>{
     );
   }
 
+  void _addDog(User user) async{
+
+    String dogName = "";
+
+    await showDialog(context: context,
+    child: AlertDialog(
+    title: Text('What is the name of your dog?'),
+    content: SingleChildScrollView(
+    child: TextFormField(
+    onChanged: (value){dogName = value;},
+    ),
+    ),
+    actions: <Widget>[
+    MaterialButton(
+    child: Text('Add dog'),
+    onPressed: (){Navigator.of(context).pop();},
+    ),
+    MaterialButton(
+    child: Text('Back'),
+    onPressed: (){Navigator.of(context).pop(); return;},
+    )
+    ],
+    )
+    );
+
+    print(dogName);
+
+    if(dogName.isEmpty){
+      return;
+    }
+    
+    final http.Response response = await http.post(
+        'https://redesigned-backend.herokuapp.com/user/dog/register?owner=${user.username}',
+        headers:<String, String>{
+          'Content-Type' : 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String,String>{
+          'name':dogName,
+          'age':null,
+          'breed':'Not set',
+          'gender':'Not set',
+          'description':'not set',
+        })
+    );
+
+    if(response.statusCode==200){
+      print(response.body);
+    }else{
+      print('semething wrong');
+    }
+  }
+
+  Future<String> getNewDogName() async{
+    String dogName = "";
+
+    AlertDialog alert = AlertDialog(
+      title: Text('What is the name of your dog?'),
+      content: SingleChildScrollView(
+        child: TextFormField(
+          onChanged: (value){dogName = value;},
+        ),
+      ),
+      actions: <Widget>[
+        MaterialButton(
+          child: Text('Add dog'),
+          onPressed: (){Navigator.of(context).pop();},
+        ),
+        MaterialButton(
+          child: Text('Back'),
+          onPressed: (){Navigator.of(context).pop(); return;},
+        )
+      ],
+    );
+    showDialog(context: context, builder: (BuildContext context){return alert;});
+
+    return dogName;
+  }
+
   Widget _dogBuilder(User user){
     return Expanded(
       flex: 12,
       child: ListView.builder(
-        itemCount: dognames.length,
+        itemCount: _userDogs.values.toList().length,
         itemBuilder: (context, index) {
           return ListTile(
             leading: Icon(Icons.pets),
-            title: Text(''),
-          );
+            title: Text(_userDogs.values.toList()[index]),
+            onTap: (){
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile()));
+              });
         },
       ),
     );
@@ -187,21 +270,35 @@ class ProfileState extends State<StatefulProfile>{
 
   Future<User> _buildUser() async{
     final prefs = await SharedPreferences.getInstance();
-    //var username = prefs.getString('username');
+    var username = prefs.getString('username');
+    print(username);
 
-    final response = await http.get('https://redesigned-backend.herokuapp.com/user/find?username=usernametest');
+    final response = await http.get('https://redesigned-backend.herokuapp.com/user/find?username=$username');
 
     if(response.statusCode == 200){
       User test = User.fromJson(json.decode(response.body));
-      String email = test.email;
-      print(email);
+      List<dynamic> dogs = test.dogs;
+      print(dogs.toString());
       return User.fromJson(json.decode(response.body));
     }else{
+      print(username);
       throw Exception('Failed to load user');
     }
   }
 
-  void _registerDog(){
-    //TODO
+  //TODO: ADD URL TO MAP FOR PICTURE
+  void _getUserDogs() async{
+    final response = await http.get('https://redesigned-backend.herokuapp.com/user/getMyDogs?username=usernametest');
+
+    if(response.statusCode == 200){
+      List<dynamic> dogs = jsonDecode(response.body);
+      dogs.forEach((element) {
+        setState(() {
+          _userDogs.putIfAbsent(element['dogId'], () => element['name']);
+        });
+      });
+    }else{
+      throw Exception('Failed to load user');
+    }
   }
 }

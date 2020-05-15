@@ -146,7 +146,7 @@ class LoginPageState extends State<LoginP> {
         final http.Response response = await http.post('https://redesigned-backend.herokuapp.com/user/login?username=$username&password=$password');
 
         if(response.statusCode==200){
-          _setLoggedIn(true);
+          _setPreferences(true, username);
           setState((){
             _isLoading = false;
           });
@@ -167,9 +167,10 @@ class LoginPageState extends State<LoginP> {
     }
   }
 
-  Future<void> _setLoggedIn(bool loggedIn) async{
+  Future<void> _setPreferences(bool loggedIn, String username) async{
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', loggedIn);
+    await prefs.setString('username', username);
   }
 
   Widget _isWrongCredent(){
