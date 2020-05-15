@@ -143,20 +143,10 @@ class LoginPageState extends State<LoginP> {
     if (formState.validate()) {
       formState.save();
       try {
-        final http.Response response = await http.post(
-            'https://pvt-dogpark.herokuapp.com/authenticate',
-            headers:<String, String>{
-              'Content-Type' : 'application/json; charset=UTF-8',
-            },
-            body: jsonEncode(<String,String>{
-              'username':username,
-              'password':password
-            })
-        );
+        final http.Response response = await http.post('https://redesigned-backend.herokuapp.com/user/login?username=$username&password=$password');
 
         if(response.statusCode==200){
-          Map<String, dynamic> token = json.decode(response.body);
-          _saveToken(token.toString());
+          _setLoggedIn(true);
           setState((){
             _isLoading = false;
           });
@@ -170,13 +160,16 @@ class LoginPageState extends State<LoginP> {
       } catch (e) {
         print(e.message);
       }
+    }else{
+      setState((){
+        _isLoading = false;
+      });
     }
   }
 
-  Future<void> _saveToken(String token) async{
+  Future<void> _setLoggedIn(bool loggedIn) async{
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('token', token);
-    await prefs.setString('username', usernameController.text); //TODO: DELETE, ONLY USED FOR TESTING
+    await prefs.setBool('isLoggedIn', loggedIn);
   }
 
   Widget _isWrongCredent(){

@@ -112,7 +112,9 @@ class StartPageState extends State<StatefulStartPage>{
     final response = await http.get('https://some-random-api.ml/facts/dog');
     if(response.statusCode == 200){
       Map<String,dynamic> f = json.decode(response.body);
-      fact = f['fact'];
+      setState(() {
+        fact = f['fact'];
+      });
     }
   }
 }
