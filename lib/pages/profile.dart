@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dog_prototype/models/User.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -155,7 +156,7 @@ class ProfileState extends State<StatefulProfile>{
     return Expanded(
       flex: 12,
       child: ListView.builder(
-        itemCount: user.dogs.length,
+        itemCount: dognames.length,
         itemBuilder: (context, index) {
           return ListTile(
             leading: Icon(Icons.pets),
@@ -186,14 +187,14 @@ class ProfileState extends State<StatefulProfile>{
 
   Future<User> _buildUser() async{
     final prefs = await SharedPreferences.getInstance();
-    var username = prefs.getString('username');
+    //var username = prefs.getString('username');
 
-    final response = await http.get('https://pvt-dogpark.herokuapp.com/user/find?name=$username');
+    final response = await http.get('https://redesigned-backend.herokuapp.com/user/find?username=usernametest');
 
     if(response.statusCode == 200){
       User test = User.fromJson(json.decode(response.body));
-      dogNames = test.dogs;
-      print(dogNames);
+      String email = test.email;
+      print(email);
       return User.fromJson(json.decode(response.body));
     }else{
       throw Exception('Failed to load user');
@@ -202,33 +203,5 @@ class ProfileState extends State<StatefulProfile>{
 
   void _registerDog(){
     //TODO
-  }
-}
-
-class User{
-  final String username;
-  final List<dynamic> dogs;
-
-  User({this.username, this.dogs});
-
-  factory User.fromJson(Map<String, dynamic> json){
-    return User(
-      username: json['username'],
-      dogs: json['dogs'],
-    );
-  }
-}
-
-class Dog{
-  final String name;
-  final String owner;
-
-  Dog({this.name, this.owner});
-
-  factory Dog.fromJson(Map<String, dynamic> json){
-    return Dog(
-      name: json['name'],
-      owner: json['owner'],
-    );
   }
 }
