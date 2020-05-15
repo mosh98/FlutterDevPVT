@@ -2,55 +2,98 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
+import 'package:dog_prototype/models/User.dart';
 
 
-class Search extends StatelessWidget{
+class Search extends StatefulWidget {
+  @override
+  SearchState createState() => SearchState();
+}
+
+
+class SearchState extends State<Search> {
+  List<User> users = new List<User>();
 
   final textFieldController = TextEditingController();
-  String change = '';
+
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.grey[850],
-          centerTitle: true,
-          title: Text('Search'),
-        ),
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            Container(
-              padding: const EdgeInsets.all(20.0),
-              child: TextField(
-                decoration: InputDecoration(
-                    hintText: "Search"
-                ),
+      appBar: AppBar(
+        backgroundColor: Colors.grey[850],
+        centerTitle: true,
+        title: Text('Search'),
+      ),
+      body: Column(
+        children: <Widget>[
+          Container(
+            padding: const EdgeInsets.all(20.0),
+            child: TextField(
+                decoration: InputDecoration(hintText: "Search"),
                 keyboardType: TextInputType.text,
                 controller: textFieldController,
-                onSubmitted: (String input){
+                onSubmitted: (String input) {
                   _getUser(input);
-                },
-              ),
-            )
-          ],
-        )
+                }),
+          ),
+          Expanded(
+
+            child: ListView.builder(
+              itemCount: users.length,
+              itemBuilder: (context, index) {
+                return Card(
+                    child: ListTile(
+                      leading: Icon(
+                          Icons.person, size: 40, color: Colors.blue),
+                      title: Text(users[index].getName()),
+                    ));
+              },
+            ),
+
+
+          ),
+        ],
+      ),
     );
   }
 
-  /**
-   * Request the user that the user has searched for and decodes json to Flutter map.
-   */
-  void _getUser(String input) async {
-    final response =
-        await http.get('https://pvt-dogpark.herokuapp.com/user/find?name=$input');
-    if(response.statusCode == 200){
-      Map<String, dynamic> user = json.decode(response.body);
-      print(user.toString());
 
-    }else{
-      print('Failed to fetch username'); //todo: något annat ska ju hända egentligen
+  void _getUser(String input) async {
+    users.clear();
+    final response = await http.get(
+        'https://redesigned-backend.herokuapp.com/user/query?username=$input');
+    if (response.statusCode == 200) {
+      Map<String, dynamic> userData = json.decode(response.body);
+      List userList = userData['content'];
+      userList.forEach((element) => users.add(User.fromJson(element)));
+    } else {
+      print(
+          'Failed to fetch username'); //todo: något annat ska ju hända egentligen
     }
+
+    String snackText = "";
+    if (users.isEmpty) {
+      snackText = "Hittade inga sökträffar";
+    } else {
+      snackText = "Hittade " + users.length.toString();
+      if (users.length == 1) {
+        snackText += " sökträff";
+      } else {
+        snackText += " sökträffar";
+      }
+    }
+
+    Scaffold.of(context)
+        .showSnackBar(SnackBar(content: Text(snackText)));
+
+    setState(() {
+
+    });
   }
 }
+
+
+
+
+
