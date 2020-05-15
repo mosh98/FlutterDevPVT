@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'placeHolderHome.dart';
@@ -38,7 +39,7 @@ class LoginPageState extends State<LoginP> {
     return Scaffold(
         body: Form(
           key: _formkey,
-          child: _isLoading ? Center(child:CircularProgressIndicator()) : ListView(
+          child: _isLoading ? Center(child:DefaultLoader()) : ListView(
             padding: const EdgeInsets.fromLTRB(25, 170, 25, 15),
             children: <Widget>[
               headerSection(),

@@ -1,7 +1,9 @@
 import 'dart:collection';
 import 'dart:convert';
 
+import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
+import 'package:dog_prototype/pages/Settings.dart';
 import 'package:dog_prototype/pages/dogProfile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +30,6 @@ class ProfileState extends State<StatefulProfile>{
   Future<User> _user;
   List<dynamic> dogNames;
   SharedPreferences prefs;
-  static const List<String> settingsOptions = <String>['Sign out'];
 
   Map<int, String> _userDogs = new HashMap<int, String>();
 
@@ -59,7 +60,7 @@ class ProfileState extends State<StatefulProfile>{
         }else if(snapshot.hasError){
           return Center(child:Text("${snapshot.error}"));
         }
-        return Center(child:CircularProgressIndicator());
+        return Center(child:DefaultLoader());
       },
     );
   }
@@ -70,6 +71,21 @@ class ProfileState extends State<StatefulProfile>{
         backgroundColor: Colors.grey[850],
         title: Text('Profile'),
         centerTitle: true,
+        actions: <Widget>[
+          FlatButton.icon(
+            onPressed: (){
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage(user: user)));
+            },
+            icon: Icon(
+              Icons.settings,
+              color: Colors.white,
+            ),
+            label: Text(
+              'Settings',
+              style: TextStyle(color:Colors.white),
+            ),
+          ),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,45 +108,19 @@ class ProfileState extends State<StatefulProfile>{
           Expanded(
             flex:7,
             child:ListTile(
-              leading: CircleAvatar(
-                radius: 25,
-                backgroundImage: AssetImage('assets/pernilla.jpg'),
+              leading: GestureDetector(
+                child: CircleAvatar(
+                  radius: 25,
+                  backgroundImage: AssetImage('assets/pernilla.jpg'),
+                ),
+                onTap: (){},
               ),
               title: Text(user.username),
             ),
           ),
-          Expanded(
-              flex:3,
-              child:DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  items: settingsOptions.map((String option){
-                    return DropdownMenuItem<String>(
-                        value: option,
-                        child: Text(option)
-                    );
-                  }).toList(),
-                  icon: Icon(Icons.settings),
-                  onChanged: (String option) {
-                    setState(() {
-                      _settingsAction(option);
-                    });
-                  },
-                  isExpanded: false,
-                ),
-              )
-          ),
         ],
       ),
     );
-  }
-
-  void _settingsAction(String action) async{
-    if(action == 'Sign out'){
-      prefs = await SharedPreferences.getInstance();
-      prefs.clear();
-      prefs.reload();
-      Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => StartPage()), (Route<dynamic> route) => false);
-    }
   }
 
   Widget _infoSection(User user){
@@ -271,7 +261,6 @@ class ProfileState extends State<StatefulProfile>{
   Future<User> _buildUser() async{
     final prefs = await SharedPreferences.getInstance();
     var username = prefs.getString('username');
-    print(username);
 
     final response = await http.get('https://redesigned-backend.herokuapp.com/user/find?username=$username');
 
