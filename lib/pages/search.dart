@@ -4,18 +4,15 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:dog_prototype/models/User.dart';
 
-
 class Search extends StatefulWidget {
   @override
   SearchState createState() => SearchState();
 }
 
-
 class SearchState extends State<Search> {
   List<User> users = new List<User>();
 
   final textFieldController = TextEditingController();
-
 
   @override
   Widget build(BuildContext context) {
@@ -38,20 +35,32 @@ class SearchState extends State<Search> {
                 }),
           ),
           Expanded(
-
             child: ListView.builder(
-              itemCount: users.length,
-              itemBuilder: (context, index) {
-                return Card(
-                    child: ListTile(
-                      leading: Icon(
-                          Icons.person, size: 40, color: Colors.blue),
-                      title: Text(users[index].getName()),
-                    ));
-              },
+                itemCount: users.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            Icon(Icons.portrait, size: 50, color: Colors.blue),
+                            Text(users[index].getName()),
+                          ],
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Icon(Icons.chat_bubble, size: 40, color: Colors.blue),
+
+                            Icon(Icons.keyboard_arrow_right, size: 40, color: Colors.black),
+
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }
             ),
-
-
           ),
         ],
       ),
@@ -84,16 +93,8 @@ class SearchState extends State<Search> {
       }
     }
 
-    Scaffold.of(context)
-        .showSnackBar(SnackBar(content: Text(snackText)));
+    Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
 
-    setState(() {
-
-    });
+    setState(() {});
   }
 }
-
-
-
-
-
