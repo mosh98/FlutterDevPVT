@@ -9,9 +9,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import 'StartPage.dart';
 
 class ProfilePage extends StatelessWidget{
   @override
@@ -27,13 +24,9 @@ class StatefulProfile extends StatefulWidget{
 
 class ProfileState extends State<StatefulProfile>{
 
-  Future<User> _user;
-  List<dynamic> dogNames;
-  SharedPreferences prefs;
-
   Map<int, String> _userDogs = new HashMap<int, String>();
 
-  List<String> images = [
+  List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     'assets/pernilla.jpg',
     'assets/pernilla.jpg',
     'assets/pernilla.jpg',
@@ -41,22 +34,20 @@ class ProfileState extends State<StatefulProfile>{
     'assets/pernilla.jpg',
     'assets/pernilla.jpg',
   ];
-  //TODO
 
   @override
   void initState(){
     super.initState();
-    _user = _buildUser();
     _getUserDogs();
   }
 
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<User>(
-      future: _user,
+      future: _userBuilder(),
       builder: (context, snapshot){
         if(snapshot.hasData){
-          return _profileBuilder(snapshot.data);
+          return _profile(snapshot.data);
         }else if(snapshot.hasError){
           return Center(child:Text("${snapshot.error}"));
         }
@@ -65,7 +56,7 @@ class ProfileState extends State<StatefulProfile>{
     );
   }
 
-  Widget _profileBuilder(User user){
+  Widget _profile(User user){
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
@@ -103,45 +94,62 @@ class ProfileState extends State<StatefulProfile>{
   Widget _headerSection(User user){
     return Expanded(
       flex: 2,
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex:7,
-            child:ListTile(
-              leading: GestureDetector(
-                child: CircleAvatar(
-                  radius: 25,
-                  backgroundImage: AssetImage('assets/pernilla.jpg'),
-                ),
-                onTap: (){},
-              ),
-              title: Text(user.username),
+      child: Container(
+        padding: EdgeInsets.all(10.0),
+        child: Row(
+          children: <Widget>[
+            CircleAvatar( //TODO: onbackgroundimageerror
+              radius: 25,
+              backgroundImage: AssetImage('assets/pernilla.jpg'),
             ),
-          ),
-        ],
+            Padding(padding: EdgeInsets.only(left: 10),),
+            Text(user.username, style: TextStyle(fontSize: 16),)
+          ],
+        ),
       ),
     );
   }
 
   Widget _infoSection(User user){
     return Expanded(
-        flex: 4,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text('About', style: TextStyle(fontSize: 16)),
-            Padding(padding: EdgeInsets.only(top:10),),
-            Text(user.desc),
-            Padding(padding: EdgeInsets.only(top:10),),
-            Row(
-              children: <Widget>[
-                Text('My dogs:', style: TextStyle(fontSize: 17)),
-                IconButton(icon: Icon(Icons.add),onPressed: (){_addDog(user);},iconSize: 16)
-              ],
-            ),
-            _dogBuilder(user)
-          ],
+        flex: 6,
+        child: Container(
+          padding: EdgeInsets.all(15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('About', style: TextStyle(fontSize: 16)),
+              Padding(padding: EdgeInsets.only(top:10),),
+              Text(user.desc),
+              Padding(padding: EdgeInsets.only(top:10),),
+              Row(
+                children: <Widget>[
+                  Text('My dogs:', style: TextStyle(fontSize: 17)),
+                  IconButton(icon: Icon(Icons.add),onPressed: (){_addDog(user);},iconSize: 16)
+                ],
+              ),
+              _dogBuilder(user)
+            ],
+          ),
         )
+    );
+  }
+
+  Widget _pictureSection(){
+    return Expanded(
+      flex: 2,
+      child: GridView.builder(
+        scrollDirection: Axis.vertical,
+        itemCount: images.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+        ),
+        itemBuilder: (context, index) {
+          return (Image(
+            image: AssetImage(images[index]),
+          ));
+        },
+      ),
     );
   }
 
@@ -170,30 +178,32 @@ class ProfileState extends State<StatefulProfile>{
     )
     );
 
-    print(dogName);
-
     if(dogName.isEmpty){
-      return;
+      return; //todo. error message
     }
     
-    final http.Response response = await http.post(
-        'https://redesigned-backend.herokuapp.com/user/dog/register?owner=${user.username}',
-        headers:<String, String>{
-          'Content-Type' : 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String,String>{
-          'name':dogName,
-          'age':null,
-          'breed':'Not set',
-          'gender':'Not set',
-          'description':'not set',
-        })
-    );
+    try{
+      final http.Response response = await http.post(
+          'https://redesigned-backend.herokuapp.com/user/dog/register?owner=${user.username}',
+          headers:<String, String>{
+            'Content-Type' : 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String,String>{
+            'name':dogName,
+            'age':null,
+            'breed':'Not set',
+            'gender':'Not set',
+            'description':'not set',
+          })
+      );
 
-    if(response.statusCode==200){
-      print(response.body);
-    }else{
-      print('semething wrong');
+      if(response.statusCode==200){
+        print(response.body);
+      }else{
+        print('semething wrong');
+      }
+    }catch(e){
+      print(e);
     }
   }
 
@@ -240,38 +250,21 @@ class ProfileState extends State<StatefulProfile>{
     );
   }
 
-  Widget _pictureSection(){
-    return Expanded(
-      flex: 4,
-      child: GridView.builder(
-        scrollDirection: Axis.vertical,
-        itemCount: images.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-        ),
-        itemBuilder: (context, index) {
-          return (Image(
-            image: AssetImage(images[index]),
-          ));
-        },
-      ),
-    );
-  }
+  Future<User> _userBuilder() async{
+    var username;
+    await SharedPreferences.getInstance().then((instance) => username = instance.getString('username'));
 
-  Future<User> _buildUser() async{
-    final prefs = await SharedPreferences.getInstance();
-    var username = prefs.getString('username');
+    try{
+      final response = await http.get('https://redesigned-backend.herokuapp.com/user/find?username=$username');
 
-    final response = await http.get('https://redesigned-backend.herokuapp.com/user/find?username=$username');
-
-    if(response.statusCode == 200){
-      User test = User.fromJson(json.decode(response.body));
-      List<dynamic> dogs = test.dogs;
-      print(dogs.toString());
-      return User.fromJson(json.decode(response.body));
-    }else{
-      print(username);
-      throw Exception('Failed to load user');
+      if(response.statusCode == 200){
+        return User.fromJson(json.decode(response.body));
+      }else{
+        throw Exception('Failed to load user');
+      }
+    }catch(e){
+      print(e);
+      return null;
     }
   }
 

@@ -61,25 +61,40 @@ class _SettingsPageState extends State<SettingsPage> {
         children: ListTile.divideTiles(
           context: context,
           tiles: [
-            ListTile(
-              title: Text('Username'),
-              trailing: Text(widget.user.username ?? 'No username.'),
+            GestureDetector(
+              child: ListTile(
+                title: Text('Username'),
+                trailing: Text(widget.user.username ?? 'No username.'),
+              ),
+              onLongPress: (){print('clicked username');},
             ),
-            ListTile(
-                title: Text('Email'),
-                trailing: Text(widget.user.email ?? 'No email')
+            GestureDetector(
+              child: ListTile(
+                  title: Text('Email'),
+                  trailing: Text(widget.user.email ?? 'No email')
+              ),
+              onLongPress: (){print('clicked email');},
             ),
-            ListTile(
-                title: Text('Date of birth'),
-                trailing: Text(widget.user.dateOfBirth ?? 'No date of birth'),
+            GestureDetector(
+              child: ListTile(
+                  title: Text('Date of birth'),
+                  trailing: Text(widget.user.dateOfBirth ?? 'No date of birth'),
+              ),
+              onLongPress: (){print('clicked date of birth');},
             ),
-            ListTile(
-                title: Text('Gender'),
-                trailing: Text(widget.user.gender ?? 'No gender specified'),
+            GestureDetector(
+              child: ListTile(
+                  title: Text('Gender'),
+                  trailing: Text(widget.user.gender ?? 'No gender specified'),
+              ),
+              onLongPress: (){print('clicked gender');},
             ),
-            ListTile(
-                title: Text('Member since'),
-                trailing: Text(widget.user.createdDate ?? 'No creation Date specified'),
+            GestureDetector(
+                child: ListTile(
+                  title: Text('Member since'),
+                  trailing: Text(widget.user.createdDate ?? 'No creation Date specified'),
+                onLongPress: (){print('clicked member');},
+              ),
             ),
           ],
         ).toList(),
@@ -94,8 +109,11 @@ class _SettingsPageState extends State<SettingsPage> {
           children: ListTile.divideTiles(
             context: context,
             tiles: [
-              ListTile(
-                title: Text('Change Password'),
+              GestureDetector(
+                child: ListTile(
+                  title: Text('Change Password'),
+                ),
+                onLongPress: (){print('clicked change password');},
               ),
               ListTile(
                 title: Text('Log out'),
@@ -109,12 +127,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _logout() async{
     await showDialog(context: context,
+        barrierDismissible: false,
         child: AlertDialog(
           title: Text('Are you sure you want to log out?'),
           actions: <Widget>[
             MaterialButton(
               child: Text('No'),
-              onPressed: (){Navigator.of(context).pop();},
+              onPressed: (){Navigator.of(context, rootNavigator: true).pop('dialog');},
             ),
             MaterialButton(
               child: Text('Yes'),
@@ -122,6 +141,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 SharedPreferences prefs = await SharedPreferences.getInstance();
                 prefs.clear();
                 prefs.reload();
+                Navigator.of(context, rootNavigator: true).pop('dialog');
                 Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => StartPage()), (Route<dynamic> route) => false);
                 },
             )
@@ -129,4 +149,12 @@ class _SettingsPageState extends State<SettingsPage> {
         )
     );
   }
+
+  bool _setProfilePicture(){return true;}
+  bool _setUsername(){return true;}
+  bool _setEmail(){return true;}
+  bool _setDateOfBirth(){return true;}
+  bool _setGender(){return true;}
+
+  bool _changePassword(){return true;}
 }
