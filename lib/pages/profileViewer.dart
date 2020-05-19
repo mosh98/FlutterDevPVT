@@ -121,7 +121,6 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
               Row(
                 children: <Widget>[
                   Text('My dogs:', style: TextStyle(fontSize: 17)),
-                  IconButton(icon: Icon(Icons.add),onPressed: (){_addDog(user);},iconSize: 16)
                 ],
               ),
               _dogBuilder(user)
@@ -141,13 +140,40 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
           crossAxisCount: 3,
         ),
         itemBuilder: (context, index) {
-          return (Image(
-            image: AssetImage(images[index]),
-          ));
+          return (
+              GestureDetector(
+              onTap: () 
+                async {
+              await showDialog(
+                context: context,
+                builder: (_) => ImageDialog()
+              );
+              },
+              child: Image(
+              image: AssetImage(images[index]),
+          ),
+          )
+          );
         },
       ),
     );
   }
+
+  /*
+
+Image(
+            image: AssetImage(images[index]),
+          ))
+
+() async {
+              await showDialog(
+                context: context,
+                builder: (_) => ImageDialog()
+              );
+            },
+          ),
+
+  */
 
   void _addDog(User user) async{
 
@@ -251,5 +277,24 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     }else{
       throw Exception('Failed to load user');
     }
+  }
+  
+}
+
+class ImageDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        width: 400,
+        height: 400,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: ExactAssetImage('assets/pernilla.jpg'),
+            fit: BoxFit.cover
+          )
+        ),
+      ),
+    );
   }
 }
