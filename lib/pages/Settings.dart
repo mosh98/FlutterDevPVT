@@ -1,6 +1,7 @@
 import 'package:dog_prototype/models/User.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 import 'StartPage.dart';
 
@@ -14,7 +15,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,7 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: Text('Email'),
                   trailing: Text(widget.user.email ?? 'No email')
               ),
-              onLongPress: (){print('clicked email');},
+              onLongPress: (){_setEmail();},
             ),
             GestureDetector(
               child: ListTile(
@@ -151,9 +151,51 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   bool _setProfilePicture(){return true;}
+
   bool _setUsername(){return true;}
-  bool _setEmail(){return true;}
+
+  _setEmail() async{
+
+    String email = widget.user.username;
+
+    AlertDialog alert = AlertDialog(
+      title: Text('Enter new email'),
+      content: SingleChildScrollView(
+        child: TextFormField(
+          onChanged: (value){email = value;},
+        ),
+      ),
+      actions: <Widget>[
+        MaterialButton(
+          child: Text('Change email'),
+          onPressed: (){Navigator.of(context).pop();},
+        ),
+        MaterialButton(
+          child: Text('Back'),
+          onPressed: (){Navigator.of(context).pop(); return;},
+        )
+      ],
+    );
+    showDialog(context: context, builder: (BuildContext context){return alert;});
+
+    try{
+      final response = await http.put('https://redesigned-backend.herokuapp.com/user/update?username=${widget.user.username}&email=$email');
+
+      if(response.statusCode == 200){
+        setState(() {
+          widget.user.setEmail(email);
+        });
+      }else{
+        throw Exception('Failed to change email');
+      }
+    }catch(e){
+      print(e);
+    }
+    //"https://redesigned-backend.herokuapp.com/user/update?username=XXXX&email=XXXXX"
+  }
+
   bool _setDateOfBirth(){return true;}
+
   bool _setGender(){return true;}
 
   bool _changePassword(){return true;}

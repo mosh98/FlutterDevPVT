@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dog_prototype/pages/mapPage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -145,6 +146,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                           borderSide: new BorderSide()
                       )
                   ),
+                  obscureText: true,
                   keyboardType: TextInputType.text,
                   validator: (value) {
                     if (value.isEmpty || value.length < 6 || value.length > 16) {
@@ -266,6 +268,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                           // If the form is valid, display a Snackbar.
                           Scaffold.of(context)
                               .showSnackBar(SnackBar(content: Text('Processing Data')));
+                              register(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
                               signin(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
                         }
                       },
@@ -311,9 +314,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                           }));
 
         }else{
-
             print(response.statusCode);
-          
         }
       } catch (e) {
         print(e.message);
@@ -321,4 +322,61 @@ class MyCustomFormState extends State<MyCustomForm> {
       
     }
   }
+
+
+  //TODO
+/**
+ * EVERYTHING AFTER THIS IS TEMPORARY CODE TO TEST FIREBASE, REMOVE IF WE DECIDE WITH SOMETHING ELSE
+ */
+
+  Future<void>register(String username, String email, String password, String dateOfBirth, String gender)async{
+    try {
+      print(email);
+      print(password);
+      //dynamic result = await _auth.registerWithEmailAndPassword(email, password);
+
+      final FirebaseAuth _auth = FirebaseAuth.instance;
+      dynamic result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+
+      if(result != null){
+        //Successfully created firebase account
+        //_registerToDatabase(username,email,dateOfBirth,gender);
+        print('worked');
+      }else{
+        //Something went wrong
+        print('did not work');
+      }
+    } catch (e) {
+      print(e.message);
+    }
+  }
+
+//  _registerToDatabase(String username, String email, String dateOfBirth, String gender)async{
+//    try {
+//      String token = await _auth.getToken(); //get current token
+//
+//      final http.Response response = await http.post( //register to database
+//          'https://dogsonfire.herokuapp.com/user/register',
+//          headers:<String, String>{
+//            "Accept": "application/json",
+//            'Content-Type' : 'application/json; charset=UTF-8',
+//            'Authorization': 'Bearer $token'
+//          },
+//          body: jsonEncode(<String,String>{
+//            "username": username,
+//            "email": email,
+//            "dateOfBirth": dateOfBirth,
+//            "gender": gender
+//          })
+//      );
+//
+//      if(response.statusCode==200){ // Successfully created database account
+//        print(response.statusCode);
+//      }else{ //Something went wrong
+//        print(response.statusCode);
+//      }
+//    } catch (e) {
+//      print(e.message);
+//    }
+//  }
 }

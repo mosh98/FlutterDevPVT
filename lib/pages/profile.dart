@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/Settings.dart';
-import 'package:dog_prototype/pages/dogProfile.dart';
+import 'package:dog_prototype/pages/profileDog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,7 +38,6 @@ class ProfileState extends State<StatefulProfile>{
   @override
   void initState(){
     super.initState();
-    _getUserDogs();
   }
 
   @override
@@ -234,6 +233,9 @@ class ProfileState extends State<StatefulProfile>{
   }
 
   Widget _dogBuilder(User user){
+
+    _getUserDogs(user);
+
     return Expanded(
       flex: 12,
       child: ListView.builder(
@@ -269,18 +271,22 @@ class ProfileState extends State<StatefulProfile>{
   }
 
   //TODO: ADD URL TO MAP FOR PICTURE
-  void _getUserDogs() async{
-    final response = await http.get('https://redesigned-backend.herokuapp.com/user/getMyDogs?username=usernametest');
+  void _getUserDogs(User user) async{
+    try{//TODO SEND TOKEN TO GET DOGS
+      final response = await http.get('https://redesigned-backend.herokuapp.com/user/getMyDogs?username=${user.username}');
 
-    if(response.statusCode == 200){
-      List<dynamic> dogs = jsonDecode(response.body);
-      dogs.forEach((element) {
-        setState(() {
-          _userDogs.putIfAbsent(element['dogId'], () => element['name']);
+      if(response.statusCode == 200){
+        List<dynamic> dogs = jsonDecode(response.body);
+        dogs.forEach((element) {
+          setState(() {
+            _userDogs.putIfAbsent(element['dogId'], () => element['name']);
+          });
         });
-      });
-    }else{
-      throw Exception('Failed to load user');
+      }else{
+        throw Exception('Failed to load user');
+      }
+    }catch(e){
+      print(e);
     }
   }
 }

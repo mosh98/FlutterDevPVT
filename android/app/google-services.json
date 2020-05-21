@@ -1,34 +1,34 @@
 {
   "project_info": {
-    "project_number": "253489842950",
-    "firebase_url": "https://dogparks-c3db6.firebaseio.com",
-    "project_id": "dogparks-c3db6",
-    "storage_bucket": "dogparks-c3db6.appspot.com"
+    "project_number": "541635968667",
+    "firebase_url": "https://pvtdogpark.firebaseio.com",
+    "project_id": "pvtdogpark",
+    "storage_bucket": "pvtdogpark.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:253489842950:android:0fdf34a84fa8735ca16c87",
+        "mobilesdk_app_id": "1:541635968667:android:5898e3fb0243cc8ff5503e",
         "android_client_info": {
           "package_name": "com.example.dog_prototype"
         }
       },
       "oauth_client": [
         {
-          "client_id": "253489842950-sim1h5kffjuue4n3cldr7lh350ud2acc.apps.googleusercontent.com",
+          "client_id": "541635968667-nc865f93takutp9dmt8fipmofao3lspp.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyB8gdiDZw_hSokhKD7KciRy29HtNqwWHg0"
+          "current_key": "AIzaSyBdITVCmnmR0loT6sjY0tIlVyM1AornhfE"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "253489842950-sim1h5kffjuue4n3cldr7lh350ud2acc.apps.googleusercontent.com",
+              "client_id": "108304008294110239799",
               "client_type": 3
             }
           ]
