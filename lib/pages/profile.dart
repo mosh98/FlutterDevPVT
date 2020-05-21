@@ -1,10 +1,12 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:image_picker/image_picker.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/Settings.dart';
-import 'package:dog_prototype/pages/profileDog.dart';
+import 'package:dog_prototype/pages/dogProfile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +25,7 @@ class StatefulProfile extends StatefulWidget{
 }
 
 class ProfileState extends State<StatefulProfile>{
+  File _image;
 
   Map<int, String> _userDogs = new HashMap<int, String>();
 
@@ -35,9 +38,18 @@ class ProfileState extends State<StatefulProfile>{
     'assets/pernilla.jpg',
   ];
 
+    Future getImage() async {
+    final image = await ImagePicker.pickImage(source: ImageSource.gallery);
+  
+    setState(() {
+      _image = image;
+    });
+  }
+
   @override
   void initState(){
     super.initState();
+    _getUserDogs();
   }
 
   @override
@@ -97,9 +109,11 @@ class ProfileState extends State<StatefulProfile>{
         padding: EdgeInsets.all(10.0),
         child: Row(
           children: <Widget>[
-            CircleAvatar( //TODO: onbackgroundimageerror
-              radius: 25,
-              backgroundImage: AssetImage('assets/pernilla.jpg'),
+            GestureDetector(
+            onTap: getImage,
+            child: _image == null
+            ? CircleAvatar(radius: 40, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
+            : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
             Text(user.username, style: TextStyle(fontSize: 16),)
@@ -144,9 +158,20 @@ class ProfileState extends State<StatefulProfile>{
           crossAxisCount: 3,
         ),
         itemBuilder: (context, index) {
-          return (Image(
-            image: AssetImage(images[index]),
-          ));
+          return (
+              GestureDetector(
+              onTap: () 
+                async {
+              await showDialog(
+                context: context,
+                builder: (_) => ImageDialog()
+              );
+              },
+              child: Image(
+              image: AssetImage(images[index]),
+          ),
+          )
+          );
         },
       ),
     );
@@ -233,9 +258,6 @@ class ProfileState extends State<StatefulProfile>{
   }
 
   Widget _dogBuilder(User user){
-
-    _getUserDogs(user);
-
     return Expanded(
       flex: 12,
       child: ListView.builder(
@@ -271,22 +293,37 @@ class ProfileState extends State<StatefulProfile>{
   }
 
   //TODO: ADD URL TO MAP FOR PICTURE
-  void _getUserDogs(User user) async{
-    try{//TODO SEND TOKEN TO GET DOGS
-      final response = await http.get('https://redesigned-backend.herokuapp.com/user/getMyDogs?username=${user.username}');
+  void _getUserDogs() async{
+    final response = await http.get('https://redesigned-backend.herokuapp.com/user/getMyDogs?username=usernametest');
 
-      if(response.statusCode == 200){
-        List<dynamic> dogs = jsonDecode(response.body);
-        dogs.forEach((element) {
-          setState(() {
-            _userDogs.putIfAbsent(element['dogId'], () => element['name']);
-          });
+    if(response.statusCode == 200){
+      List<dynamic> dogs = jsonDecode(response.body);
+      dogs.forEach((element) {
+        setState(() {
+          _userDogs.putIfAbsent(element['dogId'], () => element['name']);
         });
-      }else{
-        throw Exception('Failed to load user');
-      }
-    }catch(e){
-      print(e);
+      });
     }
+   // else{
+   //   throw Exception('Failed to load user');
+  //  }
+  }
+}
+
+class ImageDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        width: 400,
+        height: 400,
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: ExactAssetImage('assets/pernilla.jpg'),
+            fit: BoxFit.cover
+          )
+        ),
+      ),
+    );
   }
 }

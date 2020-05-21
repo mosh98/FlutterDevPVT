@@ -7,5 +7,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   var isLoggedIn = prefs.getBool('isLoggedIn');
+  //runApp(MaterialApp(home: StartPage()));
   runApp(MaterialApp(home: isLoggedIn == null || isLoggedIn == false ? StartPage() : PlaceHolderApp()));
 }
