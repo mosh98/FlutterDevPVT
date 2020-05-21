@@ -61,7 +61,6 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
         actions: <Widget>[
           FlatButton.icon(
             onPressed: (){
-                //Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage(user: user)));
             },
             icon: Icon(
               Icons.person_add,
@@ -158,22 +157,6 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
       ),
     );
   }
-
-  /*
-
-Image(
-            image: AssetImage(images[index]),
-          ))
-
-() async {
-              await showDialog(
-                context: context,
-                builder: (_) => ImageDialog()
-              );
-            },
-          ),
-
-  */
 
   void _addDog(User user) async{
 
