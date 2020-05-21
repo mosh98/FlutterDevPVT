@@ -8,7 +8,24 @@ class DogProfile extends StatelessWidget {
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
-        title: Text("Dog Profile"),
+        backgroundColor: Colors.grey[850],
+        title: Text('Dog profile'),
+        centerTitle: true,
+        actions: <Widget>[
+          FlatButton.icon(
+            onPressed: (){
+
+            },
+            icon: Icon(
+              Icons.settings,
+              color: Colors.white,
+            ),
+            label: Text(
+              'Settings',
+              style: TextStyle(color:Colors.white),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: <Widget>[

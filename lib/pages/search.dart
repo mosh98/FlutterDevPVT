@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:dog_prototype/models/User.dart';
 
+import 'profileViewer.dart';
+
 class Search extends StatefulWidget {
   @override
   SearchState createState() => SearchState();
@@ -44,16 +46,27 @@ class SearchState extends State<Search> {
                       children: <Widget>[
                         Row(
                           children: <Widget>[
-                            Icon(Icons.portrait, size: 50, color: Colors.blue),
+                            Icon(Icons.portrait, size: 50, color: Colors.black),
                             Text(users[index].getName()),
                           ],
                         ),
                         Row(
                           children: <Widget>[
-                            Icon(Icons.chat_bubble, size: 40, color: Colors.blue),
+                            Icon(Icons.chat_bubble_outline, size: 30, color: Colors.black),
 
-                            Icon(Icons.keyboard_arrow_right, size: 40, color: Colors.black),
-
+                            FlatButton.icon(
+                            onPressed: (){
+                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => profileViewer(userName: users[index].getName())));
+                            },
+                            icon: Icon(
+                            Icons.keyboard_arrow_right,
+                            color: Colors.black,
+                            ),
+                            label: Text(
+                            '',
+                            style: TextStyle(color:Colors.white),
+                            ),
+                          )
                           ],
                         ),
                       ],

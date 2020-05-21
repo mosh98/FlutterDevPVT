@@ -1,6 +1,6 @@
 class User{
   final String username;
-  final String email;
+  String email;
   final String dateOfBirth;
   final String gender;
   final String desc;
@@ -27,4 +27,6 @@ class User{
   String getDesc(){return desc;}
   String getCreatedDate(){return createdDate;}
   List<dynamic> getDogs(){return dogs;}
+
+  void setEmail(String email){this.email = email;}
 }

@@ -1,35 +1,26 @@
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:image_picker/image_picker.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
-import 'package:dog_prototype/pages/Settings.dart';
-import 'package:dog_prototype/pages/dogProfile.dart';
+import 'package:dog_prototype/pages/profileDog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-class ProfilePage extends StatelessWidget{
+class profileViewer extends StatefulWidget{
+
   @override
-  Widget build(BuildContext context) {
-    return StatefulProfile();
-  }
+  ProfileState createState() => ProfileState();
+
+    profileViewer({@required this.userName});
+    final String userName;
 }
 
-class StatefulProfile extends StatefulWidget{
-  @override
-  State createState() => new ProfileState();
-}
+class ProfileState extends State<profileViewer>{
 
-class ProfileState extends State<StatefulProfile>{
-  File _image;
-
-  Map<int, String> _userDogs = new HashMap<int, String>();
-
-  List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
+Map<int, String> _userDogs = new HashMap<int, String>();
+List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     'assets/pernilla.jpg',
     'assets/pernilla.jpg',
     'assets/pernilla.jpg',
@@ -38,13 +29,7 @@ class ProfileState extends State<StatefulProfile>{
     'assets/pernilla.jpg',
   ];
 
-    Future getImage() async {
-    final image = await ImagePicker.pickImage(source: ImageSource.gallery);
-  
-    setState(() {
-      _image = image;
-    });
-  }
+  get userName => widget.userName;
 
   @override
   void initState(){
@@ -76,14 +61,13 @@ class ProfileState extends State<StatefulProfile>{
         actions: <Widget>[
           FlatButton.icon(
             onPressed: (){
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage(user: user)));
             },
             icon: Icon(
-              Icons.settings,
+              Icons.person_add,
               color: Colors.white,
             ),
             label: Text(
-              'Settings',
+              'Add Friend',
               style: TextStyle(color:Colors.white),
             ),
           ),
@@ -109,11 +93,9 @@ class ProfileState extends State<StatefulProfile>{
         padding: EdgeInsets.all(10.0),
         child: Row(
           children: <Widget>[
-            GestureDetector(
-            onTap: getImage,
-            child: _image == null
-            ? CircleAvatar(radius: 40, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
-            : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
+            CircleAvatar( //TODO: onbackgroundimageerror
+              radius: 25,
+              backgroundImage: AssetImage('assets/pernilla.jpg'),
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
             Text(user.username, style: TextStyle(fontSize: 16),)
@@ -138,7 +120,6 @@ class ProfileState extends State<StatefulProfile>{
               Row(
                 children: <Widget>[
                   Text('My dogs:', style: TextStyle(fontSize: 17)),
-                  IconButton(icon: Icon(Icons.add),onPressed: (){_addDog(user);},iconSize: 16)
                 ],
               ),
               _dogBuilder(user)
@@ -231,32 +212,6 @@ class ProfileState extends State<StatefulProfile>{
     }
   }
 
-  Future<String> getNewDogName() async{
-    String dogName = "";
-
-    AlertDialog alert = AlertDialog(
-      title: Text('What is the name of your dog?'),
-      content: SingleChildScrollView(
-        child: TextFormField(
-          onChanged: (value){dogName = value;},
-        ),
-      ),
-      actions: <Widget>[
-        MaterialButton(
-          child: Text('Add dog'),
-          onPressed: (){Navigator.of(context).pop();},
-        ),
-        MaterialButton(
-          child: Text('Back'),
-          onPressed: (){Navigator.of(context).pop(); return;},
-        )
-      ],
-    );
-    showDialog(context: context, builder: (BuildContext context){return alert;});
-
-    return dogName;
-  }
-
   Widget _dogBuilder(User user){
     return Expanded(
       flex: 12,
@@ -275,8 +230,7 @@ class ProfileState extends State<StatefulProfile>{
   }
 
   Future<User> _userBuilder() async{
-    var username;
-    await SharedPreferences.getInstance().then((instance) => username = instance.getString('username'));
+    var username = userName;
 
     try{
       final response = await http.get('https://redesigned-backend.herokuapp.com/user/find?username=$username');
@@ -303,11 +257,11 @@ class ProfileState extends State<StatefulProfile>{
           _userDogs.putIfAbsent(element['dogId'], () => element['name']);
         });
       });
+    }else{
+      throw Exception('Failed to load user');
     }
-   // else{
-   //   throw Exception('Failed to load user');
-  //  }
   }
+  
 }
 
 class ImageDialog extends StatelessWidget {
