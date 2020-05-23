@@ -1,7 +1,7 @@
 import 'package:dog_prototype/pages/placeHolderHome.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'pages/StartPage.dart';
+import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/StartPage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

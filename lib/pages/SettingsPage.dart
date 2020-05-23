@@ -13,6 +13,8 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
 
+  final AuthService _auth = AuthService();
+
   @override
   Widget build(BuildContext context) {
 
@@ -123,7 +125,7 @@ class _SettingsPageState extends State<SettingsPage> {
         )
     );
   }
-final AuthService _auth = AuthService();
+
   void _logout() async{
     await showDialog(context: context,
         barrierDismissible: false,

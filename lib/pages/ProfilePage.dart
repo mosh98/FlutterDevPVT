@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dog_prototype/models/User.dart';
-import 'package:dog_prototype/pages/newsettings.dart';
+import 'package:dog_prototype/pages/SettingsPage.dart';
 import 'package:dog_prototype/pages/profileDog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -32,8 +32,6 @@ class ProfileState extends State<ProfilePage>{
     'assets/pernilla.jpg',
     'assets/pernilla.jpg',
   ];
-
-  Map<int, String> _userDogs = new HashMap<int, String>();
 
   @override
   void initState() {

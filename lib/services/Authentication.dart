@@ -31,7 +31,7 @@ class AuthService{
         return User.fromJson(json.decode(response.body));
       }else{
         print(response.statusCode);
-        throw Exception('Failed to load user');
+        print(response.body);
       }
     }catch(e){
       print(e);

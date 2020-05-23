@@ -35,28 +35,28 @@ class Signup extends StatelessWidget {
   }
 }
 
-        double _kPickerSheetHeight = 216.0;
-        Widget _buildBottomPicker(Widget picker) {
-            return Container(
-            height: _kPickerSheetHeight,
-            padding: const EdgeInsets.only(top: 6.0),
-            color: CupertinoColors.white,
-            child: DefaultTextStyle(
-                style: const TextStyle(
-                color: CupertinoColors.black,
-                fontSize: 22.0,
-                ),
-                child: GestureDetector(
-                // Blocks taps from propagating to the modal sheet and popping.
-                onTap: () {},
-                child: SafeArea(
-                    top: false,
-                    child: picker,
-                ),
-                ),
-            ),
-            );
-        }
+double _kPickerSheetHeight = 216.0;
+Widget _buildBottomPicker(Widget picker) {
+  return Container(
+    height: _kPickerSheetHeight,
+    padding: const EdgeInsets.only(top: 6.0),
+    color: CupertinoColors.white,
+    child: DefaultTextStyle(
+      style: const TextStyle(
+        color: CupertinoColors.black,
+        fontSize: 22.0,
+      ),
+      child: GestureDetector(
+        // Blocks taps from propagating to the modal sheet and popping.
+        onTap: () {},
+        child: SafeArea(
+          top: false,
+          child: picker,
+        ),
+      ),
+    ),
+  );
+}
 
 
 class MyCustomForm extends StatefulWidget {
@@ -273,7 +273,6 @@ class MyCustomFormState extends State<MyCustomForm> {
                           // If the form is valid, display a Snackbar.
                           Scaffold.of(context)
                               .showSnackBar(SnackBar(content: Text('Processing Data')));
-                              register(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
                               signin(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
                         }
                       },
@@ -325,61 +324,6 @@ class MyCustomFormState extends State<MyCustomForm> {
         print(e.message);
       }
       
-    }
-  }
-
-
-  //TODO
-/**
- * EVERYTHING AFTER THIS IS TEMPORARY CODE TO TEST FIREBASE, REMOVE IF WE DECIDE WITH SOMETHING ELSE
- */
-
-  final AuthService _auth = AuthService();
-
-  Future<void>register(String username, String email, String password, String dateOfBirth, String gender)async{
-    try {
-
-      dynamic result = await _auth.registerWithEmailAndPassword(email, password);
-
-      if(result != null){
-        //Successfully created firebase account
-        _registerToDatabase(username,email,dateOfBirth,gender);
-        print('worked');
-      }else{
-        //Something went wrong
-        print('did not work');
-      }
-    } catch (e) {
-      print(e.message + "catch");
-    }
-  }
-
-  _registerToDatabase(String username, String email, String dateOfBirth, String gender)async{
-    try {
-      String token = await _auth.getToken();
-
-      final http.Response response = await http.post( //register to database
-          'https://dogsonfire.herokuapp.com/user/register',
-          headers:<String, String>{
-            "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer $token'
-          },
-          body: jsonEncode(<String,String>{
-            "username": username,
-            "email": email,
-            "dateOfBirth": dateOfBirth,
-            "gender": gender
-          })
-      );
-
-      if(response.statusCode==200){ // Successfully created database account
-        print(response.statusCode);
-      }else{ //Something went wrong
-        print(response.statusCode);
-      }
-    } catch (e) {
-      print("catch: " + e.message);
     }
   }
 }
