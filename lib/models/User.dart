@@ -1,3 +1,5 @@
+import 'Dog.dart';
+
 class User{
   final String username;
   String email;
@@ -13,7 +15,8 @@ class User{
     return User(
       username: json['username'],
       email: json['email'],
-      dateOfBirth: json['date_of_birth'],
+      gender: json['gender'],
+      dateOfBirth: json['dateOfBirth'],
       desc: json['description'],
       createdDate: json['createdAt'],
       dogs: json['dogs'],
@@ -26,7 +29,12 @@ class User{
   String getGender(){return gender;}
   String getDesc(){return desc;}
   String getCreatedDate(){return createdDate;}
-  List<dynamic> getDogs(){return dogs;}
+  List getDogs(){return dogs;}
 
   void setEmail(String email){this.email = email;}
+
+  @override
+  String toString() {
+    return "Name: $username Email: $email Date of birth: $dateOfBirth Gender: $gender Description: $desc Created at: $createdDate Dogs: $dogs";
+  }
 }
