@@ -78,7 +78,7 @@ class AuthService{
   _registerToDatabase(String username, String email, String dateOfBirth, String gender, String token, String password)async{
     try {
       final http.Response response = await http.post( //register to database
-          'https://dogsonfire.herokuapp.com/user/register',
+          'https://dogsonfire.herokuapp.com/users/register',
           headers:<String, String>{
             "Accept": "application/json",
             'Content-Type' : 'application/json; charset=UTF-8',

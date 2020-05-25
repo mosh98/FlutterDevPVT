@@ -45,15 +45,17 @@ class _DogProfileState extends State<DogProfile> {
     //TODO, WHEN PICTURES IS FINISHED
     return Expanded(
       flex: 2,
-      child: Column(
-          children: [
-            GestureDetector(
-                onTap: getImage,
-                child: _image == null
-                    ? CircleAvatar(radius: 40, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
-                    : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
-            ),
-          ],
+      child: Center(
+        child: Column(
+            children: [
+              GestureDetector(
+                  onTap: getImage,
+                  child: _image == null
+                      ? CircleAvatar(radius: 40, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
+                      : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
+              ),
+            ],
+        ),
       )
     );
   }
