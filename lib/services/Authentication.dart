@@ -22,8 +22,9 @@ class AuthService{
   Future<User> createUserModel(Future<IdTokenResult> token) async{
     try{
       String t = await token.then((value) => value.token);
+      print(await _auth.currentUser().then((value) => value.uid));
 
-      final response = await http.get('https://dogsonfire.herokuapp.com/user/',headers: {
+      final response = await http.get('https://dogsonfire.herokuapp.com/users?uid=${await _auth.currentUser().then((value) => value.uid)}',headers: {
         'Authorization': 'Bearer $t',
       });
 

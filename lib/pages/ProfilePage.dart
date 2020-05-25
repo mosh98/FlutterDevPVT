@@ -5,7 +5,7 @@ import 'package:dog_prototype/services/Authentication.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/SettingsPage.dart';
-import 'package:dog_prototype/pages/profileDog.dart';
+import 'package:dog_prototype/pages/DogProfile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
