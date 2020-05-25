@@ -13,35 +13,26 @@ class DogProfile extends StatefulWidget {
 
 class _DogProfileState extends State<DogProfile> {
 
-  final ProfileState _state = ProfileState.About;
+  ProfileState _state = ProfileState.About;
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        Column(
-          children: [
-            _pictureSection(),
-            _stateSection(),
-            _informatioSection(),
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.grey[850],
+        title: Text('Dog Profile'),
+        centerTitle: true,
+      ),
+      body: Container(
+        padding: EdgeInsets.all(15.0),
+        child:Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _pictureSection(),
+              _stateSection(),
+              _informationSection(),
+            ],
         )
-      ],
-    );
-  }
-
-  Widget tesst(){
-    return DefaultTabController(
-      length: 2,
-      child: TabBar(
-        tabs: <Widget>[
-          Tab(
-
-          ),
-          Tab(
-
-          )
-        ],
       ),
     );
   }
@@ -61,22 +52,67 @@ class _DogProfileState extends State<DogProfile> {
   Widget _stateSection(){
     return Expanded(
       flex: 1,
-      child: Row(
-        children: [
-          Text('statesection')
-        ],
-      ),
+      child: DefaultTabController(
+          length: 2,
+          child: TabBar(
+            labelColor: Colors.black,
+            onTap: (value){
+              if(value==0){
+                setState(() {
+                  _state = ProfileState.About;
+                });
+              }else{
+                setState(() {
+                  _state = ProfileState.Awards;
+                });
+              }
+              },
+            tabs: <Widget>[
+              Tab(
+                icon: Icon(Icons.person),
+                child:Text('About')
+              ),
+              Tab(
+                  icon: Icon(Icons.star),
+                  child:Text('Awards')
+              )
+            ]
+          )
+      )
     );
   }
 
-  Widget _informatioSection() {
+  Widget _informationSection() {
     return Expanded(
      flex: 7,
-     child: Column(
-       children: [
-         Text('informationssection')
-       ],
-     )
+     child: _state == ProfileState.About ?
+     aboutSection()
+         :
+     awardsSection()
+    );
+  }
+
+  Widget aboutSection(){
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("DOG1", style: TextStyle(fontSize: 20.0),),
+        Padding(padding:EdgeInsets.only(top: 10.0)),
+        Text("Owner: " + "user"),
+        Text("Breed: " + "Bulldog"),
+        Text("Age: " + "5"),
+        Text("Gender: " + "Male"),
+        Text("Castrated: " + "Yes"),
+        Text("Description: " + "Dog1 loves to be a test dog"),
+      ],
+    );
+  }
+
+  Widget awardsSection(){
+    return Column(
+      children: [
+        Text('IF WE HAVE TIME TO IMPLEMENT THIS')
+      ],
     );
   }
 

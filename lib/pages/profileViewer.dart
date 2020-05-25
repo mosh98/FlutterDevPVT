@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
-import 'package:dog_prototype/pages/profileDog.dart';
+import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/profileDog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;

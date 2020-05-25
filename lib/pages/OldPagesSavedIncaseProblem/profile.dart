@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/Settings.dart';
-import 'package:dog_prototype/pages/profileDog.dart';
+import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/profileDog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
