@@ -10,8 +10,8 @@ import 'package:http/http.dart' as http;
 
 class AuthService{
 
-  FirebaseAuth _auth = FirebaseAuth.instance;
-  User databaseUser;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final User databaseUser = null;
 
   //auth change user stream
   Stream<FirebaseUser> get user {
@@ -29,7 +29,6 @@ class AuthService{
       });
 
       if(response.statusCode == 200){
-        databaseUser = User.fromJson(json.decode(response.body));
         return User.fromJson(json.decode(response.body));
       }else{
         print(response.statusCode);
@@ -51,9 +50,7 @@ class AuthService{
         return null;
       }
 
-      User user = await createUserModel(result.user.getIdToken());
-      print(user);
-      return user;
+      return User();//TODO
     }catch(e){
       print(e);
       return null;
@@ -67,8 +64,8 @@ class AuthService{
 
       if(result != null){
         String token = await result.user.getIdToken().then((value) => value.token);
-        await _registerToDatabase(username, email, dateOfBirth, gender, token);
-        return createUserModel(result.user.getIdToken());
+        await _registerToDatabase(username, email, dateOfBirth, gender, token, password);
+        return User(); //TODO
       }else{
         return null;
       }
@@ -78,7 +75,7 @@ class AuthService{
     }
   }
 
-  _registerToDatabase(String username, String email, String dateOfBirth, String gender, String token)async{
+  _registerToDatabase(String username, String email, String dateOfBirth, String gender, String token, String password)async{
     try {
       final http.Response response = await http.post( //register to database
           'https://dogsonfire.herokuapp.com/user/register',
@@ -98,6 +95,8 @@ class AuthService{
       print('inside registertodatabase'); //TODO
       if(response.statusCode==200){ // Successfully created database account
         print(response.statusCode);
+        signOut();
+        await signInWithEmailAndPassword(email, password);
       }else{ //Something went wrong
         print(response.statusCode);
         print(response.body);
