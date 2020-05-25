@@ -209,7 +209,7 @@ class ProfileState extends State<ProfilePage>{
 
     try{
       String token = await AuthService().getCurrentFirebaseUser().then((firebaseUser) => firebaseUser.getIdToken().then((tokenResult) => tokenResult.token));
-
+      print(token);
       final http.Response response = await http.put(
           'https://dogsonfire.herokuapp.com/dogs/',
           headers:{

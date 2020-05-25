@@ -11,7 +11,6 @@ import 'package:http/http.dart' as http;
 class AuthService{
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final User databaseUser = null;
 
   //auth change user stream
   Stream<FirebaseUser> get user {
@@ -132,7 +131,4 @@ class AuthService{
     return await _auth.currentUser();
   }
 
-  User getCurrentUser() {
-    return databaseUser;
-  }
 }
