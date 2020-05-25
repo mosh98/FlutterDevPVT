@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dog_prototype/models/User.dart';
@@ -142,7 +143,8 @@ class ProfileState extends State<ProfilePage>{
               title: Text(widget.user.dogs[index]['name']),
               //TODO: IMAGE URL
               onTap: (){
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile()));
+                Dog dog = Dog.fromJson(widget.user.dogs[index]);
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog)));
               });
         },
       ),

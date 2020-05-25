@@ -3,7 +3,7 @@ class Dog{
   final String breed;
   final String dateOfBirth;
   final String gender;
-  final String neutered;
+  final bool neutered;
   final String description;
 
   Dog({this.name, this.breed, this.dateOfBirth, this.gender, this.neutered, this.description});

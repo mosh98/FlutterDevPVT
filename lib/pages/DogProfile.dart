@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class DogProfile extends StatefulWidget {
 
@@ -14,6 +17,7 @@ class DogProfile extends StatefulWidget {
 class _DogProfileState extends State<DogProfile> {
 
   ProfileState _state = ProfileState.About;
+  File _image;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +47,12 @@ class _DogProfileState extends State<DogProfile> {
       flex: 2,
       child: Column(
           children: [
-            Text('picture')
+            GestureDetector(
+                onTap: getImage,
+                child: _image == null
+                    ? CircleAvatar(radius: 40, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
+                    : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
+            ),
           ],
       )
     );
@@ -67,6 +76,8 @@ class _DogProfileState extends State<DogProfile> {
                 });
               }
               },
+              indicatorWeight: 0.1,
+              unselectedLabelColor: Colors.grey,
             tabs: <Widget>[
               Tab(
                 icon: Icon(Icons.person),
@@ -96,14 +107,13 @@ class _DogProfileState extends State<DogProfile> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("DOG1", style: TextStyle(fontSize: 20.0),),
+        Text(widget.dog.name, style: TextStyle(fontSize: 20.0),),
         Padding(padding:EdgeInsets.only(top: 10.0)),
-        Text("Owner: " + "user"),
-        Text("Breed: " + "Bulldog"),
-        Text("Age: " + "5"),
-        Text("Gender: " + "Male"),
-        Text("Castrated: " + "Yes"),
-        Text("Description: " + "Dog1 loves to be a test dog"),
+        Text(widget.dog.breed == null ? 'Breed: Unknown.' : 'Breed: ' + widget.dog.breed),
+        Text(widget.dog.dateOfBirth == null ? 'Date of birth: Unknown.' : 'Date of birth: ' + widget.dog.dateOfBirth),
+        Text(widget.dog.gender == null ? 'Gender: Unknown.' : 'Gender: ' + widget.dog.gender),
+        Text(widget.dog.neutered == null ? 'Neutered: Unknown.' : 'Neutered: ' + widget.dog.neutered.toString()),
+        Text(widget.dog.description == null ? 'Description: Unknown.' : 'Description: ' + widget.dog.description),
       ],
     );
   }
@@ -114,6 +124,14 @@ class _DogProfileState extends State<DogProfile> {
         Text('IF WE HAVE TIME TO IMPLEMENT THIS')
       ],
     );
+  }
+
+  Future getImage() async {
+    final image = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      _image = image;
+    });
   }
 
 }
