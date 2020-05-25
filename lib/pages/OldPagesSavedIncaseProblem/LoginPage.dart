@@ -120,7 +120,6 @@ class LoginPageState extends State<LoginP> {
                 child: new Text("Sign in"),
                 onPressed: () {
                   setState((){_isLoading = true;});
-                  _firebaseLogin(usernameController.text, passwordController.text);
                   login(usernameController.text, passwordController.text);
                 },
                 splashColor: Colors.redAccent,
@@ -193,18 +192,4 @@ class LoginPageState extends State<LoginP> {
     return wrongCredent ? Text('Wrong username or password',style: TextStyle(color:Colors.red),) : Text('');
   }
 
-  /**
-   * EVERYTHING AFTER THIS IS TEMPORARY CODE TO TEST FIREBASE, REMOVE IF WE DECIDE WITH SOMETHING ELSE
-   */
-  final AuthService _auth = AuthService();
-  bool _firebaseLogin(String email, String password){
-    dynamic result = _auth.signInWithEmailAndPassword(email, password);
-    if(result == null){
-      setState((){
-        //set error message wrong username or password
-        _isLoading = false;
-      });
-    }
-    print(result);
-  }
 }

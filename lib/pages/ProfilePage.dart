@@ -12,8 +12,8 @@ import 'package:http/http.dart' as http;
 
 class ProfilePage extends StatefulWidget{
 
-  final Future<User> futureUser;
-  ProfilePage({this.futureUser});
+  final User user;
+  ProfilePage({this.user});
 
   @override
   State createState() => new ProfileState();
@@ -21,7 +21,6 @@ class ProfilePage extends StatefulWidget{
 
 class ProfileState extends State<ProfilePage>{
 
-  User user;
   File _image;
 
   List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
@@ -35,20 +34,14 @@ class ProfileState extends State<ProfilePage>{
 
   @override
   void initState() {
-    _awaitUser();
     super.initState();
-  }
-
-  _awaitUser() async{
-    user = await widget.futureUser;
-    setState((){});
   }
 
   Widget _loading = CircularProgressIndicator();
 
   @override
   Widget build(BuildContext context) {
-    if(user == null){
+    if(widget.user == null){
       return _loading;
     }else{
       return profile();
@@ -57,7 +50,7 @@ class ProfileState extends State<ProfilePage>{
 
   Widget profile(){
 
-    print(user.toString());
+    print(widget.user.toString());
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
@@ -66,7 +59,7 @@ class ProfileState extends State<ProfilePage>{
         actions: <Widget>[
           FlatButton.icon(
             onPressed: (){
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage(user: user)));
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage(user: widget.user)));
             },
             icon: Icon(
               Icons.settings,
@@ -106,7 +99,7 @@ class ProfileState extends State<ProfilePage>{
                     : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
-            Text(user.username, style: TextStyle(fontSize: 16),)
+            Text(widget.user.username, style: TextStyle(fontSize: 16),)
           ],
         ),
       ),
@@ -123,7 +116,7 @@ class ProfileState extends State<ProfilePage>{
             children: <Widget>[
               Text('About', style: TextStyle(fontSize: 16)),
               Padding(padding: EdgeInsets.only(top:10),),
-              Text(user.desc ?? 'Add a description of yourself'),
+              Text(widget.user.desc ?? 'Add a description of yourself'),
               Padding(padding: EdgeInsets.only(top:10),),
               Row(
                 children: <Widget>[
@@ -142,11 +135,11 @@ class ProfileState extends State<ProfilePage>{
     return Expanded(
       flex: 12,
       child: ListView.builder(
-        itemCount: user.dogs.length,
+        itemCount: widget.user.dogs.length,
         itemBuilder: (context, index) {
           return ListTile(
               leading: Icon(Icons.pets),
-              title: Text(user.dogs[index]['name']),
+              title: Text(widget.user.dogs[index]['name']),
               //TODO: IMAGE URL
               onTap: (){
                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile()));
@@ -215,10 +208,10 @@ class ProfileState extends State<ProfilePage>{
     }
 
     try{
-      String token = await AuthService().getCurrentUser().then((firebaseUser) => firebaseUser.getIdToken().then((tokenResult) => tokenResult.token));
+      String token = await AuthService().getCurrentFirebaseUser().then((firebaseUser) => firebaseUser.getIdToken().then((tokenResult) => tokenResult.token));
 
       final http.Response response = await http.put(
-          'https://dogsonfire.herokuapp.com/dogs',
+          'https://dogsonfire.herokuapp.com/dogs/',
           headers:{
             'Content-Type' : 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token'

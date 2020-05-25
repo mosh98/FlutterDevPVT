@@ -10,6 +10,9 @@ import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
 import 'package:gender_selector/gender_selector.dart';
 
+import 'ProfilePage.dart';
+import 'placeHolderHome.dart';
+
 class Signup extends StatelessWidget {
   @override
 
@@ -294,48 +297,17 @@ class MyCustomFormState extends State<MyCustomForm> {
   Future<void>register(String username, String email, String password, String dateOfBirth, String gender)async{
     try {
 
-      dynamic result = await _auth.registerWithEmailAndPassword(email, password);
+      dynamic result = await _auth.registerWithEmailAndPassword(username, email, dateOfBirth, gender, password);
 
       if(result != null){
         //Successfully created firebase account
-        await _registerToDatabase(username,email,dateOfBirth,gender);
-        print('worked');
+        //Navigator.of(context).push(MaterialPageRoute(builder: (context) => PlaceHolderApp(user:result)));
       }else{
         //Something went wrong
         print('did not work');
       }
     } catch (e) {
       print(e.message + "catch");
-    }
-  }
-
-  _registerToDatabase(String username, String email, String dateOfBirth, String gender)async{
-    try {
-      String token = await _auth.getToken();
-
-      final http.Response response = await http.post( //register to database
-          'https://dogsonfire.herokuapp.com/user/register',
-          headers:<String, String>{
-            "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer $token'
-          },
-          body: jsonEncode(<String,String>{
-            "username": username,
-            "email": email,
-            "dateOfBirth": dateOfBirth,
-            "gender": gender
-          })
-      );
-
-      if(response.statusCode==200){ // Successfully created database account
-        print(response.statusCode);
-      }else{ //Something went wrong
-        print(response.statusCode);
-        print(response.body);
-      }
-    } catch (e) {
-      print("catch: " + e.message);
     }
   }
 }
