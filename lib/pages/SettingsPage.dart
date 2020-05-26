@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 
 class SettingsPage extends StatefulWidget {
 
-  User user;
+  final User user;
   SettingsPage({this.user});
 
   @override
@@ -21,11 +21,15 @@ class _SettingsPageState extends State<SettingsPage> {
   final AuthService _auth = AuthService();
   String gender = "";
   String dateOfBirth = "";
+  User user;
 
   @override
   void initState() {
-    gender = widget.user.gender;
-    dateOfBirth = widget.user.dateOfBirth;
+    if(user == null){
+      user = widget.user;
+    }
+    gender = user.gender;
+    dateOfBirth = user.dateOfBirth;
     super.initState();
   }
 
@@ -78,12 +82,12 @@ class _SettingsPageState extends State<SettingsPage> {
             tiles: [
               ListTile(
                 title: Text('Username'),
-                trailing: Text(widget.user.username ?? 'No username.'),
+                trailing: Text(user.username ?? 'No username.'),
                 leading: Icon(Icons.lock)
               ),
               ListTile(
                   title: Text('Email'),
-                  trailing: Text(widget.user.email ?? 'No email'),
+                  trailing: Text(user.email ?? 'No email'),
                   leading: Icon(Icons.lock),
               ),
               GestureDetector(
@@ -208,9 +212,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
       if(response.statusCode==200){ // Successfully created database account
         print(response.statusCode);
-        User user = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+        User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
         setState(() {
-          widget.user = user;
+          user = newUser;
         });
       }else{ //Something went wrong
         print(response.statusCode);
@@ -259,9 +263,9 @@ class _SettingsPageState extends State<SettingsPage> {
 
       if(response.statusCode==200){ // Successfully created database account
         print(response.statusCode);
-        User user = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+        User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
         setState(() {
-          widget.user = user;
+          user = newUser;
         });
       }else{ //Something went wrong
         print(response.statusCode);
