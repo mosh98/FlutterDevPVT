@@ -125,7 +125,17 @@ class ProfileState extends State<ProfilePage>{
               Row(
                 children: <Widget>[
                   Text('My dogs:', style: TextStyle(fontSize: 17)),
-                  IconButton(icon: Icon(Icons.add),onPressed: (){_addDog();},iconSize: 16)
+                  IconButton(
+                      icon: Icon(Icons.add),
+                      onPressed: () async{
+                        await showDialog(context: context, barrierDismissible: false, child: DogDialog());
+                        User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+                        print(newUser.toString());
+                        setState(() {user = newUser;});
+                        print(newUser.toString());
+                      },
+                      iconSize: 16
+                  )
                 ],
               ),
               _dogSection()
@@ -183,144 +193,129 @@ class ProfileState extends State<ProfilePage>{
     );
   }
 
+  Future getImage() async {
+    final image = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      _image = image;
+    });
+  }
+}
+
+class ImageDialog extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        width: 400,
+        height: 400,
+        decoration: BoxDecoration(
+            image: DecorationImage(
+                image: ExactAssetImage('assets/pernilla.jpg'),
+                fit: BoxFit.cover
+            )
+        ),
+      ),
+    );
+  }
+}
+
+class DogDialog extends StatefulWidget{
+  @override
+  createState() => new _DialogState();
+}
+
+class _DialogState extends State<DogDialog>{
+
+  String dogName = "";
+  String breed = "";
+  String dateOfBirth = "";
   double _kPickerSheetHeight = 75.0;
   double _kPickersheetWidth = 250.0;
   String gender = 'MALE'; //DEFAULT
-  void _addDog() async{
 
-    String dogName = "";
-    String breed = "";
-    String dateOfBirth = "";
+  DateTime _dateTime = DateTime.now();
+  final f = new DateFormat('yyyy-MM-dd');
 
-    DateTime _dateTime = DateTime.now();
-    final f = new DateFormat('yyyy-MM-dd');
+  @override
+  Widget build(BuildContext context) {
+    return _dogDialog();
+  }
 
-    await showDialog(context: context,
-        barrierDismissible: false,
-        child: ListView(
+  Widget _dogDialog(){
+    return AlertDialog(
+        content: Stack(
+          overflow: Overflow.visible,
           children: [
-            AlertDialog(
-                content: Stack(
-                  overflow: Overflow.visible,
+            Row(
+              children: [
+                Text('Information about your dog', style:TextStyle(fontSize: 17.0)),
+                Padding(padding:EdgeInsets.only(left:25.0)),
+                IconButton(icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
+              ],
+            ),
+            Form(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Positioned(
-                      right: -40.0,
-                      top: -40.0,
-                      child: InkResponse(
-                        onTap: () {
-                          Navigator.of(context, rootNavigator: true).pop('dialog');
-                          Navigator.of(context).pop();
+                    Padding(padding:EdgeInsets.only(top:40.0)),
+                    TextFormField(
+                      decoration: InputDecoration(
+                          hintText: 'Name*'
+                      ),
+                      onChanged: (String value){dogName = value;},
+                    ),
+                    TextFormField(
+                      decoration: InputDecoration(
+                          hintText: 'Breed*'
+                      ),
+                      onChanged: (String value){breed = value;},
+                    ),
+                    _buildBottomPicker(
+                      CupertinoDatePicker(
+                        mode: CupertinoDatePickerMode.date,
+                        initialDateTime: DateTime.now(),
+                        maximumDate: DateTime.now(),
+                        onDateTimeChanged: (DateTime newDateTime) {
+                          if (mounted) {
+                            _dateTime = newDateTime;
+                            print("You Selected Date: ${newDateTime}");
+                            dateOfBirth = '${f.format(_dateTime)}';
+                          }
                         },
-                        child: CircleAvatar(
-                          child: Icon(Icons.close),
-                          backgroundColor: Colors.red,
-                        ),
+                      ),),
+                    DropdownButton<String>(
+                      value: gender,
+
+                      onChanged: (String newValue) {setState(() {
+                        setState(() {
+                          gender = newValue;
+                        });
+
+                      });},
+                      items: <String>[
+                        'MALE', 'FEMALE'
+                      ].map<DropdownMenuItem<String>>((String value){
+                        return DropdownMenuItem<String>(
+                          value:value,
+                          child:Text(value, style: TextStyle(fontSize: 15.0),),
+                        );
+                      }).toList(),
+                    ),
+                    Center(
+                      child: RaisedButton(
+                        onPressed: ()async{await _addDog();Navigator.of(context).pop();},
+                        child: Text('Add dog'),
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
                       ),
                     ),
-                    Padding(padding:EdgeInsets.only(top:10.0)),
-                    Text('Information about your dog', style:TextStyle(fontSize: 17.0)),
-                    Form(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(padding:EdgeInsets.only(top:20.0)),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                  hintText: 'Name*'
-                              ),
-                              onChanged: (String value){dogName = value;},
-                            ),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                  hintText: 'Breed*'
-                              ),
-                              onChanged: (String value){breed = value;},
-                            ),
-                            _buildBottomPicker(
-                              CupertinoDatePicker(
-                                mode: CupertinoDatePickerMode.date,
-                                initialDateTime: DateTime.now(),
-                                maximumDate: DateTime.now(),
-                                onDateTimeChanged: (DateTime newDateTime) {
-                                  if (mounted) {
-                                    _dateTime = newDateTime;
-                                    print("You Selected Date: ${newDateTime}");
-                                    dateOfBirth = '${f.format(_dateTime)}';
-                                  }
-                                },
-                              ),),
-                            DropdownButton<String>(
-                              value: gender,
-
-                              onChanged: (String newValue) {setState(() {
-                                setState(() {
-                                  gender = newValue;
-                                });
-
-                                print(gender);
-                              });},
-                              items: <String>[
-                                'MALE', 'FEMALE'
-                              ].map<DropdownMenuItem<String>>((String value){
-                                return DropdownMenuItem<String>(
-                                  value:value,
-                                  child:Text(value, style: TextStyle(fontSize: 15.0),),
-                                );
-                              }).toList(),
-                            ),
-                            Center(
-                              child: RaisedButton(
-                                onPressed: (){Navigator.of(context).pop();},
-                                child: Text('Add dog'),
-                                shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
-                              ),
-                            ),
-                          ],
-                        )
-                    )
                   ],
                 )
-            ),
+            )
           ],
         )
     );
-
-    print(dogName + " " + breed + " " + dateOfBirth + " " + gender);
-
-    if(dogName.isEmpty || breed.isEmpty || dateOfBirth.isEmpty || gender.isEmpty){
-      return; //todo. error message
-    }
-
-    try{
-      String token = await AuthService().getCurrentFirebaseUser().then((firebaseUser) => firebaseUser.getIdToken().then((tokenResult) => tokenResult.token));
-
-      final http.Response response = await http.post(
-          'https://dogsonfire.herokuapp.com/dogs',
-          headers:{
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer $token'
-          },
-          body: jsonEncode(<String,String>{
-            'name':dogName,
-            'breed':breed,
-            'dateOfBirth':dateOfBirth,
-            'gender':gender,
-            'neutered':null,
-            'description':null,
-          })
-      );
-
-      if(response.statusCode==201){
-        User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
-        setState(() {user = newUser;});
-      }else{
-        print(response.statusCode);
-        print(response.body);
-      }
-    }catch(e){
-      print(e);
-    }
   }
 
   Widget _buildBottomPicker(Widget picker) {
@@ -346,30 +341,39 @@ class ProfileState extends State<ProfilePage>{
     );
   }
 
-  Future getImage() async {
-    final image = await ImagePicker.pickImage(source: ImageSource.gallery);
+  _addDog() async{
+    if(dogName.isEmpty || breed.isEmpty || dateOfBirth.isEmpty || gender.isEmpty){
+      return; //todo. error message
+    }
 
-    setState(() {
-      _image = image;
-    });
-  }
-}
+    try{
+      String token = await AuthService().getCurrentFirebaseUser().then((firebaseUser) => firebaseUser.getIdToken().then((tokenResult) => tokenResult.token));
 
-class ImageDialog extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      child: Container(
-        width: 400,
-        height: 400,
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: ExactAssetImage('assets/pernilla.jpg'),
-                fit: BoxFit.cover
-            )
-        ),
-      ),
-    );
+      final http.Response response = await http.post(
+          'https://dogsonfire.herokuapp.com/dogs',
+          headers:{
+            'Content-Type' : 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $token'
+          },
+          body: jsonEncode(<String,String>{
+            'name':dogName,
+            'breed':breed,
+            'dateOfBirth':dateOfBirth,
+            'gender':gender,
+            'neutered':null,
+            'description':null,
+          })
+      );
+
+      if(response.statusCode==201){
+        print(response.statusCode);
+      }else{
+        print(response.statusCode);
+        print(response.body);
+      }
+    }catch(e){
+      print(e);
+    }
   }
 }
 
