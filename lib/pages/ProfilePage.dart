@@ -13,7 +13,7 @@ import 'package:http/http.dart' as http;
 
 class ProfilePage extends StatefulWidget{
 
-  final User user;
+  User user;
   ProfilePage({this.user});
 
   @override
@@ -23,6 +23,7 @@ class ProfilePage extends StatefulWidget{
 class ProfileState extends State<ProfilePage>{
 
   File _image;
+  User user;
 
   List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     'assets/pernilla.jpg',
@@ -35,6 +36,7 @@ class ProfileState extends State<ProfilePage>{
 
   @override
   void initState() {
+    user = widget.user;
     super.initState();
   }
 
@@ -211,9 +213,9 @@ class ProfileState extends State<ProfilePage>{
 
     try{
       String token = await AuthService().getCurrentFirebaseUser().then((firebaseUser) => firebaseUser.getIdToken().then((tokenResult) => tokenResult.token));
-      print(token);
+
       final http.Response response = await http.put(
-          'https://dogsonfire.herokuapp.com/dogs/',
+          'https://dogsonfire.herokuapp.com/dogs',
           headers:{
             'Content-Type' : 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $token'
@@ -229,7 +231,8 @@ class ProfileState extends State<ProfilePage>{
       );
 
       if(response.statusCode==200){
-        setState(() {});
+        User user = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+        setState(() {widget.user = user;});
       }else{
         print(response.statusCode);
         print(response.body);

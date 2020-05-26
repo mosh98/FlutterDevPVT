@@ -60,11 +60,10 @@ class AuthService{
   //register with email and password
   Future<User> registerWithEmailAndPassword(String username, String email, String dateOfBirth, String gender, String password) async{
     try{
-      AuthResult result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-
+      dynamic result = await _registerToDatabase(username, email, dateOfBirth, gender, password);
+      print("this was the result: " + result);
       if(result != null){
-        String token = await result.user.getIdToken().then((value) => value.token);
-        await _registerToDatabase(username, email, dateOfBirth, gender, token, password);
+        print('in here');
         return User(); //TODO
       }else{
         return null;
@@ -75,27 +74,26 @@ class AuthService{
     }
   }
 
-  _registerToDatabase(String username, String email, String dateOfBirth, String gender, String token, String password)async{
+  _registerToDatabase(String username, String email, String dateOfBirth, String gender, String password)async{
     try {
       final http.Response response = await http.post( //register to database
           'https://dogsonfire.herokuapp.com/users/register',
           headers:<String, String>{
             "Accept": "application/json",
             'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer $token'
           },
           body: jsonEncode(<String,String>{
             "username": username,
             "email": email,
             "dateOfBirth": dateOfBirth,
-            "gender": gender
+            "gender": gender,
+            "password":password
           })
       );
 
       print('inside registertodatabase'); //TODO
       if(response.statusCode==200){ // Successfully created database account
         print(response.statusCode);
-        signOut();
         await signInWithEmailAndPassword(email, password);
       }else{ //Something went wrong
         print(response.statusCode);
@@ -113,6 +111,18 @@ class AuthService{
       return Future.delayed(Duration.zero);
     }catch(e){
       print(e.toString());
+      return null;
+    }
+  }
+
+  Future changePassword(String password) async{
+    try{
+      FirebaseUser user = await _auth.currentUser();
+      user.updatePassword(password);
+      signOut();
+      return true;
+    }catch(e){
+      print(e);
       return null;
     }
   }

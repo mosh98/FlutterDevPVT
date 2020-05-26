@@ -33,6 +33,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
         appBar: AppBar(
           backgroundColor: Colors.grey[850],
           title: Text('Settings'),
@@ -127,7 +128,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: ListTile(
                   title: Text('Change Password'),
                 ),
-                onLongPress: (){print('clicked change password');},
+                onTap: (){_changePassword();},
               ),
               ListTile(
                 title: Text('Log out'),
@@ -163,7 +164,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   double _kPickerSheetHeight = 216.0;
-  _setDateOfBirth() async{
+  _setDateOfBirth() async{ //TODO: FACTOR
     DateTime _dateTime = DateTime.now();
     final f = new DateFormat('yyyy-MM-dd');
     await showCupertinoModalPopup<void>(
@@ -268,6 +269,66 @@ class _SettingsPageState extends State<SettingsPage> {
       }
     }catch(e){
       print(e);
+    }
+  }
+
+  //TODO: NOT FINISHED
+  _changePassword()async{
+    String password = "";
+
+    await showDialog(context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context){
+          return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 200.0, maxWidth: 450.0),
+                  child: Dialog(
+                    child: ListView(
+                      padding: EdgeInsets.all(10.0),
+                      children: [
+                        TextFormField(
+                          decoration: new InputDecoration(
+                            hintText: "New password* ",
+                          ),
+                          obscureText: true,
+                          onChanged: (String value){
+                            password = value;
+                          },
+                        ),
+                        Row(
+                          children: [
+                            RaisedButton(
+                              child: Text('Back'),
+                              onPressed: (){Navigator.of(context, rootNavigator: true).pop('dialog'); return;},
+                            ),
+                            Padding(padding:EdgeInsets.only(left:20)),
+                            RaisedButton(
+                              child: Text('Renew password'),
+                              onPressed: () async{
+                                Navigator.of(context, rootNavigator: true).pop('dialog');
+                              },
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              );
+        },
+    );
+
+    if(password.trim().isNotEmpty && password.length > 5){
+      print('here');
+      bool changedPassword = await AuthService().changePassword(password);
+      if(changedPassword){
+        print('worked'); //TODO: NOTIFY USER
+        await _auth.signOut();
+      }else{
+        print('did not work'); //TODO: NOTIFY USER
+      }
+    }else{
+      print('cant be empty or less than 6 symbols'); //TODO: NOTIFY USER
     }
   }
 }
