@@ -261,7 +261,6 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
       throw Exception('Failed to load user');
     }
   }
-  
 }
 
 class ImageDialog extends StatelessWidget {
