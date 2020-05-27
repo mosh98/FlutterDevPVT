@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 class DogProfile extends StatefulWidget {
 
@@ -32,6 +34,8 @@ class _DogProfileState extends State<DogProfile> {
     super.initState();
   }
 
+  bool _loading = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,15 +44,19 @@ class _DogProfileState extends State<DogProfile> {
         title: Text('Dog Profile'),
         centerTitle: true,
       ),
-      body: Container(
-        padding: EdgeInsets.all(15.0),
-        child:Column(
+      body: ModalProgressHUD(
+        inAsyncCall: _loading,
+        progressIndicator: DefaultLoader(),
+        child: Container(
+          padding: EdgeInsets.all(15.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _pictureSection(),
               _informationSection(),
             ],
-        )
+          ),
+        ),
       ),
     );
   }
@@ -66,6 +74,7 @@ class _DogProfileState extends State<DogProfile> {
                       ? CircleAvatar(radius: 40, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
                       : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
               ),
+              Padding(padding: EdgeInsets.only(top:25.0)),
               _stateSection()
             ],
         ),
@@ -117,7 +126,7 @@ class _DogProfileState extends State<DogProfile> {
                :
            awardsSection(),
          ),
-         Expanded(
+         Expanded( //TODO
            flex: 3,
              child: _descriptionSection()
          ),
@@ -133,24 +142,24 @@ class _DogProfileState extends State<DogProfile> {
           tiles: [
             ListTile(
                 title: Text('Name:'),
-                trailing: Text(widget.dog.name ?? 'No name specified.'),
+                trailing: Text(dog.name ?? 'No name specified.'),
                 onTap: (){_setName();},
             ),
             ListTile(
                 title: Text('Breed:'),
-                trailing: Text(widget.dog.breed ?? 'No breed specified.'),
+                trailing: Text(dog.breed ?? 'No breed specified.'),
                 onTap: (){_setBreed();},
             ),
             ListTile(
                 title: Text('Date of birth:'),
-                trailing: Text(widget.dog.dateOfBirth ?? 'No date of birth specified.'),
+                trailing: Text(dog.dateOfBirth ?? 'No date of birth specified.'),
                 onTap: (){_setDateOfBirth();},
             ),
             ListTile(
                 title: Text('Neutered:'),
                 trailing: DropdownButton<String>(
-                  value: widget.dog.getNeutered(),
-                  onChanged: (String newValue){_updateNeutered(newValue);},
+                  value: dog.getNeutered(),
+                  onChanged: (String newValue){_updateNeutered(newValue); },
                   items: <String>[
                     'Yes', 'No'
                   ].map<DropdownMenuItem<String>>((String value){
@@ -164,7 +173,7 @@ class _DogProfileState extends State<DogProfile> {
             ListTile(
                 title: Text('Gender:'),
                 trailing: DropdownButton<String>(
-                  value: widget.dog.gender ?? 'MALE',
+                  value: dog.gender ?? 'MALE',
                   onChanged: (String newValue){_updateGender(newValue);},
                   items: <String>[
                     'MALE', 'FEMALE'
@@ -196,7 +205,7 @@ class _DogProfileState extends State<DogProfile> {
           title: Text('Description', style: TextStyle(fontSize: 20)),
           trailing: IconButton(icon:Icon(Icons.edit), onPressed: (){_editDescription();}),
         ),
-        Text(widget.dog.description ?? 'Add a description to your dog!'),
+        Text(dog.description ?? 'Add a description to your dog!'),
       ],
     );
   }
@@ -207,30 +216,39 @@ class _DogProfileState extends State<DogProfile> {
 
     await showDialog(
         context: context,
+        barrierDismissible: true,
         builder: (BuildContext context){
-      return SizedBox(
-        height: 400.0,
-        child: Dialog(
-          child: Row(
-            children: [
-              Padding(padding:EdgeInsets.only(right:10.0)),
-              Expanded(
-                child:TextFormField(
-                  decoration: InputDecoration(
-                      hintText: 'Enter a new name'
+      return Dialog(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children:[
+            Container(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  TextField(
+                    keyboardType: TextInputType.multiline,
+                    maxLines: 7,
+                    maxLength: 100,
+                    onChanged: (String input){
+                      desc = input;
+                    },
                   ),
-                  onChanged: (String newValue){desc = newValue;},
-                ),
+                  ListTile(
+                    leading: IconButton(
+                      icon: Icon(Icons.done),
+                      onPressed: (){_updateDescription(desc); setState(() {_loading = true;}); Navigator.pop(context);},
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.close),
+                      onPressed: (){Navigator.pop(context);},
+                    ),
+                  )
+                ],
               ),
-              IconButton(icon: Icon(Icons.done),
-                  onPressed: () async{
-
-                    Navigator.pop(context);
-                  }),
-              IconButton(icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
-            ],
-          ),
-        ),
+            ),
+          ]
+        )
       );
     }
     );
@@ -265,8 +283,11 @@ class _DogProfileState extends State<DogProfile> {
                 ),
                 IconButton(icon: Icon(Icons.done),
                     onPressed: () async{
-                  await _updateName(name);
                   Navigator.pop(context);
+                  setState(() {
+                    _loading = true;
+                  });
+                  await _updateName(name);
                 }),
                 IconButton(icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
               ],
@@ -292,10 +313,11 @@ class _DogProfileState extends State<DogProfile> {
 
       if(response.statusCode==200){ // Successfully created database account
         print("Updated name, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setName(name);});
+        setState(() {widget.dog.setName(name); _loading = false;});
       }else{ //Something went wrong
         print("Something went wrong with updating name: " + response.statusCode.toString());
         print(response.body);
+        setState(() {_loading = false;});
       }
     }catch(e){
       print(e);
@@ -324,6 +346,9 @@ class _DogProfileState extends State<DogProfile> {
             IconButton(icon: Icon(Icons.done),
                 onPressed: () async{
                   await _updateBreed(breed);
+                  setState(() {
+                    _loading = true;
+                  });
                   Navigator.pop(context);
                 }),
             IconButton(icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
@@ -351,10 +376,11 @@ class _DogProfileState extends State<DogProfile> {
 
       if(response.statusCode==200){ // Successfully created database account
         print("Updated breed, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setBreed(breed);});
+        setState(() {widget.dog.setBreed(breed); _loading=false;});
       }else{ //Something went wrong
         print("Something went wrong with updating breed: " + response.statusCode.toString());
         print(response.body);
+        setState(() {_loading=false;});
       }
     }catch(e){
       print(e);
@@ -388,6 +414,7 @@ class _DogProfileState extends State<DogProfile> {
 
     dateOfBirth = '${f.format(_dateTime)}';
 
+    setState(() {_loading = true;});
     _updateDateOfBirth(dateOfBirth);
   }
 
@@ -434,10 +461,11 @@ class _DogProfileState extends State<DogProfile> {
 
       if(response.statusCode==200){ // Successfully created database account
         print("Updated date of birth, response code: " + response.statusCode.toString());
-        setState(() {dog.setDateOfBirth(dateOfBirth);});
+        setState(() {dog.setDateOfBirth(dateOfBirth); _loading = false;});
       }else{ //Something went wrong
         print("Something went wrong with updating date of birth, response code: " + response.statusCode.toString());
         print(response.body);
+        setState(() {_loading = false;});
       }
     }catch(e){
       print(e);
@@ -446,11 +474,14 @@ class _DogProfileState extends State<DogProfile> {
 
   void _updateNeutered(String neutered) async{
     bool neut;
+
     if(neutered == 'Yes'){
       neut = true;
     }else{
       neut = false;
     }
+
+    setState(() {_loading=true;});
 
     try{
 
@@ -469,10 +500,11 @@ class _DogProfileState extends State<DogProfile> {
 
       if(response.statusCode==200){ // Successfully created database account
         print("Updated neutered, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setNeutered(neut);});
+        setState(() {widget.dog.setNeutered(neut); _loading = false;});
       }else{ //Something went wrong
         print("Something went wrong with updating neutered, response code: " + response.statusCode.toString());
         print(response.body);
+        setState(() {_loading = false;});
       }
     }catch(e){
       print(e);
@@ -480,6 +512,9 @@ class _DogProfileState extends State<DogProfile> {
   }
 
   void _updateGender(String gender) async{
+
+    setState(() {_loading = true;});
+
     try{
 
       final http.Response response = await http.put( //register to database
@@ -497,17 +532,18 @@ class _DogProfileState extends State<DogProfile> {
 
       if(response.statusCode==200){ // Successfully created database account
         print("Updated gender, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setGender(gender);});
+        setState(() {widget.dog.setGender(gender); _loading = false;});
       }else{ //Something went wrong
         print("Something went wrong with updating gender, response code: " + response.statusCode.toString());
         print(response.body);
+        setState(() {_loading=false;});
       }
     }catch(e){
       print(e);
     }
   }
 
-  void _setDescription(String desc) async{
+  void _updateDescription(String desc) async{
     try{
 
       final http.Response response = await http.put( //register to database
@@ -525,10 +561,11 @@ class _DogProfileState extends State<DogProfile> {
 
       if(response.statusCode==200){ // Successfully created database account
         print("Updated desc, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setDescription(desc);});
+        setState(() {widget.dog.setDescription(desc); _loading = false;});
       }else{ //Something went wrong
         print("Something went wrong with updating desc, response code: " + response.statusCode.toString());
         print(response.body);
+        setState(() {_loading = false;});
       }
     }catch(e){
       print(e);

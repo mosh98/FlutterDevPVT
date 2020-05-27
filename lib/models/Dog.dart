@@ -44,7 +44,7 @@ class Dog{
   }
 
   getNeutered(){
-    if(neutered = true){
+    if(neutered == true){
       return 'Yes';
     }else{
       return 'No';
