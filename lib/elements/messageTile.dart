@@ -1,3 +1,4 @@
+import 'package:dog_prototype/pages/messagingWindow.dart';
 import 'package:flutter/material.dart';
 
 class MessageTile extends StatelessWidget {
