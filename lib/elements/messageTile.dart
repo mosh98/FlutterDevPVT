@@ -1,4 +1,3 @@
-import 'package:dog_prototype/pages/messagingWindow.dart';
 import 'package:flutter/material.dart';
 
 class MessageTile extends StatelessWidget {
@@ -18,7 +17,9 @@ class MessageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      onTap: (){ Navigator.push(context, MaterialPageRoute(builder: (context) => NewMessage()));},
+      onTap: (){ Navigator.push(context, MaterialPageRoute(builder: (context) => NewMessage()
+      )
+      );},
         leading: CircleAvatar(
           radius: 30,
           backgroundColor: Colors.red[700],
