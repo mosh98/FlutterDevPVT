@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dog_prototype/pages/FacebookForm.dart';
 import 'package:dog_prototype/pages/LoginPage.dart';
 import 'package:dog_prototype/pages/ProfilePage.dart';
 import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/signup.dart';
@@ -36,16 +37,55 @@ class Wrapper extends StatelessWidget{
     builder: (BuildContext context, AsyncSnapshot<FirebaseUser> snapshot) {
       if(snapshot.connectionState == ConnectionState.active){
       final bool isLoggedIn = snapshot.hasData;
-      print(isLoggedIn);
+
         return isLoggedIn ?
-        PlaceHolderApp(futureUser: AuthService().createUserModel(snapshot.data.getIdToken()))
+        //PlaceHolderApp(futureUser: AuthService().createUserModel(snapshot.data.getIdToken()))
+        Redirect()
          :
         StartPage();
       }
     return DefaultLoader();
     },
   );
+  }
 }
 
+class Redirect extends StatefulWidget {
+  @override
+  _RedirectState createState() => _RedirectState();
+}
 
+class _RedirectState extends State<Redirect> {
+
+  bool _registeredToDatabase;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _isRegisteredToDatabase(),
+      builder: (context, snapshot) {
+        if(snapshot.hasData){
+          if(snapshot.data == true){
+            return PlaceHolderApp(futureUser: AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken())));
+            //return FacebookForm();
+          }else{
+            return FacebookForm();
+          }
+        }else if(snapshot.hasError){
+          return Text('error');
+        }else{
+          return DefaultLoader();
+        }
+      },
+    );
+  }
+
+  _isRegisteredToDatabase() async{
+    return _registeredToDatabase = await AuthService().isRegisteredToDatabase();
+  }
 }

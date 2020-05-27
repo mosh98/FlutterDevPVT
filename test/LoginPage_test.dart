@@ -1,9 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/LoginPage.dart';
-import 'package:mockito/mockito.dart';
-import 'package:dog_prototype/pages/placeHolderHome.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main(){
 

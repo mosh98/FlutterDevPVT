@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dog_prototype/pages/mapPage.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/Validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -79,7 +80,7 @@ class MyCustomFormState extends State<MyCustomForm> {
   final passwordController = TextEditingController();
   final emailController = TextEditingController();
   String date_of_birth;
-  String gender_type;
+  String gender_type = 'Male'; //DEFAULT
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +103,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                       shape: new RoundedRectangleBorder(
                           borderRadius: new BorderRadius.circular(10.0),
                           side: BorderSide(color: Colors.grey[850])),
-                      onPressed: () {},
+                      onPressed: () {_signInWithFacebook();},
                       color: Colors.grey[850],
                       textColor: Colors.white,
                       child: Text('Sign up with FaceBook',
@@ -133,13 +134,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                       )
                   ),
                   keyboardType: TextInputType.text,
-                  validator: (email) {
-                    if (EmailValidator.validate(email) != true) {
-                      return 'Please enter a valid mailadress';
-                    }
-                    return null;
-
-                  },
+                  validator: Validator.emailValidator,
                 ),
               ),
 
@@ -157,12 +152,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                   ),
                   obscureText: true,
                   keyboardType: TextInputType.text,
-                  validator: (value) {
-                    if (value.isEmpty || value.length < 6 || value.length > 16) {
-                      return 'Please enter a valid password which is at least 6 characters long';
-                    }
-                    return null;
-                  },
+                  validator: Validator.passwordValidator,
                 ),
               ),
 
@@ -179,12 +169,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                       )
                   ),
                   keyboardType: TextInputType.text,
-                  validator: (value) {
-                    if (value.isEmpty || value.length > 16) {
-                      return 'Please enter a valid username';
-                    }
-                    return null;
-                  },
+                  validator: Validator.usernameValidator,
                 ),
               ),
 
@@ -246,7 +231,6 @@ class MyCustomFormState extends State<MyCustomForm> {
                         } else {
                           gender_type = "MALE";
                         }
-                        print(gender_type);
                       }
                   )
               ),
@@ -309,5 +293,10 @@ class MyCustomFormState extends State<MyCustomForm> {
     } catch (e) {
       print(e.message + "catch");
     }
+  }
+
+  void _signInWithFacebook() {
+    print('here');
+    AuthService().signInWithFacebook(context);
   }
 }
