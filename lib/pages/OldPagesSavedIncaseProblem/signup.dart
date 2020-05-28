@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dog_prototype/pages/mapPage.dart';
+import 'package:dog_prototype/services/Authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,10 @@ import 'package:gender_selector/gender_selector.dart';
 class Signup extends StatelessWidget {
   @override
 
+  //TODO:
+  /**
+   * - Create default value for date of birth variable, returns null if not clicked on it now.
+   */
   
   Widget build(BuildContext context) {
     final appTitle = 'Sign up';
@@ -30,28 +35,28 @@ class Signup extends StatelessWidget {
   }
 }
 
-        double _kPickerSheetHeight = 216.0;
-        Widget _buildBottomPicker(Widget picker) {
-            return Container(
-            height: _kPickerSheetHeight,
-            padding: const EdgeInsets.only(top: 6.0),
-            color: CupertinoColors.white,
-            child: DefaultTextStyle(
-                style: const TextStyle(
-                color: CupertinoColors.black,
-                fontSize: 22.0,
-                ),
-                child: GestureDetector(
-                // Blocks taps from propagating to the modal sheet and popping.
-                onTap: () {},
-                child: SafeArea(
-                    top: false,
-                    child: picker,
-                ),
-                ),
-            ),
-            );
-        }
+double _kPickerSheetHeight = 216.0;
+Widget _buildBottomPicker(Widget picker) {
+  return Container(
+    height: _kPickerSheetHeight,
+    padding: const EdgeInsets.only(top: 6.0),
+    color: CupertinoColors.white,
+    child: DefaultTextStyle(
+      style: const TextStyle(
+        color: CupertinoColors.black,
+        fontSize: 22.0,
+      ),
+      child: GestureDetector(
+        // Blocks taps from propagating to the modal sheet and popping.
+        onTap: () {},
+        child: SafeArea(
+          top: false,
+          child: picker,
+        ),
+      ),
+    ),
+  );
+}
 
 
 class MyCustomForm extends StatefulWidget {
@@ -65,7 +70,7 @@ class MyCustomFormState extends State<MyCustomForm> {
 
   final _formKey = GlobalKey<FormState>();
   DateTime _dateTime = DateTime.now();
-  final f = new DateFormat('dd-MM-yyyy');
+  final f = new DateFormat('yyyy-MM-dd');
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
   final emailController = TextEditingController();
@@ -268,7 +273,6 @@ class MyCustomFormState extends State<MyCustomForm> {
                           // If the form is valid, display a Snackbar.
                           Scaffold.of(context)
                               .showSnackBar(SnackBar(content: Text('Processing Data')));
-                              register(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
                               signin(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
                         }
                       },
@@ -322,61 +326,4 @@ class MyCustomFormState extends State<MyCustomForm> {
       
     }
   }
-
-
-  //TODO
-/**
- * EVERYTHING AFTER THIS IS TEMPORARY CODE TO TEST FIREBASE, REMOVE IF WE DECIDE WITH SOMETHING ELSE
- */
-
-  Future<void>register(String username, String email, String password, String dateOfBirth, String gender)async{
-    try {
-      print(email);
-      print(password);
-      //dynamic result = await _auth.registerWithEmailAndPassword(email, password);
-
-      final FirebaseAuth _auth = FirebaseAuth.instance;
-      dynamic result = await _auth.createUserWithEmailAndPassword(email: email, password: password);
-
-      if(result != null){
-        //Successfully created firebase account
-        //_registerToDatabase(username,email,dateOfBirth,gender);
-        print('worked');
-      }else{
-        //Something went wrong
-        print('did not work');
-      }
-    } catch (e) {
-      print(e.message);
-    }
-  }
-
-//  _registerToDatabase(String username, String email, String dateOfBirth, String gender)async{
-//    try {
-//      String token = await _auth.getToken(); //get current token
-//
-//      final http.Response response = await http.post( //register to database
-//          'https://dogsonfire.herokuapp.com/user/register',
-//          headers:<String, String>{
-//            "Accept": "application/json",
-//            'Content-Type' : 'application/json; charset=UTF-8',
-//            'Authorization': 'Bearer $token'
-//          },
-//          body: jsonEncode(<String,String>{
-//            "username": username,
-//            "email": email,
-//            "dateOfBirth": dateOfBirth,
-//            "gender": gender
-//          })
-//      );
-//
-//      if(response.statusCode==200){ // Successfully created database account
-//        print(response.statusCode);
-//      }else{ //Something went wrong
-//        print(response.statusCode);
-//      }
-//    } catch (e) {
-//      print(e.message);
-//    }
-//  }
 }

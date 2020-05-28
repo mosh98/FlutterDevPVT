@@ -1,9 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'LoginPage.dart';
-import 'mapPage.dart';
+import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/LoginPage.dart';
 import 'package:http/http.dart' as http;
+
+import '../mapPage.dart';
 
 class StartPage extends StatelessWidget {
   @override
@@ -34,25 +35,20 @@ class StartPageState extends State<StatefulStartPage>{
 
   @override
   Widget build(BuildContext context) {
-
-    if(fact == null){
-      return CircularProgressIndicator();
-    }else{
-      return Scaffold(
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(10, 250, 10, 0),
-            children: <Widget>[
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  _factSection(),
-                  _buttonSection(),
-                ],
-              )
-            ],
-          )
-      );
-    }
+    return Scaffold(
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(10, 250, 10, 0),
+          children: <Widget>[
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                _factSection(),
+                _buttonSection(),
+              ],
+            )
+          ],
+        )
+    );
   }
 
   Widget _factSection(){

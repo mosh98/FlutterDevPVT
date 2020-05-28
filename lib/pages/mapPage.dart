@@ -13,6 +13,28 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:screen/screen.dart';
 
+
+
+/*
+	TODO: Undvika hårdkodade värden för storlekar på knappar, kartmarkeringar osv.
+	TODO: Visa tydligare när appen söker efter hundparker eller papperskorgar,
+	      en timglasikon är för otydligt.
+
+
+	FIXAT: Storleken på knapparna för sök, position, hundparker och papperskorgar baseras nu
+	på skärmstorleken.
+	FIXAT: Bytt från timglasikon vid sökning till en snurrade animation
+
+ */
+
+// De fyra huvudknapparnas sidlängd ska vara 15% av skärmens bredd
+double gButtonLengthOfScreenWidth = 0.15;
+
+
+
+
+
+
 void main() {
 	runApp(MapPage());
 }
@@ -85,6 +107,7 @@ class MainScreenState extends State<MainScreen> {
 	@override
 	void initState() {
 		// Förhindrar att googlemap låser sig
+
 		Screen.keepOn(true);
 
 	}
@@ -284,6 +307,37 @@ class DogparkWidgetState extends State<DogparkWidget> {
 		super.initState();
 	}
 
+
+	Widget searchButton() {
+		double sideLength = MediaQuery.of(context).size.width * gButtonLengthOfScreenWidth;
+		if (isSearching == true) {
+			return Container(
+				width: sideLength,
+				height: sideLength,
+				child: CircularProgressIndicator(strokeWidth: 5.0),
+			);
+		} else {
+			return
+				Container(
+						width: sideLength,
+						height: sideLength,
+			child:
+					IconButton(
+					iconSize: sideLength,
+					icon:
+					ImageIcon(AssetImage('assets/dogparkicon.png')),
+					onPressed: () {
+						print("dogpark pressed");
+						setState(() {
+							isPressed = true;
+						});
+					}
+					)
+			);
+		}
+	}
+
+
 	@override
 	Widget build(BuildContext context) {
 		if (isPressed == false) {
@@ -293,17 +347,8 @@ class DogparkWidgetState extends State<DogparkWidget> {
 					color: Colors.lightBlueAccent,
 					border: Border.all(color: Colors.black),
 				),
-				child: IconButton(
-					iconSize: 40,
-					icon: isSearching
-						? Icon(Icons.hourglass_empty)
-						: ImageIcon(AssetImage('assets/dogparkicon.png')),
-					onPressed: () {
-						print("watebin pressed");
-						setState(() {
-							isPressed = true;
-						});
-					}),
+				child: searchButton()
+
 			);
 		} else {
 			return Container(
@@ -528,23 +573,15 @@ class WastebinWidgetState extends State<WastebinWidget> {
 	Widget build(BuildContext context) {
 		if (isPressed == false) {
 			return Container(
-				decoration: BoxDecoration(
-					borderRadius: BorderRadius.circular(10),
-					color: Colors.lightBlueAccent,
-					border: Border.all(color: Colors.black),
-				),
-				child: IconButton(
-					iconSize: 40,
-					icon: isSearching
-						? Icon(Icons.hourglass_empty)
-						: ImageIcon(AssetImage('assets/wastebin_black.png')),
-					onPressed: () {
-						setState(() {
-							isPressed = true;
-						});
-					},
-				),
+					decoration: BoxDecoration(
+						borderRadius: BorderRadius.circular(10),
+						color: Colors.lightBlueAccent,
+						border: Border.all(color: Colors.black),
+					),
+					child: wastebinButton()
+
 			);
+
 		} else {
 			return Container(
 				padding: EdgeInsets.all(12.0),
@@ -619,13 +656,43 @@ class WastebinWidgetState extends State<WastebinWidget> {
 					],
 				));
 		}
+
+
 	}
 
-	@override
-	void initState() {}
+	Widget wastebinButton() {
+		double sideLength = MediaQuery.of(context).size.width * gButtonLengthOfScreenWidth;
+		if (isSearching == true) {
+			return Container(
+				width: sideLength,
+				height: sideLength,
+				child: CircularProgressIndicator(strokeWidth: 5.0),
+			);
+		} else {
+			return
+				Container(
+						width: sideLength,
+						height: sideLength,
+						child:
+						IconButton(
+								iconSize: sideLength,
+								icon:
+								ImageIcon(AssetImage('assets/wastebin_black.png')),
+								onPressed: () {
+									print("wastebin pressed");
+									setState(() {
+										isPressed = true;
+									});
+								}
+						)
+				);
+		}
+	}
 
 
 	void searchForWasteBins() async {
+
+
 		StateHandler.mapWidgetStateKey.currentState.setState(() {
 			StateHandler.mapWidgetStateKey.currentState._markers
 				.removeAll(wastebinMarkers);
@@ -856,14 +923,18 @@ class SearchPosWidgetState extends State<SearchPosWidget> {
 
 	@override
 	Widget build(BuildContext context) {
+		double sideLength = MediaQuery.of(context).size.width * gButtonLengthOfScreenWidth;
+
 		if (isButtonPressed) {
 			return Container(
+
 				decoration: BoxDecoration(
 					color: Colors.white,
 					border: Border.all(
 						width: 3.0, color: Colors.lightBlueAccent),
 					borderRadius: BorderRadius.all(Radius.circular(5.0) //
 					),
+
 				),
 				child: FlatButton(
 					child: Text('Peka på kartan!'),
@@ -872,6 +943,8 @@ class SearchPosWidgetState extends State<SearchPosWidget> {
 			);
 		} else {
 			return Container(
+					width: sideLength,
+					height: sideLength,
 				decoration: BoxDecoration(
 					borderRadius: BorderRadius.circular(10),
 					color: Colors.lightBlueAccent,
@@ -908,13 +981,19 @@ class MyLocationWidget extends StatefulWidget {
 class MyLocationWidgetState extends State<MyLocationWidget> {
 	@override
 	Widget build(BuildContext context) {
+		double sideLength = MediaQuery.of(context).size.width * gButtonLengthOfScreenWidth;
+
 		return Container(
+			width: sideLength,
+			height: sideLength,
 			decoration: BoxDecoration(
 				borderRadius: BorderRadius.circular(10),
 				color: Colors.lightBlueAccent,
 				border: Border.all(color: Colors.black),
 			),
 			child: Container(
+				width: sideLength,
+				height: sideLength,
 				child: IconButton(
 					iconSize: 40,
 					icon: Icon(Icons.my_location),
@@ -1090,6 +1169,7 @@ class MyFunctions {
 		if (SHOW_DEBUG_MESSAGE) print("DEBUG_MESSAGE: " + str);
 	}
 }
+
 
 class StateHandler {
 	static final GlobalKey<MapWidgetState> mapWidgetStateKey =
