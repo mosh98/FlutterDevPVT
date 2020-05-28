@@ -80,7 +80,7 @@ class MyCustomFormState extends State<MyCustomForm> {
   final passwordController = TextEditingController();
   final emailController = TextEditingController();
   String date_of_birth;
-  String gender_type = 'Male'; //DEFAULT
+  String gender_type = 'MALE'; //DEFAULT
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +106,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                       onPressed: () {_signInWithFacebook();},
                       color: Colors.grey[850],
                       textColor: Colors.white,
-                      child: Text('Sign up with FaceBook',
+                      child: Text('Sign up with Facebook',
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 16, fontFamily: 'RobotoMono'))
                   )
@@ -175,6 +175,51 @@ class MyCustomFormState extends State<MyCustomForm> {
 
               Padding(
                 padding: const EdgeInsets.only(left:20, right: 20, top: 10),
+                child:  Container(
+                  decoration: BoxDecoration(
+                      borderRadius: new BorderRadius.circular(5.0),
+                      border: Border.all(color: Colors.black.withOpacity(0.4))
+                  ),
+                  child: ListTile(
+                    title: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                          'Gender*',
+                          textAlign: TextAlign.left,
+                          style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4))),
+                    ),
+                    trailing: DropdownButton<String>(
+                      value: gender_type,
+
+                      onChanged: (String newValue) {
+                        setState(() {
+                          gender_type = newValue;
+                        });
+                      },
+                      items: <String>[
+                        'MALE', 'FEMALE'
+                      ].map<DropdownMenuItem<String>>((String value){
+                        return DropdownMenuItem<String>(
+                          value:value,
+                          child:Text(value, style: TextStyle(fontSize: 15.0),),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+//                  GenderSelector(
+//                      onChanged: (gender) {
+//                        if(gender == Gender.FEMALE) {
+//                          gender_type = "FEMALE";
+//                        } else {
+//                          gender_type = "MALE";
+//                        }
+//                      }
+//                  )
+              ),
+
+              Padding(
+                padding: const EdgeInsets.only(left:20, right: 20, top: 10),
                 child:
                 MaterialButton(
                     minWidth: 375,
@@ -222,20 +267,6 @@ class MyCustomFormState extends State<MyCustomForm> {
               ),
 
               Padding(
-                  padding: const EdgeInsets.only(left:20, right: 20, top: 10),
-                  child:
-                  GenderSelector(
-                      onChanged: (gender) {
-                        if(gender == Gender.FEMALE) {
-                          gender_type = "FEMALE";
-                        } else {
-                          gender_type = "MALE";
-                        }
-                      }
-                  )
-              ),
-
-              Padding(
                   padding: const EdgeInsets.only(left: 75, right: 20, top: 10),
                   child:
                   Text(
@@ -280,6 +311,10 @@ class MyCustomFormState extends State<MyCustomForm> {
 
   Future<void>register(String username, String email, String password, String dateOfBirth, String gender)async{
     try {
+
+      if(dateOfBirth == null){
+        dateOfBirth = f.format(_dateTime);
+      }
 
       dynamic result = await _auth.registerWithEmailAndPassword(username, email, dateOfBirth, gender, password);
 

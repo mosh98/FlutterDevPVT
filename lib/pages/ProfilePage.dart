@@ -276,78 +276,140 @@ class _DialogState extends State<DogDialog>{
   }
 
   Widget _dogDialog(){
-    return AlertDialog(
-        content: Stack(
-          overflow: Overflow.visible,
-          children: [
-            Row(
-              children: [
-                Text('Information about your dog', style:TextStyle(fontSize: 17.0)),
-                Padding(padding:EdgeInsets.only(left:25.0)),
-                IconButton(icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
-              ],
-            ),
-            Form(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(padding:EdgeInsets.only(top:40.0)),
-                    TextFormField(
-                      decoration: InputDecoration(
-                          hintText: 'Name*'
-                      ),
-                      onChanged: (String value){dogName = value;},
+    return SimpleDialog(
+      contentPadding: EdgeInsets.all(10.0),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(20.0))
+        ),
+        children: [
+          Row(
+            children: [
+              Text('Information about your dog', style:TextStyle(fontSize: 20.0)),
+              Padding(padding:EdgeInsets.only(left:15.0)),
+              IconButton(icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
+            ],
+          ),
+          Form(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(padding:EdgeInsets.only(top:20.0)),
+                  TextFormField(
+                    decoration: InputDecoration(
+                        hintText: 'Name*',
+                        border: new OutlineInputBorder(
+                            borderSide: new BorderSide(),
+                          borderRadius: new BorderRadius.circular(20.0)
+                        )
                     ),
-                    TextFormField(
-                      decoration: InputDecoration(
-                          hintText: 'Breed*'
-                      ),
-                      onChanged: (String value){breed = value;},
+                    onChanged: (String value){dogName = value;},
+                  ),
+                  Padding(padding: EdgeInsets.only(top:10.0)),
+                  TextFormField(
+                    decoration: InputDecoration(
+                        hintText: 'Breed*',
+                        border: new OutlineInputBorder(
+                            borderSide: new BorderSide(),
+                            borderRadius: new BorderRadius.circular(20.0)
+                        )
                     ),
-                    _buildBottomPicker(
-                      CupertinoDatePicker(
-                        mode: CupertinoDatePickerMode.date,
-                        initialDateTime: DateTime.now(),
-                        maximumDate: DateTime.now(),
-                        onDateTimeChanged: (DateTime newDateTime) {
-                          if (mounted) {
-                            _dateTime = newDateTime;
-                            print("You Selected Date: ${newDateTime}");
-                            dateOfBirth = '${f.format(_dateTime)}';
-                          }
-                        },
-                      ),),
-                    DropdownButton<String>(
-                      value: gender,
+                    onChanged: (String value){breed = value;},
+                  ),
+                  Padding(padding:EdgeInsets.only(top:10)),
 
-                      onChanged: (String newValue) {setState(() {
-                        setState(() {
-                          gender = newValue;
-                        });
+                  Container(
+                    decoration: BoxDecoration(
+                        borderRadius: new BorderRadius.circular(20.0),
+                        border: Border.all(color: Colors.black.withOpacity(0.4))
+                    ),
+                    child: ListTile(
+                      title: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                            'Gender:',
+                            textAlign: TextAlign.left,
+                            style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4))),
+                      ),
+                      trailing: DropdownButton<String>(
+                        value: gender,
 
-                      });},
-                      items: <String>[
-                        'MALE', 'FEMALE'
-                      ].map<DropdownMenuItem<String>>((String value){
-                        return DropdownMenuItem<String>(
-                          value:value,
-                          child:Text(value, style: TextStyle(fontSize: 15.0),),
+                        onChanged: (String newValue) {setState(() {
+                          setState(() {
+                            gender = newValue;
+                          });
+
+                        });},
+                        items: <String>[
+                          'MALE', 'FEMALE'
+                        ].map<DropdownMenuItem<String>>((String value){
+                          return DropdownMenuItem<String>(
+                            value:value,
+                            child:Text(value, style: TextStyle(fontSize: 15.0),),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+
+                  Padding(padding:EdgeInsets.only(top:10)),
+
+                  MaterialButton(
+                      minWidth: 375,
+                      height: 50,
+                      shape: new OutlineInputBorder(
+                          borderSide: new BorderSide(),
+                          borderRadius: new BorderRadius.circular(20.0))
+                      ,
+                      onPressed: () {
+                        showCupertinoModalPopup<void>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return _buildBottomPicker(
+                              CupertinoDatePicker(
+                                mode: CupertinoDatePickerMode.date,
+                                initialDateTime: DateTime(1990),
+                                onDateTimeChanged: (DateTime newDateTime) {
+                                  if (mounted) {
+                                    setState(() => _dateTime = newDateTime
+
+                                    );
+
+                                    dateOfBirth = '${f.format(_dateTime)}';
+
+
+                                  }
+                                },
+                              ),
+                            );
+                          },
                         );
-                      }).toList(),
+                      },
+                      child:
+                      Align(
+                          alignment: Alignment.centerLeft,
+                          key:Key('date_of_birth'),
+                          child:
+
+                          Text('Date of Birth ${f.format(_dateTime)}',
+                              textAlign: TextAlign.left,
+                              style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4)))
+                      )),
+
+                  Padding(padding:EdgeInsets.only(top:25)),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: RaisedButton(
+                      onPressed: ()async{await _addDog();Navigator.of(context).pop();},
+                      child: Text('Add dog'),
+                      shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
                     ),
-                    Center(
-                      child: RaisedButton(
-                        onPressed: ()async{await _addDog();Navigator.of(context).pop();},
-                        child: Text('Add dog'),
-                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
-                      ),
-                    ),
-                  ],
-                )
-            )
-          ],
-        )
+                  ),
+                ],
+              )
+          )
+        ],
     );
   }
 
@@ -375,7 +437,12 @@ class _DialogState extends State<DogDialog>{
   }
 
   _addDog() async{
-    if(dogName.isEmpty || breed.isEmpty || dateOfBirth.isEmpty || gender.isEmpty){
+    if(dateOfBirth.isEmpty){
+      dateOfBirth = f.format(_dateTime);
+    }
+
+    if(dogName.isEmpty || breed.isEmpty || gender.isEmpty){
+      print('wrong inputs');
       return; //todo. error message
     }
 

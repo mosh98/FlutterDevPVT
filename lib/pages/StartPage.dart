@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:flutter/material.dart';
 import 'LoginPage.dart';
 import 'mapPage.dart';
@@ -24,7 +25,7 @@ class StatefulStartPage extends StatefulWidget{
 
 class StartPageState extends State<StatefulStartPage>{
 
-  String fact = "";
+  String fact;
 
   @override
   void initState() {
@@ -36,7 +37,7 @@ class StartPageState extends State<StatefulStartPage>{
   Widget build(BuildContext context) {
 
     if(fact == null){
-      return CircularProgressIndicator();
+      return DefaultLoader();
     }else{
       return Scaffold(
           body: ListView(
@@ -59,7 +60,7 @@ class StartPageState extends State<StatefulStartPage>{
     return Container(
       child: Column(
         children: <Widget>[
-          Text( //TODO: TOO MANY REQUESTS BUG?
+          Text(
             fact.toLowerCase(),
             overflow: TextOverflow.visible,
             style: TextStyle(
