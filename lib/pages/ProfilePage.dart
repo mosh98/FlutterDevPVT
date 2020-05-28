@@ -193,6 +193,39 @@ class ProfileState extends State<ProfilePage>{
     );
   }
 
+  Future getUrl(File image) async{
+      try{
+      String token = await AuthService().getCurrentFirebaseUser().then((firebaseUser) => firebaseUser.getIdToken().then((tokenResult) => tokenResult.token));
+      String uid = await AuthService().getCurrentFirebaseUser().then((value) => value.uid);
+      print(token);
+      print(uid);
+
+      final response = await http.put('https://dogsonfire.herokuapp.com/images/${await AuthService().getCurrentFirebaseUser().then((value) => value.uid)}', 
+      headers:<String,String> {
+        "Accept": "application/json",
+        'Content-Type' : 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+            body: jsonEncode(<String,String>{
+            "fileName": uid,
+          })
+      );
+
+      String photoUrl = response.body;
+
+      if(response.statusCode == 200){
+        return photoUrl;
+      }else{
+        print(response.statusCode);
+        print(response.body);
+        return null;
+      }
+    }catch(e){
+      print(e);
+      return null;
+    }
+}
+
   Future getImage() async {
     final image = await ImagePicker.pickImage(source: ImageSource.gallery);
 
