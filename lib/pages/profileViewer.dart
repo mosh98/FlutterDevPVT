@@ -2,8 +2,9 @@ import 'dart:collection';
 import 'dart:convert';
 
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
+import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
-import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/profileDog.dart';
+import 'package:dog_prototype/pages/DogProfile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -13,13 +14,12 @@ class profileViewer extends StatefulWidget{
   @override
   ProfileState createState() => ProfileState();
 
-    profileViewer({@required this.userName});
-    final String userName;
+    profileViewer({@required this.otherUser});
+    final User otherUser;
 }
 
 class ProfileState extends State<profileViewer>{
 
-Map<int, String> _userDogs = new HashMap<int, String>();
 List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     'assets/pernilla.jpg',
     'assets/pernilla.jpg',
@@ -29,34 +29,29 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     'assets/pernilla.jpg',
   ];
 
-  get userName => widget.userName;
+Widget _loading = DefaultLoader();
+
 
   @override
   void initState(){
     super.initState();
-    _getUserDogs();
+
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<User>(
-      future: _userBuilder(),
-      builder: (context, snapshot){
-        if(snapshot.hasData){
-          return _profile(snapshot.data);
-        }else if(snapshot.hasError){
-          return Center(child:Text("${snapshot.error}"));
-        }
-        return Center(child:DefaultLoader());
-      },
-    );
+@override
+Widget build(BuildContext context) {
+  if(widget.otherUser == null){
+    return _loading;
+  }else{
+    return _profile();
   }
+}
 
-  Widget _profile(User user){
+  Widget _profile(){
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
-        title: Text('Profile'),
+        title: Text(widget.otherUser.username),
         centerTitle: true,
         actions: <Widget>[
           FlatButton.icon(
@@ -76,9 +71,9 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _headerSection(user),
+          _headerSection(),
 
-          _infoSection(user),
+          _infoSection(),
 
           _pictureSection(),
         ],
@@ -86,7 +81,7 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     );
   }
 
-  Widget _headerSection(User user){
+  Widget _headerSection(){
     return Expanded(
       flex: 2,
       child: Container(
@@ -98,36 +93,55 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
               backgroundImage: AssetImage('assets/pernilla.jpg'),
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
-            Text(user.username, style: TextStyle(fontSize: 16),)
+            Text(widget.otherUser.username, style: TextStyle(fontSize: 16),)
           ],
         ),
       ),
     );
   }
 
-  Widget _infoSection(User user){
-    return Expanded(
-        flex: 6,
-        child: Container(
-          padding: EdgeInsets.all(15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text('About', style: TextStyle(fontSize: 16)),
-              Padding(padding: EdgeInsets.only(top:10),),
-              Text(user.desc),
-              Padding(padding: EdgeInsets.only(top:10),),
-              Row(
-                children: <Widget>[
-                  Text('My dogs:', style: TextStyle(fontSize: 17)),
-                ],
-              ),
-              _dogBuilder(user)
-            ],
-          ),
-        )
-    );
-  }
+Widget _infoSection(){
+  return Expanded(
+      flex: 6,
+      child: Container(
+        padding: EdgeInsets.all(15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text('About', style: TextStyle(fontSize: 16)),
+            Padding(padding: EdgeInsets.only(top:10),),
+            Text(widget.otherUser.desc ?? ''),
+            Padding(padding: EdgeInsets.only(top:10),),
+            Row(
+              children: <Widget>[
+                Text(widget.otherUser.username + 's dogs:', style: TextStyle(fontSize: 17)),
+              ],
+            ),
+            _dogSection()
+          ],
+        ),
+      )
+  );
+}
+
+Widget _dogSection(){
+  return Expanded(
+    flex: 12,
+    child: ListView.builder(
+      itemCount: widget.otherUser.dogs.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+            leading: Icon(Icons.pets),
+            title: Text(widget.otherUser.dogs[index]['name']),
+            //TODO: IMAGE URL
+            onTap: (){
+              Dog dog = Dog.fromJson(widget.otherUser.dogs[index]);
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog))); //TODO: NEED TO CHANGE
+            });
+      },
+    ),
+  );
+}
 
   Widget _pictureSection(){
     return Expanded(
@@ -212,55 +226,6 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     }
   }
 
-  Widget _dogBuilder(User user){
-    return Expanded(
-      flex: 12,
-      child: ListView.builder(
-        itemCount: _userDogs.values.toList().length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: Icon(Icons.pets),
-            title: Text(_userDogs.values.toList()[index]),
-            onTap: (){
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile()));
-              });
-        },
-      ),
-    );
-  }
-
-  Future<User> _userBuilder() async{
-    var username = userName;
-
-    try{
-      final response = await http.get('https://redesigned-backend.herokuapp.com/user/find?username=$username');
-
-      if(response.statusCode == 200){
-        return User.fromJson(json.decode(response.body));
-      }else{
-        throw Exception('Failed to load user');
-      }
-    }catch(e){
-      print(e);
-      return null;
-    }
-  }
-
-  //TODO: ADD URL TO MAP FOR PICTURE
-  void _getUserDogs() async{
-    final response = await http.get('https://redesigned-backend.herokuapp.com/user/getMyDogs?username=usernametest');
-
-    if(response.statusCode == 200){
-      List<dynamic> dogs = jsonDecode(response.body);
-      dogs.forEach((element) {
-        setState(() {
-          _userDogs.putIfAbsent(element['dogId'], () => element['name']);
-        });
-      });
-    }else{
-      throw Exception('Failed to load user');
-    }
-  }
 }
 
 class ImageDialog extends StatelessWidget {

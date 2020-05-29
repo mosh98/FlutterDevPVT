@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
@@ -22,6 +24,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String gender = "";
   String dateOfBirth = "";
   User user;
+  File _image;
 
   @override
   void initState() {
@@ -64,15 +67,23 @@ class _SettingsPageState extends State<SettingsPage> {
       flex:3,
       child: Center(
         child: GestureDetector(
-          child: CircleAvatar(
-            radius: 50,
-            backgroundImage: AssetImage('assets/pernilla.jpg'),
-          ),
-          onLongPress: (){print('clicked profile picture');},
+            onTap: getImage,
+            child: _image == null
+                ? CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
+                : CircleAvatar(radius: 60, backgroundImage: FileImage(_image))
         ),
       ),
     );
   }
+
+  Future getImage() async {
+    final image = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      _image = image;
+    });
+  }
+
   Widget _profileInformationBuilder(){
     return Expanded(
         flex:5,
@@ -178,6 +189,7 @@ class _SettingsPageState extends State<SettingsPage> {
           CupertinoDatePicker(
             mode: CupertinoDatePickerMode.date,
             initialDateTime: DateTime.now(),
+            minimumDate: DateTime(1900),
             maximumDate: DateTime.now(),
             onDateTimeChanged: (DateTime newDateTime) {
               if (mounted) {

@@ -203,6 +203,8 @@ class MyCustomFormState extends State<MyCustomForm> {
                     CupertinoDatePicker(
                         mode: CupertinoDatePickerMode.date,
                         initialDateTime: DateTime(1990),
+                        maximumDate: DateTime.now(),
+                        minimumDate: DateTime(1900),
                         onDateTimeChanged: (DateTime newDateTime) {
                         if (mounted) {
                             setState(() => _dateTime = newDateTime

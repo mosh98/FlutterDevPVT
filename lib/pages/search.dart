@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
@@ -7,11 +8,17 @@ import 'package:dog_prototype/models/User.dart';
 import 'profileViewer.dart';
 
 class Search extends StatefulWidget {
+
+  final User user;
+  Search({this.user});
+
   @override
   SearchState createState() => SearchState();
 }
 
 class SearchState extends State<Search> {
+
+
   List<User> users = new List<User>();
 
   final textFieldController = TextEditingController();
@@ -56,7 +63,7 @@ class SearchState extends State<Search> {
 
                             FlatButton.icon(
                             onPressed: (){
-                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => profileViewer(userName: users[index].getName())));
+                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => profileViewer(otherUser: users[index])));
                             },
                             icon: Icon(
                             Icons.keyboard_arrow_right,
@@ -83,31 +90,40 @@ class SearchState extends State<Search> {
 
   void _getUser(String input) async {
     users.clear();
-    final response = await http.get(
-        'https://redesigned-backend.herokuapp.com/user/query?username=$input');
-    if (response.statusCode == 200) {
-      Map<String, dynamic> userData = json.decode(response.body);
-      List userList = userData['content'];
-      userList.forEach((element) => users.add(User.fromJson(element)));
-    } else {
-      print(
-          'Failed to fetch username'); //todo: något annat ska ju hända egentligen
-    }
+    try{
 
-    String snackText = "";
-    if (users.isEmpty) {
-      snackText = "Hittade inga sökträffar";
-    } else {
-      snackText = "Hittade " + users.length.toString();
-      if (users.length == 1) {
-        snackText += " sökträff";
+      String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+
+      final response = await http.get('https://dogsonfire.herokuapp.com/users?search=$input', headers: {
+        'Authorization': 'Bearer $token',
+      });
+
+
+      if (response.statusCode == 200) {
+        List userData = json.decode(response.body);
+        userData.forEach((element) {users.add(User.fromJson(element));});
       } else {
-        snackText += " sökträffar";
+        print('Failed to fetch username' + response.statusCode.toString());
+        print(response.body);
       }
+
+      String snackText = "";
+      if (users.isEmpty) {
+        snackText = "Hittade inga sökträffar";
+      } else {
+        snackText = "Hittade " + users.length.toString();
+        if (users.length == 1) {
+          snackText += " sökträff";
+        } else {
+          snackText += " sökträffar";
+        }
+      }
+
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
+
+      setState(() {});
+    }catch(e){
+
     }
-
-    Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
-
-    setState(() {});
   }
 }
