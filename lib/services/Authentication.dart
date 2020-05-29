@@ -25,12 +25,13 @@ class AuthService{
     try{
       String t = await token.then((value) => value.token);
 
-      final response = await http.get('https://dogsonfire.herokuapp.com/users?uid=${await _auth.currentUser().then((value) => value.uid)}',headers: {
+      final response = await http.get('https://dogsonfire.herokuapp.com/users?uid=${await _auth.currentUser().then((value) => value.uid)}',headers:<String, String>{
         'Authorization': 'Bearer $t',
+        'Content-Type': 'application/json'
       });
 
       if(response.statusCode == 200){
-        return User.fromJson(json.decode(response.body));
+        return User.fromJson(json.decode(utf8.decode(response.bodyBytes)));
       }else{
         print(response.statusCode);
         print(response.body);
@@ -172,7 +173,7 @@ class AuthService{
           'https://dogsonfire.herokuapp.com/users/register',
           headers:<String, String>{
             "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
+            'Content-Type' : 'application/json; charset=UTF-8', //ISO-8859-1
           },
           body: jsonEncode(<String,String>{
             "username": username,

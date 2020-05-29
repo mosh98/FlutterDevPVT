@@ -5,9 +5,11 @@ import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/DogProfile.dart';
+import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_image/network.dart';
 
 class profileViewer extends StatefulWidget{
 
@@ -30,17 +32,47 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
   ];
 
 Widget _loading = DefaultLoader();
+String profileImage;
 
 
   @override
   void initState(){
+    evictImage();
+    _getProfileImage();
     super.initState();
-
   }
+
+void evictImage(){
+  final NetworkImage provider = NetworkImage(widget.otherUser.photoUrl);
+  provider.evict().then<void>((bool success){
+    if(success)
+      debugPrint('removed image');
+  });
+}
+
+_getProfileImage() async{
+  String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+  try{
+    final url = await http.get('https://dogsonfire.herokuapp.com/images/profiles/${widget.otherUser.userId}', headers:{'Authorization': 'Bearer $token'});
+    if(url != null){
+      print(url.body);
+      setState(() {
+        profileImage = url.body;
+      });
+    }else{
+      print(url.body);
+      setState(() {
+        profileImage = widget.otherUser.photoUrl;
+      });
+    }
+  }catch(e){
+    print(e);
+  }
+}
 
 @override
 Widget build(BuildContext context) {
-  if(widget.otherUser == null){
+  if(widget.otherUser == null || profileImage == null){
     return _loading;
   }else{
     return _profile();
@@ -48,6 +80,7 @@ Widget build(BuildContext context) {
 }
 
   Widget _profile(){
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
@@ -88,9 +121,19 @@ Widget build(BuildContext context) {
         padding: EdgeInsets.all(10.0),
         child: Row(
           children: <Widget>[
-            CircleAvatar( //TODO: onbackgroundimageerror
-              radius: 25,
-              backgroundImage: AssetImage('assets/pernilla.jpg'),
+//            CircleAvatar(
+//                radius: 40,
+//                backgroundImage: NetworkImage(widget.otherUser.photoUrl),
+//            ),
+            CircleAvatar(radius: (52),
+                backgroundColor: Colors.white,
+                child: ClipRRect(
+                  borderRadius:BorderRadius.circular(50),
+                  child: CircleAvatar(
+                    radius: 52,
+                    backgroundImage: NetworkImage(profileImage),
+                  ),
+                )
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
             Text(widget.otherUser.username, style: TextStyle(fontSize: 16),)

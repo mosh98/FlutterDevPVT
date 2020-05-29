@@ -345,10 +345,10 @@ class _DogProfileState extends State<DogProfile> {
             ),
             IconButton(icon: Icon(Icons.done),
                 onPressed: () async{
-                  await _updateBreed(breed);
                   setState(() {
                     _loading = true;
                   });
+                  await _updateBreed(breed);
                   Navigator.pop(context);
                 }),
             IconButton(icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
