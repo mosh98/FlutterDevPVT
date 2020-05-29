@@ -189,6 +189,7 @@ class _SettingsPageState extends State<SettingsPage> {
           CupertinoDatePicker(
             mode: CupertinoDatePickerMode.date,
             initialDateTime: DateTime.now(),
+            minimumDate: DateTime(1900),
             maximumDate: DateTime.now(),
             onDateTimeChanged: (DateTime newDateTime) {
               if (mounted) {

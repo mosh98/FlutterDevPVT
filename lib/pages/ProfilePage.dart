@@ -368,6 +368,8 @@ class _DialogState extends State<DogDialog>{
                             return _buildBottomPicker(
                               CupertinoDatePicker(
                                 mode: CupertinoDatePickerMode.date,
+                                maximumDate: DateTime.now(),
+                                minimumDate: DateTime(1900),
                                 initialDateTime: DateTime(1990),
                                 onDateTimeChanged: (DateTime newDateTime) {
                                   if (mounted) {
