@@ -32,6 +32,12 @@ class _SettingsPageState extends State<SettingsPage> {
       user = widget.user;
     }
     gender = user.gender;
+     if(user.gender == "UNKNOWN") {
+      gender = "-"; 
+    }
+    else {
+      gender = user.gender; 
+    }
     dateOfBirth = user.dateOfBirth;
     super.initState();
   }
@@ -117,7 +123,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     gender = newValue;
                   });_setGender(newValue);},
                   items: <String>[
-                    'MALE', 'FEMALE'
+                    'MALE', 'FEMALE', '-'
                   ].map<DropdownMenuItem<String>>((String value){
                     return DropdownMenuItem<String>(
                       value:value,
@@ -260,6 +266,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   _setGender(String gender) async{
+    if(gender == "-") {
+      gender = "UNKNOWN";
+    }
     try{
       final http.Response response = await http.put( //register to database
           'https://dogsonfire.herokuapp.com/users',
