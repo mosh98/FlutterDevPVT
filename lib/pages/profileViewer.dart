@@ -6,6 +6,7 @@ import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/DogProfile.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/pages/DogProfileViewer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -179,7 +180,7 @@ Widget _dogSection(){
             //TODO: IMAGE URL
             onTap: (){
               Dog dog = Dog.fromJson(widget.otherUser.dogs[index]);
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog))); //TODO: NEED TO CHANGE
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfileViewer(dog:dog))); //TODO: NEED TO CHANGE
             });
       },
     ),
