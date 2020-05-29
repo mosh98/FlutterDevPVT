@@ -197,7 +197,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                         });
                       },
                       items: <String>[
-                        'MALE', 'FEMALE'
+                        'MALE', 'FEMALE', '-'
                       ].map<DropdownMenuItem<String>>((String value){
                         return DropdownMenuItem<String>(
                           value:value,
@@ -313,6 +313,9 @@ class MyCustomFormState extends State<MyCustomForm> {
 
   Future<void>register(String username, String email, String password, String dateOfBirth, String gender)async{
     try {
+      if(gender == "-") {
+        gender = "UNKNOWN"; 
+      }
 
       if(dateOfBirth == null){
         dateOfBirth = f.format(_dateTime);
