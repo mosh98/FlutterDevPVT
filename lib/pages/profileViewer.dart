@@ -1,27 +1,23 @@
-import 'dart:collection';
-import 'dart:convert';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
-import 'package:dog_prototype/pages/DogProfile.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/pages/DogProfileViewer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_image/network.dart';
 
-class profileViewer extends StatefulWidget{
+class ProfileViewer extends StatefulWidget{
 
   @override
   ProfileState createState() => ProfileState();
 
-    profileViewer({@required this.otherUser});
+    ProfileViewer({@required this.otherUser});
     final User otherUser;
 }
 
-class ProfileState extends State<profileViewer>{
+class ProfileState extends State<ProfileViewer>{
 
 List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     'assets/pernilla.jpg',
@@ -34,40 +30,32 @@ List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
 
 Widget _loading = DefaultLoader();
 String profileImage;
+bool _loadingImage = false;
 
 
   @override
   void initState(){
-    evictImage();
     _getProfileImage();
     super.initState();
   }
-
-void evictImage(){
-  final NetworkImage provider = NetworkImage(widget.otherUser.photoUrl);
-  provider.evict().then<void>((bool success){
-    if(success)
-      debugPrint('removed image');
-  });
-}
 
 _getProfileImage() async{
   String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
   try{
     final url = await http.get('https://dogsonfire.herokuapp.com/images/profiles/${widget.otherUser.userId}', headers:{'Authorization': 'Bearer $token'});
-    if(url != null){
-      print(url.body);
+    if(url.statusCode==200){
       setState(() {
         profileImage = url.body;
       });
-    }else{
-      print(url.body);
-      setState(() {
-        profileImage = widget.otherUser.photoUrl;
-      });
     }
+    setState(() {
+      _loadingImage = false;
+    });
   }catch(e){
     print(e);
+    setState(() {
+      _loadingImage = false;
+    });
   }
 }
 
@@ -122,18 +110,19 @@ Widget build(BuildContext context) {
         padding: EdgeInsets.all(10.0),
         child: Row(
           children: <Widget>[
-//            CircleAvatar(
-//                radius: 40,
-//                backgroundImage: NetworkImage(widget.otherUser.photoUrl),
-//            ),
-            CircleAvatar(radius: (52),
-                backgroundColor: Colors.white,
-                child: ClipRRect(
-                  borderRadius:BorderRadius.circular(50),
-                  child: CircleAvatar(
-                    radius: 52,
-                    backgroundImage: NetworkImage(profileImage),
-                  ),
+            Container(
+                height:100,
+                width:100,
+                child:
+                ClipRRect(
+                    borderRadius: BorderRadius.circular(10000.0),
+                    child: _loadingImage == true ?
+                    DefaultLoader()
+                        :
+                    CachedNetworkImage(
+                        imageUrl: profileImage,
+                        placeholder: (context, url) => DefaultLoader(),
+                        errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.person, color: Colors.white, size: 60,), backgroundColor:Colors.grey))
                 )
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
@@ -215,61 +204,6 @@ Widget _dogSection(){
       ),
     );
   }
-
-  void _addDog(User user) async{
-
-    String dogName = "";
-
-    await showDialog(context: context,
-    child: AlertDialog(
-    title: Text('What is the name of your dog?'),
-    content: SingleChildScrollView(
-    child: TextFormField(
-    onChanged: (value){dogName = value;},
-    ),
-    ),
-    actions: <Widget>[
-    MaterialButton(
-    child: Text('Add dog'),
-    onPressed: (){Navigator.of(context).pop();},
-    ),
-    MaterialButton(
-    child: Text('Back'),
-    onPressed: (){Navigator.of(context).pop(); return;},
-    )
-    ],
-    )
-    );
-
-    if(dogName.isEmpty){
-      return; //todo. error message
-    }
-    
-    try{
-      final http.Response response = await http.post(
-          'https://redesigned-backend.herokuapp.com/user/dog/register?owner=${user.username}',
-          headers:<String, String>{
-            'Content-Type' : 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode(<String,String>{
-            'name':dogName,
-            'age':null,
-            'breed':'Not set',
-            'gender':'Not set',
-            'description':'not set',
-          })
-      );
-
-      if(response.statusCode==200){
-        print(response.body);
-      }else{
-        print('semething wrong');
-      }
-    }catch(e){
-      print(e);
-    }
-  }
-
 }
 
 class ImageDialog extends StatelessWidget {

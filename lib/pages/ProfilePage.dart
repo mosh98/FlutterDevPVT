@@ -29,9 +29,15 @@ class ProfileState extends State<ProfilePage>{
 
   String profileImage;
 
+  bool _loadingImage = false;
+
   Future getImage() async{
 
     var tempImage = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      _loadingImage = true;
+    });
 
     bool uploadSuccessful = await _uploadImage(tempImage);
     if(uploadSuccessful){
@@ -41,7 +47,7 @@ class ProfileState extends State<ProfilePage>{
 
       Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
 
-      setState(() {});
+      setState(() {_loadingImage = false;});
     }
   }
 
@@ -72,8 +78,14 @@ class ProfileState extends State<ProfilePage>{
           profileImage = url.body;
         });
       }
+      setState(() {
+        _loadingImage = false;
+      });
     }catch(e){
       print(e);
+      setState(() {
+        _loadingImage = false;
+      });
     }
   }
 
@@ -132,7 +144,21 @@ class ProfileState extends State<ProfilePage>{
           children: <Widget>[
             GestureDetector(
                 onTap: getImage,
-                child: Container(height:100, width:100,child: ClipRRect(borderRadius: BorderRadius.circular(10000.0),child: CachedNetworkImage(imageUrl: profileImage, errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey))))
+                child: Container(
+                    height:100,
+                    width:100,
+                    child:
+                    ClipRRect(
+                        borderRadius: BorderRadius.circular(10000.0),
+                        child: _loadingImage == true ?
+                        DefaultLoader()
+                        :
+                        CachedNetworkImage(
+                            imageUrl: profileImage,
+                            placeholder: (context, url) => DefaultLoader(),
+                            errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey))
+                    )
+                )
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
             Text(user.username, style: TextStyle(fontSize: 16),),

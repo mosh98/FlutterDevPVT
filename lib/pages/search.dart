@@ -63,7 +63,7 @@ class SearchState extends State<Search> {
 
                             FlatButton.icon(
                             onPressed: (){
-                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => profileViewer(otherUser: users[index])));
+                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: users[index])));
                             },
                             icon: Icon(
                             Icons.keyboard_arrow_right,
