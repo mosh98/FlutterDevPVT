@@ -28,6 +28,7 @@ class ProfileState extends State<ProfilePage>{
   User user;
 
   String profileImage;
+  String snackText = "";
 
   bool _loadingImage = false;
   bool _loadingProfile = false;
@@ -195,7 +196,7 @@ class ProfileState extends State<ProfilePage>{
                   IconButton(
                       icon: Icon(Icons.add),
                       onPressed: () async{
-                        await showDialog(context: context, barrierDismissible: false, child: DogDialog());
+                        await showDialog(context: context, barrierDismissible: false, child: DogDialog(context));
                         setState(() {
                           _loadingProfile = true;
                         });
@@ -296,6 +297,13 @@ class ProfileState extends State<ProfilePage>{
               leading: Icon(Icons.pets),
               title: Text(user.dogs[index]['name']),
               //TODO: IMAGE URL
+              trailing: IconButton(
+                  icon: Icon(Icons.delete_forever),
+                  onPressed: (){
+                    Dog dog = Dog.fromJson(user.dogs[index]);
+                    _deleteDogConfirmation(dog);
+                  }
+                  ),
               onTap: (){
                 Dog dog = Dog.fromJson(user.dogs[index]);
                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog)));
@@ -303,6 +311,86 @@ class ProfileState extends State<ProfilePage>{
         },
       ),
     );
+  }
+
+  _deleteDogConfirmation(Dog dog)async{
+    await showDialog(
+        context: context,
+        child: SimpleDialog(
+          contentPadding: EdgeInsets.all(10.0),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))
+          ),
+          children: [
+            Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Text(
+                    'Are you sure that you want to delete ${dog.name} from your profile?',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top:20),
+                  child: ListTile(
+                    leading: RaisedButton(
+                        child: Text('No'),
+                        onPressed: (){Navigator.pop(context);},
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                      ,
+                    trailing: RaisedButton(
+                        child: Text('Yes'),
+                        onPressed: () async{
+                          setState(() {_loadingProfile = true;});
+                          Navigator.pop(context);
+                          await _deleteDog(dog);
+                          setState(() {
+                            _loadingProfile = true;
+                          });
+                          User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+                          setState(() {user = newUser; _loadingProfile = false;});
+                          },
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                  ),
+                ),
+              ],
+            ),
+          ],
+        )
+    );
+  }
+
+  _deleteDog(Dog dog)async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+ 
+    try{
+      final response = await http.delete('https://dogsonfire.herokuapp.com/dogs/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
+      if(response.statusCode == 204){
+        print(response.statusCode);
+      
+        setState(() {
+          _loadingProfile = false;
+        });
+        snackText = 'Successfully deleted ${dog.name} from your profile.';
+      }else{
+        print(response.statusCode);
+        print(response.body);
+        
+        setState(() {
+          _loadingProfile = false;
+        });
+        snackText = 'Something went wrong with deleting ${dog.name} from your profile.';
+      }
+    }catch(e){
+      print(e);
+      setState(() {
+        _loadingProfile = false;
+      });
+      snackText = 'Something went wrong with deleting ${dog.name} from your profile.';
+    }
+
+    Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
   }
 
   Widget _pictureSection(){
@@ -392,6 +480,10 @@ class ImageDialog extends StatelessWidget {
 }
 
 class DogDialog extends StatefulWidget{
+
+  final BuildContext context;
+  DogDialog(this.context);
+
   @override
   createState() => new _DialogState();
 }
@@ -580,13 +672,17 @@ class _DialogState extends State<DogDialog>{
   }
 
   _addDog() async{
+    String snackText = "";
     if(dateOfBirth.isEmpty){
       dateOfBirth = f.format(_dateTime);
     }
 
     if(dogName.isEmpty || breed.isEmpty || gender.isEmpty){
       print('wrong inputs');
-      return; //todo. error message
+      snackText = "Please specify name and breed.";
+
+      Scaffold.of(widget.context).showSnackBar(SnackBar(content: Text(snackText)));
+      return;
     }
 
     try{
@@ -610,13 +706,17 @@ class _DialogState extends State<DogDialog>{
 
       if(response.statusCode==201){
         print(response.statusCode);
+        snackText = "$dogName was added to your profile!";
       }else{
         print(response.statusCode);
         print(response.body);
+        snackText = "Failed to upload $dogName to your profile.";
       }
     }catch(e){
       print(e);
+      snackText = "Failed to upload $dogName to your profile.";
     }
+    Scaffold.of(widget.context).showSnackBar(SnackBar(content: Text(snackText)));
   }
 }
 

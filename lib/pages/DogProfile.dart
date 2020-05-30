@@ -168,6 +168,7 @@ class _DogProfileState extends State<DogProfile> {
                 trailing: Text(dog.dateOfBirth ?? 'No date of birth specified.'),
                 onTap: (){_setDateOfBirth();},
             ),
+            dog.gender == 'MALE' ?
             ListTile(
                 title: Text('Neutered:'),
                 trailing: DropdownButton<String>(
@@ -182,7 +183,9 @@ class _DogProfileState extends State<DogProfile> {
                     );
                   }).toList(),
                 )
-            ),
+            )
+                :
+            Text(''),
             ListTile(
                 title: Text('Gender:'),
                 trailing: DropdownButton<String>(
@@ -197,7 +200,7 @@ class _DogProfileState extends State<DogProfile> {
                     );
                   }).toList(),
                 )
-            ),
+            )
           ]
       ).toList(),
     );

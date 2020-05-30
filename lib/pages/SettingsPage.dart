@@ -25,6 +25,7 @@ class _SettingsPageState extends State<SettingsPage> {
   final AuthService _auth = AuthService();
   String gender = "";
   String dateOfBirth = "";
+  String snackText = "";
   String profileImage;
   bool _loadingImage = false;
   Widget _loading = DefaultLoader();
@@ -245,11 +246,14 @@ class _SettingsPageState extends State<SettingsPage> {
           children: ListTile.divideTiles(
             context: context,
             tiles: [
-              GestureDetector(
-                child: ListTile(
-                  title: Text('Change Password'),
-                ),
+              ListTile(
+                title: Text('Change Password'),
                 onTap: (){_changePassword();},
+              ),
+              ListTile(
+                title: Text('Delete account'),
+                trailing: Icon(Icons.error),
+                onTap:(){_deleteAccountConfirmation();}
               ),
               ListTile(
                 title: Text('Log out'),
@@ -259,6 +263,78 @@ class _SettingsPageState extends State<SettingsPage> {
           ).toList(),
         )
     );
+  }
+
+  void _deleteAccountConfirmation() async{
+    await showDialog(
+        context: context,
+        child: SimpleDialog(
+          contentPadding: EdgeInsets.all(10.0),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))
+          ),
+          children: [
+            Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Text(
+                    'Are you sure that you want to delete your profile? This is not reversible',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top:20),
+                  child: ListTile(
+                      leading: RaisedButton(
+                          child: Text('No'),
+                          onPressed: (){Navigator.pop(context);},
+                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                      ,
+                      trailing: RaisedButton(
+                          child: Text('Yes'),
+                          onPressed: (){setState(() {_loadingProfile = true;}); _deleteAccount(); Navigator.pop(context);},
+                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                  ),
+                ),
+              ],
+            ),
+          ],
+        )
+    );
+  }
+
+  void _deleteAccount() async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+    try{
+      final response = await http.delete('https://dogsonfire.herokuapp.com/users/${widget.user.userId}', headers:{'Authorization': 'Bearer $token'});
+      if(response.statusCode == 204){
+        print(response.statusCode);
+        print('deleted');
+
+        setState(() {
+          _loadingProfile = false;
+        });
+        snackText = 'Successfully deleted your profile.';
+      }else{
+        print(response.statusCode);
+        print(response.body);
+        print('not deleted');
+
+        setState(() {
+          _loadingProfile = false;
+        });
+        snackText = 'Something went wrong with deleting your profile.';
+      }
+    }catch(e){
+      print(e);
+      setState(() {
+        _loadingProfile = false;
+      });
+      snackText = 'Something went wrong with deleting your profile.';
+    }
+
+    Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
   }
 
   void _logout() async{
