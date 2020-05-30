@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,28 +26,55 @@ class _SettingsPageState extends State<SettingsPage> {
   String gender = "";
   String dateOfBirth = "";
   User user;
-  File _image;
+  String profileImage;
+  bool _loadingImage = false;
+  Widget _loading = DefaultLoader();
+  bool _loadingProfile = false;
 
   @override
   void initState() {
     if(user == null){
       user = widget.user;
     }
-    gender = user.gender;
-     if(user.gender == "UNKNOWN") {
+    _getProfileImage();
+
+    if(user.gender == "UNKNOWN") {
       gender = "-"; 
     }
     else {
-      gender = user.gender; 
+      gender = user.gender;
     }
+
     dateOfBirth = user.dateOfBirth;
     super.initState();
   }
 
+  _getProfileImage() async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+    try{
+      final url = await http.get('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
+      if(url.statusCode==200){
+        setState(() {
+          profileImage = url.body;
+        });
+      }
+      setState(() {
+        _loadingImage = false;
+      });
+    }catch(e){
+      print(e);
+      setState(() {
+        _loadingImage = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-
-    return Scaffold(
+    return _loadingProfile == true || profileImage == null ?
+        _loading
+        :
+    Scaffold(
       resizeToAvoidBottomPadding: false,
         appBar: AppBar(
           backgroundColor: Colors.grey[850],
@@ -74,20 +103,80 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Center(
         child: GestureDetector(
             onTap: getImage,
-            child: _image == null
-                ? CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
-                : CircleAvatar(radius: 60, backgroundImage: FileImage(_image))
+            child: Container(
+                height:100,
+                width:100,
+                child:
+                ClipRRect(
+                    borderRadius: BorderRadius.circular(10000.0),
+                    child: _loadingImage == true ?
+                    DefaultLoader()
+                        :
+                    CachedNetworkImage(
+                        imageUrl: profileImage,
+                        placeholder: (context, url) => DefaultLoader(),
+                        errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey))
+                )
+            )
         ),
       ),
     );
   }
 
-  Future getImage() async {
-    final image = await ImagePicker.pickImage(source: ImageSource.gallery);
+  Future getImage() async{
+
+    var tempImage = await ImagePicker.pickImage(source: ImageSource.gallery);
 
     setState(() {
-      _image = image;
+      _loadingImage = true;
     });
+
+    bool uploadSuccessful = await _uploadImage(tempImage);
+    if(uploadSuccessful){
+      _getProfileImage();
+    }else{
+      String snackText = "Something went wrong with uploading picture.";
+
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
+
+      setState(() {_loadingImage = false;});
+    }
+  }
+
+  Future<bool> _uploadImage(File image) async{
+    try{
+      String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+
+      final response = await http.put('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
+
+      if(response != null){
+        print('First put of picture-upload went through :' + response.statusCode.toString());
+        print('Response body :' + response.body);
+        try{
+          final nextResponse = await http.put(response.body,
+              body: image.readAsBytesSync());
+          if(nextResponse.statusCode == 200){
+            print('Second put of picture-upload went through :' + response.statusCode.toString());
+
+            return true;
+          }else{
+            print('Something went wrong with uploading picture, second put: ' + response.statusCode.toString());
+            //TODO: POPUP USER
+            return false;
+          }
+        }catch(e){
+          print(e);
+          return false;
+        }
+      }else{
+        print('Something went wrong with first put of profilepicture: ' + response.statusCode.toString());
+        print(response.body);
+        return false;
+      }
+    }catch(e){
+      print(e);
+      return false;
+    }
   }
 
   Widget _profileInformationBuilder(){
@@ -120,8 +209,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   value: gender,
 
                   onChanged: (String newValue) {setState(() {
+                    _setGender(newValue);
                     gender = newValue;
-                  });_setGender(newValue);},
+                  });},
                   items: <String>[
                     'MALE', 'FEMALE', '-'
                   ].map<DropdownMenuItem<String>>((String value){
@@ -200,7 +290,7 @@ class _SettingsPageState extends State<SettingsPage> {
             onDateTimeChanged: (DateTime newDateTime) {
               if (mounted) {
                 _dateTime = newDateTime;
-                print("You Selected Date: ${newDateTime}");
+
                 dateOfBirth = '${f.format(_dateTime)}';
               }
             },
@@ -212,10 +302,10 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       dateOfBirth = '${f.format(_dateTime)}';
     });
-    print(dateOfBirth);
+
 
     try{
-      print(dateOfBirth);
+
       final http.Response response = await http.put( //register to database
           'https://dogsonfire.herokuapp.com/users',
           headers:<String, String>{
@@ -230,10 +320,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
       if(response.statusCode==200){ // Successfully created database account
         print(response.statusCode);
-        User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+
         setState(() {
-          user = newUser;
+          user.setDateOfBirth(dateOfBirth);
+          widget.user.setDateOfBirth(dateOfBirth);
         });
+
       }else{ //Something went wrong
         print(response.statusCode);
         print(response.body);
@@ -269,8 +361,9 @@ class _SettingsPageState extends State<SettingsPage> {
     if(gender == "-") {
       gender = "UNKNOWN";
     }
+
     try{
-      final http.Response response = await http.put( //register to database
+      final http.Response response = await http.put(
           'https://dogsonfire.herokuapp.com/users',
           headers:<String, String>{
             "Accept": "application/json",
@@ -282,11 +375,11 @@ class _SettingsPageState extends State<SettingsPage> {
           })
       );
 
-      if(response.statusCode==200){ // Successfully created database account
+      if(response.statusCode==200){
         print(response.statusCode);
-        User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
         setState(() {
-          user = newUser;
+          user.setGender(gender);
+          widget.user.setGender(gender);
         });
       }else{ //Something went wrong
         print(response.statusCode);

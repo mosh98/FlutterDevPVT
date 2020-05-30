@@ -3,8 +3,8 @@ import 'Dog.dart';
 class User{
   final String username;
   String email;
-  final String dateOfBirth;
-  final String gender;
+  String dateOfBirth;
+  String gender;
   String desc;
   final String createdDate;
   final List<dynamic> dogs;
@@ -42,6 +42,10 @@ class User{
   void setPhotoUrl(String photoUrl){this.photoUrl = photoUrl;}
 
   void setDescription(String desc){this.desc = desc;}
+
+  void setGender(String gender){this.gender = gender;}
+
+  void setDateOfBirth(String dateOfBirth){this.dateOfBirth = dateOfBirth;}
 
   @override
   String toString() {
