@@ -5,7 +5,7 @@ class User{
   String email;
   final String dateOfBirth;
   final String gender;
-  final String desc;
+  String desc;
   final String createdDate;
   final List<dynamic> dogs;
   String photoUrl;
@@ -40,6 +40,8 @@ class User{
   void setEmail(String email){this.email = email;}
 
   void setPhotoUrl(String photoUrl){this.photoUrl = photoUrl;}
+
+  void setDescription(String desc){this.desc = desc;}
 
   @override
   String toString() {

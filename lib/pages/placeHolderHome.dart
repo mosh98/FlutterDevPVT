@@ -1,6 +1,6 @@
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
-import 'package:dog_prototype/pages/search.dart';
+import 'package:dog_prototype/pages/FindFriends.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,7 +24,7 @@ class HomePageState extends State<PlaceHolderApp> {
   MapPage mapPage;
   ProfilePage profilePage;
   Messages messages;
-  Search search;
+  FindFriends search;
   List<Widget> pages;
   Widget currentPage;
   int selectedIndex = 0;
@@ -55,7 +55,7 @@ class HomePageState extends State<PlaceHolderApp> {
       mapPage = MapPage();
       profilePage = ProfilePage(user:user);
       messages = Messages();
-      search = Search();
+      search = FindFriends();
       pages = [profilePage, mapPage, search, messages];
       currentPage = pages[selectedIndex];
     }
@@ -71,7 +71,7 @@ class HomePageState extends State<PlaceHolderApp> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
-            title: Text('Search'),
+            title: Text('Find friends'),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.message),

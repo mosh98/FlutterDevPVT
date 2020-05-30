@@ -2,7 +2,7 @@ import 'package:dog_prototype/pages/friends.dart';
 import 'package:dog_prototype/pages/mapPage.dart';
 import 'package:dog_prototype/pages/messages.dart';
 import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/profile.dart';
-import 'package:dog_prototype/pages/search.dart';
+import 'package:dog_prototype/pages/FindFriends.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -11,7 +11,7 @@ class BottomBar extends StatelessWidget {
   List<Widget> _widgetOptions = <Widget>[
     ProfilePage(),
     MapPage(),
-    Search(),
+    FindFriends(),
     Messages()
 
 

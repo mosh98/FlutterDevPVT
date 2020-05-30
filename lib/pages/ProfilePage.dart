@@ -30,6 +30,7 @@ class ProfileState extends State<ProfilePage>{
   String profileImage;
 
   bool _loadingImage = false;
+  bool _loadingProfile = false;
 
   Future getImage() async{
 
@@ -101,7 +102,10 @@ class ProfileState extends State<ProfilePage>{
   }
 
   Widget profile(){
-    return Scaffold(
+    return _loadingProfile == true ?
+    _loading
+        :
+    Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
         title: Text('Profile'),
@@ -178,7 +182,11 @@ class ProfileState extends State<ProfilePage>{
             children: <Widget>[
               Text('About', style: TextStyle(fontSize: 16)),
               Padding(padding: EdgeInsets.only(top:10),),
-              Text(user.desc ?? 'Add a description of yourself'),
+              GestureDetector(
+                child: ListTile(title: Text(user.desc ?? 'Add a description of yourself')),
+                onTap: (){_setDescription();}
+              ),
+              Divider(thickness: 1.0,),
               Padding(padding: EdgeInsets.only(top:10),),
               Row(
                 children: <Widget>[
@@ -201,6 +209,79 @@ class ProfileState extends State<ProfilePage>{
           ),
         )
     );
+  }
+
+    _setDescription() async{
+    String desc = "";
+
+    await showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context){
+          return Dialog(
+              child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children:[
+                    Container(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          TextField(
+                            keyboardType: TextInputType.multiline,
+                            maxLines: 7,
+                            maxLength: 100,
+                            onChanged: (String input){
+                              desc = input;
+                            },
+                          ),
+                          ListTile(
+                            leading: IconButton(
+                              icon: Icon(Icons.done),
+                              onPressed: (){_updateDescription(desc); setState(() {_loadingProfile = true;}); Navigator.pop(context);},
+                            ),
+                            trailing: IconButton(
+                              icon: Icon(Icons.close),
+                              onPressed: (){Navigator.pop(context);},
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ]
+              )
+          );
+        }
+    );
+  }
+
+  void _updateDescription(String desc) async{
+    try{
+
+      final http.Response response = await http.put( //register to database
+          'https://dogsonfire.herokuapp.com/users',
+          headers:<String, String>{
+            "Accept": "application/json",
+            'Content-Type' : 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
+          },
+          body: jsonEncode(<String,String>{
+            "name":widget.user.username,
+            "description":desc,
+          })
+      );
+
+      if(response.statusCode==200){ // Successfully created database account
+        print("Updated desc, response code: " + response.statusCode.toString());
+        setState(() {widget.user.setDescription(desc); _loadingProfile = false;});
+      }else{ //Something went wrong
+        print("Something went wrong with updating desc, response code: " + response.statusCode.toString());
+        print(response.body);
+        setState(() {_loadingProfile = false;});
+      }
+    }catch(e){
+      setState(() {_loadingProfile = false;});
+      print(e);
+    }
   }
 
   Widget _dogSection(){
