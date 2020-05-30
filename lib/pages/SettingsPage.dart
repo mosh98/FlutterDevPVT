@@ -25,7 +25,6 @@ class _SettingsPageState extends State<SettingsPage> {
   final AuthService _auth = AuthService();
   String gender = "";
   String dateOfBirth = "";
-  User user;
   String profileImage;
   bool _loadingImage = false;
   Widget _loading = DefaultLoader();
@@ -33,26 +32,24 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   void initState() {
-    if(user == null){
-      user = widget.user;
-    }
+
     _getProfileImage();
 
-    if(user.gender == "UNKNOWN") {
+    if(widget.user.gender == "UNKNOWN") {
       gender = "-"; 
     }
     else {
-      gender = user.gender;
+      gender = widget.user.gender;
     }
 
-    dateOfBirth = user.dateOfBirth;
+    dateOfBirth = widget.user.dateOfBirth;
     super.initState();
   }
 
   _getProfileImage() async{
     String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
     try{
-      final url = await http.get('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
+      final url = await http.get('https://dogsonfire.herokuapp.com/images/${widget.user.userId}', headers:{'Authorization': 'Bearer $token'});
       if(url.statusCode==200){
         setState(() {
           profileImage = url.body;
@@ -71,6 +68,19 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    if(widget.user == null){
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.grey[850],
+          title: Text('Settings'),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Text('Something went wrong with loading settings.'),
+        ),
+      );
+    }
+
     return _loadingProfile == true || profileImage == null ?
         _loading
         :
@@ -147,7 +157,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try{
       String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
 
-      final response = await http.put('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
+      final response = await http.put('https://dogsonfire.herokuapp.com/images/${widget.user.userId}', headers:{'Authorization': 'Bearer $token'});
 
       if(response != null){
         print('First put of picture-upload went through :' + response.statusCode.toString());
@@ -188,12 +198,12 @@ class _SettingsPageState extends State<SettingsPage> {
             tiles: [
               ListTile(
                 title: Text('Username'),
-                trailing: Text(user.username ?? 'No username.'),
+                trailing: Text(widget.user.username ?? 'No username.'),
                 leading: Icon(Icons.lock)
               ),
               ListTile(
                   title: Text('Email'),
-                  trailing: Text(user.email ?? 'No email'),
+                  trailing: Text(widget.user.email ?? 'No email'),
                   leading: Icon(Icons.lock),
               ),
               GestureDetector(
@@ -322,7 +332,7 @@ class _SettingsPageState extends State<SettingsPage> {
         print(response.statusCode);
 
         setState(() {
-          user.setDateOfBirth(dateOfBirth);
+
           widget.user.setDateOfBirth(dateOfBirth);
         });
 
@@ -378,7 +388,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if(response.statusCode==200){
         print(response.statusCode);
         setState(() {
-          user.setGender(gender);
+
           widget.user.setGender(gender);
         });
       }else{ //Something went wrong
