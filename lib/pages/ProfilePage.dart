@@ -37,7 +37,11 @@ class ProfileState extends State<ProfilePage>{
     if(uploadSuccessful){
       _getProfileImage();
     }else{
-      //todo: error message
+      String snackText = "Something went wrong with uploading picture.";
+
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
+
+      setState(() {});
     }
   }
 
