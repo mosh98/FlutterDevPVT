@@ -116,13 +116,9 @@ class LoginPageState extends State<LoginPage> {
             minWidth: 250.0,
             color: Colors.black54,
             textColor: Colors.white,
-            child: new Text("Register new user"),
+            child: new Text("Sign in with Facebook"),
             onPressed: () {
-              Navigator.of(context).push(
-                  MaterialPageRoute<Null>(
-                      builder: (BuildContext context) {
-                        return new Signup();
-                      }));
+              _signInWithFacebook();
             },
             splashColor: Colors.redAccent,
             shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
@@ -195,6 +191,10 @@ class LoginPageState extends State<LoginPage> {
         _isLoading = false;
       });
     }
+  }
+
+  void _signInWithFacebook() {
+    AuthService().signInWithFacebook(context);
   }
 }
 
