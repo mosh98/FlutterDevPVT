@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:flutter/material.dart';
 import 'LoginPage.dart';
+import 'RegisterPage.dart';
 import 'mapPage.dart';
 import 'package:http/http.dart' as http;
 
@@ -109,6 +110,20 @@ class StartPageState extends State<StatefulStartPage>{
                 },
                 shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0))
             ),
+
+            Padding(
+              padding: EdgeInsets.only(top:15),
+              child: GestureDetector(
+                child: Text(
+                  "Don't have an account? Register here."
+                ),
+                onTap: (){ Navigator.of(context).push(
+                    MaterialPageRoute<Null>(
+                        builder: (BuildContext context) {
+                          return new Signup();
+                        }));},
+              ),
+            )
           ],
         )
     );
