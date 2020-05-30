@@ -21,16 +21,18 @@ class AuthService{
     });
   }
 
+  //create user model
   Future<User> createUserModel(Future<IdTokenResult> token) async{
     try{
       String t = await token.then((value) => value.token);
 
-      final response = await http.get('https://dogsonfire.herokuapp.com/users?uid=${await _auth.currentUser().then((value) => value.uid)}',headers: {
+      final response = await http.get('https://dogsonfire.herokuapp.com/users?uid=${await _auth.currentUser().then((value) => value.uid)}',headers:<String, String>{
         'Authorization': 'Bearer $t',
+        'Content-Type': 'application/json'
       });
 
       if(response.statusCode == 200){
-        return User.fromJson(json.decode(response.body));
+        return User.fromJson(json.decode(utf8.decode(response.bodyBytes)));
       }else{
         print(response.statusCode);
         print(response.body);
@@ -40,6 +42,28 @@ class AuthService{
       print(e);
       return null;
     }
+  }
+
+  Future<bool> deleteAccount()async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+    try{
+      final response = await http.delete('https://dogsonfire.herokuapp.com/users', headers:{'Authorization': 'Bearer $token'});
+      if(response.statusCode == 204){
+        await signOut();
+        print('Successfully deleted account: ' + response.statusCode.toString());
+        return true;
+      }
+      return false;
+    }catch(e){
+      print(e);
+      return false;
+    }
+  }
+
+  //password reset with email
+  resetPasswordUsingEmail(String email){
+    print(email);
+    _auth.sendPasswordResetEmail(email: email);
   }
 
   //sign in with email and password String email, String password
@@ -62,7 +86,7 @@ class AuthService{
   Future signInWithFacebook(BuildContext context) async{
     String clientID = '340936393545904';
     String url = 'https://www.facebook.com/connect/login_success.html';
-    https://www.facebook.com/dialog/oauth?client_id=340936393545904&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=email,public_profile
+
     try{
       String result = await Navigator.push(context, MaterialPageRoute(
         builder: (context) => CustomWebView(
@@ -79,16 +103,19 @@ class AuthService{
     }
   }
 
-  _signInToFBWithFirebase(String result)async{
+  Future _signInToFBWithFirebase(String result)async{
     try{
       final facebookAuthCred = FacebookAuthProvider.getCredential(accessToken:result);
       if(facebookAuthCred != null){
         final res = await _auth.signInWithCredential(facebookAuthCred);
+        return res.user;
       }else{
         print('something went wrong with facebook log in');
+        return null;
       }
     }catch(e){
       print(e);
+      return null;
     }
   }
 
@@ -172,7 +199,7 @@ class AuthService{
           'https://dogsonfire.herokuapp.com/users/register',
           headers:<String, String>{
             "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
+            'Content-Type' : 'application/json; charset=UTF-8', //ISO-8859-1
           },
           body: jsonEncode(<String,String>{
             "username": username,

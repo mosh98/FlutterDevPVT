@@ -3,16 +3,20 @@ import 'Dog.dart';
 class User{
   final String username;
   String email;
-  final String dateOfBirth;
-  final String gender;
-  final String desc;
+  String dateOfBirth;
+  String gender;
+  String desc;
   final String createdDate;
   final List<dynamic> dogs;
+  String photoUrl;
+  final String userId;
+  final bucket;
 
-  User({this.username, this.email, this.dateOfBirth, this.gender, this.desc, this.createdDate, this.dogs});
+  User({this.userId,this.username, this.email, this.dateOfBirth, this.gender, this.desc, this.createdDate, this.dogs, this.photoUrl, this.bucket});
 
   factory User.fromJson(Map<String, dynamic> json){
     return User(
+      userId: json['userId'],
       username: json['username'],
       email: json['email'],
       gender: json['gender'],
@@ -20,6 +24,8 @@ class User{
       desc: json['description'],
       createdDate: json['createdAt'],
       dogs: json['dogs'],
+      photoUrl: json['photoUrl'],
+      bucket: json['bucket']
     );
   }
 
@@ -32,6 +38,14 @@ class User{
   List getDogs(){return dogs;}
 
   void setEmail(String email){this.email = email;}
+
+  void setPhotoUrl(String photoUrl){this.photoUrl = photoUrl;}
+
+  void setDescription(String desc){this.desc = desc;}
+
+  void setGender(String gender){this.gender = gender;}
+
+  void setDateOfBirth(String dateOfBirth){this.dateOfBirth = dateOfBirth;}
 
   @override
   String toString() {

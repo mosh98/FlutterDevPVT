@@ -1,6 +1,7 @@
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,14 +18,40 @@ class ProfilePage extends StatefulWidget{
   final User user;
   ProfilePage({this.user});
 
+
   @override
   State createState() => new ProfileState();
 }
 
 class ProfileState extends State<ProfilePage>{
 
-  File _image;
   User user;
+
+  String profileImage;
+  String snackText = "";
+
+  bool _loadingImage = false;
+  bool _loadingProfile = false;
+
+  Future getImage() async{
+
+    var tempImage = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      _loadingImage = true;
+    });
+
+    bool uploadSuccessful = await _uploadImage(tempImage);
+    if(uploadSuccessful){
+      _getProfileImage();
+    }else{
+      String snackText = "Something went wrong with uploading picture.";
+
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
+
+      setState(() {_loadingImage = false;});
+    }
+  }
 
   List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
     'assets/pernilla.jpg',
@@ -40,14 +67,35 @@ class ProfileState extends State<ProfilePage>{
     if(user == null){
       user = widget.user;
     }
+    _getProfileImage();
     super.initState();
   }
 
-  Widget _loading = CircularProgressIndicator();
+  _getProfileImage() async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+    try{
+      final url = await http.get('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
+      if(url.statusCode==200){
+        setState(() {
+          profileImage = url.body;
+        });
+      }
+      setState(() {
+        _loadingImage = false;
+      });
+    }catch(e){
+      print(e);
+      setState(() {
+        _loadingImage = false;
+      });
+    }
+  }
+
+  Widget _loading = DefaultLoader();
 
   @override
   Widget build(BuildContext context) {
-    if(user == null){
+    if(user == null || profileImage == null){
       return _loading;
     }else{
       return profile();
@@ -55,7 +103,10 @@ class ProfileState extends State<ProfilePage>{
   }
 
   Widget profile(){
-    return Scaffold(
+    return _loadingProfile == true ?
+    _loading
+        :
+    Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
         title: Text('Profile'),
@@ -98,14 +149,26 @@ class ProfileState extends State<ProfilePage>{
           children: <Widget>[
             GestureDetector(
                 onTap: getImage,
-                child: _image == null
-                    ? CircleAvatar(radius: 40, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
-                    : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
+                child: Container(
+                    height:100,
+                    width:100,
+                    child:
+                    ClipRRect(
+                        borderRadius: BorderRadius.circular(10000.0),
+                        child: _loadingImage == true ?
+                        DefaultLoader()
+                        :
+                        CachedNetworkImage(
+                            imageUrl: profileImage,
+                            placeholder: (context, url) => DefaultLoader(),
+                            errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey))
+                    )
+                )
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
-            Text(user.username, style: TextStyle(fontSize: 16),)
+            Text(user.username, style: TextStyle(fontSize: 16),),
           ],
-        ),
+      ),
       ),
     );
   }
@@ -120,7 +183,11 @@ class ProfileState extends State<ProfilePage>{
             children: <Widget>[
               Text('About', style: TextStyle(fontSize: 16)),
               Padding(padding: EdgeInsets.only(top:10),),
-              Text(user.desc ?? 'Add a description of yourself'),
+              GestureDetector(
+                child: ListTile(title: Text(user.desc ?? 'Add a description of yourself')),
+                onTap: (){_setDescription();}
+              ),
+              Divider(thickness: 1.0,),
               Padding(padding: EdgeInsets.only(top:10),),
               Row(
                 children: <Widget>[
@@ -128,11 +195,12 @@ class ProfileState extends State<ProfilePage>{
                   IconButton(
                       icon: Icon(Icons.add),
                       onPressed: () async{
-                        await showDialog(context: context, barrierDismissible: false, child: DogDialog());
+                        await showDialog(context: context, barrierDismissible: false, child: DogDialog(context));
+                        setState(() {
+                          _loadingProfile = true;
+                        });
                         User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
-                        print(newUser.toString());
-                        setState(() {user = newUser;});
-                        print(newUser.toString());
+                        setState(() {user = newUser; _loadingProfile = false;});
                       },
                       iconSize: 16
                   )
@@ -145,6 +213,79 @@ class ProfileState extends State<ProfilePage>{
     );
   }
 
+    _setDescription() async{
+    String desc = "";
+
+    await showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context){
+          return Dialog(
+              child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children:[
+                    Container(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: [
+                          TextField(
+                            keyboardType: TextInputType.multiline,
+                            maxLines: 7,
+                            maxLength: 100,
+                            onChanged: (String input){
+                              desc = input;
+                            },
+                          ),
+                          ListTile(
+                            leading: IconButton(
+                              icon: Icon(Icons.done),
+                              onPressed: (){_updateDescription(desc); setState(() {_loadingProfile = true;}); Navigator.pop(context);},
+                            ),
+                            trailing: IconButton(
+                              icon: Icon(Icons.close),
+                              onPressed: (){Navigator.pop(context);},
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ]
+              )
+          );
+        }
+    );
+  }
+
+  void _updateDescription(String desc) async{
+    try{
+
+      final http.Response response = await http.put( //register to database
+          'https://dogsonfire.herokuapp.com/users',
+          headers:<String, String>{
+            "Accept": "application/json",
+            'Content-Type' : 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
+          },
+          body: jsonEncode(<String,String>{
+            "name":widget.user.username,
+            "description":desc,
+          })
+      );
+
+      if(response.statusCode==200){ // Successfully created database account
+        print("Updated desc, response code: " + response.statusCode.toString());
+        setState(() {widget.user.setDescription(desc); _loadingProfile = false;});
+      }else{ //Something went wrong
+        print("Something went wrong with updating desc, response code: " + response.statusCode.toString());
+        print(response.body);
+        setState(() {_loadingProfile = false;});
+      }
+    }catch(e){
+      setState(() {_loadingProfile = false;});
+      print(e);
+    }
+  }
+
   Widget _dogSection(){
     return Expanded(
       flex: 12,
@@ -155,6 +296,13 @@ class ProfileState extends State<ProfilePage>{
               leading: Icon(Icons.pets),
               title: Text(user.dogs[index]['name']),
               //TODO: IMAGE URL
+              trailing: IconButton(
+                  icon: Icon(Icons.delete_forever),
+                  onPressed: (){
+                    Dog dog = Dog.fromJson(user.dogs[index]);
+                    _deleteDogConfirmation(dog);
+                  }
+                  ),
               onTap: (){
                 Dog dog = Dog.fromJson(user.dogs[index]);
                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog)));
@@ -162,6 +310,86 @@ class ProfileState extends State<ProfilePage>{
         },
       ),
     );
+  }
+
+  _deleteDogConfirmation(Dog dog)async{
+    await showDialog(
+        context: context,
+        child: SimpleDialog(
+          contentPadding: EdgeInsets.all(10.0),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))
+          ),
+          children: [
+            Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Text(
+                    'Are you sure that you want to delete ${dog.name} from your profile?',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top:20),
+                  child: ListTile(
+                    leading: RaisedButton(
+                        child: Text('No'),
+                        onPressed: (){Navigator.pop(context);},
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                      ,
+                    trailing: RaisedButton(
+                        child: Text('Yes'),
+                        onPressed: () async{
+                          setState(() {_loadingProfile = true;});
+                          Navigator.pop(context);
+                          await _deleteDog(dog);
+                          setState(() {
+                            _loadingProfile = true;
+                          });
+                          User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+                          setState(() {user = newUser; _loadingProfile = false;});
+                          },
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                  ),
+                ),
+              ],
+            ),
+          ],
+        )
+    );
+  }
+
+  _deleteDog(Dog dog)async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+ 
+    try{
+      final response = await http.delete('https://dogsonfire.herokuapp.com/dogs/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
+      if(response.statusCode == 204){
+        print(response.statusCode);
+      
+        setState(() {
+          _loadingProfile = false;
+        });
+        snackText = 'Successfully deleted ${dog.name} from your profile.';
+      }else{
+        print(response.statusCode);
+        print(response.body);
+        
+        setState(() {
+          _loadingProfile = false;
+        });
+        snackText = 'Something went wrong with deleting ${dog.name} from your profile.';
+      }
+    }catch(e){
+      print(e);
+      setState(() {
+        _loadingProfile = false;
+      });
+      snackText = 'Something went wrong with deleting ${dog.name} from your profile.';
+    }
+
+    Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
   }
 
   Widget _pictureSection(){
@@ -193,46 +421,43 @@ class ProfileState extends State<ProfilePage>{
     );
   }
 
-  Future getUrl(File image) async{
-      try{
-      String token = await AuthService().getCurrentFirebaseUser().then((firebaseUser) => firebaseUser.getIdToken().then((tokenResult) => tokenResult.token));
-      String uid = await AuthService().getCurrentFirebaseUser().then((value) => value.uid);
-      print(token);
-      print(uid);
+  Future<bool> _uploadImage(File image) async{
+    try{
+      String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
 
-      final response = await http.put('https://dogsonfire.herokuapp.com/images/${await AuthService().getCurrentFirebaseUser().then((value) => value.uid)}', 
-      headers:<String,String> {
-        "Accept": "application/json",
-        'Content-Type' : 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $token',
-      },
-            body: jsonEncode(<String,String>{
-            "fileName": uid,
-          })
-      );
+      final response = await http.put('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
 
-      String photoUrl = response.body;
+      if(response != null){
+        print('First put of picture-upload went through :' + response.statusCode.toString());
+        print('Response body :' + response.body);
+        try{
+          final nextResponse = await http.put(response.body,
+              body: image.readAsBytesSync());
+          if(nextResponse.statusCode == 200){
+            print('Second put of picture-upload went through :' + response.statusCode.toString());
 
-      if(response.statusCode == 200){
-        return photoUrl;
+            return true;
+          }else{
+            print('Something went wrong with uploading picture, second put: ' + response.statusCode.toString());
+            //TODO: POPUP USER
+            return false;
+          }
+        }catch(e){
+          print(e);
+          return false;
+        }
       }else{
-        print(response.statusCode);
+        print('Something went wrong with first put of profilepicture: ' + response.statusCode.toString());
         print(response.body);
-        return null;
+        return false;
       }
     }catch(e){
       print(e);
-      return null;
+      return false;
     }
 }
 
-  Future getImage() async {
-    final image = await ImagePicker.pickImage(source: ImageSource.gallery);
 
-    setState(() {
-      _image = image;
-    });
-  }
 }
 
 class ImageDialog extends StatelessWidget {
@@ -254,6 +479,10 @@ class ImageDialog extends StatelessWidget {
 }
 
 class DogDialog extends StatefulWidget{
+
+  final BuildContext context;
+  DogDialog(this.context);
+
   @override
   createState() => new _DialogState();
 }
@@ -375,23 +604,23 @@ class _DialogState extends State<DogDialog>{
                                   if (mounted) {
                                     setState(() => _dateTime = newDateTime
 
-                                    );
+                                  );
 
-                                    dateOfBirth = '${f.format(_dateTime)}';
+                                  dateOfBirth = '${f.format(_dateTime)}';
 
 
-                                  }
-                                },
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      child:
-                      Align(
-                          alignment: Alignment.centerLeft,
-                          key:Key('date_of_birth'),
-                          child:
+                                }
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child:
+                    Align(
+                        alignment: Alignment.centerLeft,
+                        key:Key('date_of_birth'),
+                        child:
 
                           Text('Date of Birth ${f.format(_dateTime)}',
                               textAlign: TextAlign.left,
@@ -403,7 +632,10 @@ class _DialogState extends State<DogDialog>{
                   SizedBox(
                     width: double.infinity,
                     child: RaisedButton(
-                      onPressed: ()async{await _addDog();Navigator.of(context).pop();},
+                      onPressed: ()async{
+                        await _addDog();
+                        Navigator.of(context).pop();
+                        },
                       child: Text('Add dog'),
                       shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
                     ),
@@ -439,13 +671,17 @@ class _DialogState extends State<DogDialog>{
   }
 
   _addDog() async{
+    String snackText = "";
     if(dateOfBirth.isEmpty){
       dateOfBirth = f.format(_dateTime);
     }
 
     if(dogName.isEmpty || breed.isEmpty || gender.isEmpty){
       print('wrong inputs');
-      return; //todo. error message
+      snackText = "Please specify name and breed.";
+
+      Scaffold.of(widget.context).showSnackBar(SnackBar(content: Text(snackText)));
+      return;
     }
 
     try{
@@ -469,13 +705,17 @@ class _DialogState extends State<DogDialog>{
 
       if(response.statusCode==201){
         print(response.statusCode);
+        snackText = "$dogName was added to your profile!";
       }else{
         print(response.statusCode);
         print(response.body);
+        snackText = "Failed to upload $dogName to your profile.";
       }
     }catch(e){
       print(e);
+      snackText = "Failed to upload $dogName to your profile.";
     }
+    Scaffold.of(widget.context).showSnackBar(SnackBar(content: Text(snackText)));
   }
 }
 

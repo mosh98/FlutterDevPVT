@@ -1,5 +1,6 @@
 import 'package:dog_prototype/pages/placeHolderHome.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/Validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gender_selector/gender_selector.dart';
@@ -16,16 +17,19 @@ class FacebookForm extends StatefulWidget {
 class _FacebookFormState extends State<FacebookForm> {
 
   final usernameController = TextEditingController();
-  String dateOfBirth;
-  String gender_type;
+  String gender_type = 'MALE'; //DEFAULT
   DateTime _dateTime = DateTime.now();
+  String dateOfBirth;
   final f = new DateFormat('yyyy-MM-dd');
   final _formKey = GlobalKey<FormState>();
+  String snackText = "";
 
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
           title: Text('Add information to finish registration'),
           backgroundColor: Colors.grey[850],
@@ -37,11 +41,12 @@ class _FacebookFormState extends State<FacebookForm> {
 
   Widget _formSection(){
     return ListView(
+      padding: EdgeInsets.all(15),
       children: [
         Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               TextFormField(
                 key: Key('username'),
@@ -53,8 +58,45 @@ class _FacebookFormState extends State<FacebookForm> {
                     )
                 ),
                 keyboardType: TextInputType.text,
-                //validator: RegisterValidator.usernameValidator,
+                validator: Validator.usernameValidator,
               ),
+
+              Padding(padding: EdgeInsets.only(top:15),),
+
+              Container(
+                  decoration: BoxDecoration(
+                      borderRadius: new BorderRadius.circular(5.0),
+                      border: Border.all(color: Colors.black.withOpacity(0.4))
+                  ),
+                child: ListTile(
+                  title: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                        'Gender',
+                        textAlign: TextAlign.left,
+                        style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4))),
+                  ),
+                  trailing: DropdownButton<String>(
+                    value: gender_type,
+
+                    onChanged: (String newValue) {
+                      setState(() {
+                        gender_type = newValue;
+                      });
+                    },
+                    items: <String>[
+                      'MALE', 'FEMALE', '-'
+                    ].map<DropdownMenuItem<String>>((String value){
+                      return DropdownMenuItem<String>(
+                        value:value,
+                        child:Text(value, style: TextStyle(fontSize: 15.0),),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+
+              Padding(padding: EdgeInsets.only(top:15),),
 
               MaterialButton(
                   minWidth: 375,
@@ -79,8 +121,6 @@ class _FacebookFormState extends State<FacebookForm> {
                                 );
                                 print("You Selected Date: ${newDateTime}");
                                 dateOfBirth = '${f.format(_dateTime)}';
-
-
                               }
                             },
                           ),
@@ -92,24 +132,13 @@ class _FacebookFormState extends State<FacebookForm> {
                   Align(
                       alignment: Alignment.centerLeft,
                       key:Key('date_of_birth'),
-                      child:
-
-                      Text('Date of Birth ${f.format(_dateTime)}',
+                      child: Text('Date of Birth ${f.format(_dateTime)}',
                           textAlign: TextAlign.left,
                           style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4)))
-                  )),
-
-              GenderSelector(
-                  onChanged: (gender) {
-                    if(gender == Gender.FEMALE) {
-                      gender_type = "FEMALE";
-                    } else {
-                      gender_type = "MALE";
-                    }
-                  }
+                  )
               ),
 
-              Padding(padding: EdgeInsets.only(top: 25.0)),
+              Padding(padding: EdgeInsets.only(top: 80.0)),
 
               MaterialButton(
                   minWidth: 375,
@@ -129,7 +158,7 @@ class _FacebookFormState extends State<FacebookForm> {
                       style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.6)))
               ),
 
-              Padding(padding: EdgeInsets.only(top: 25.0)),
+              Padding(padding: EdgeInsets.only(top: 15.0)),
 
               MaterialButton(
                   minWidth: 375,
@@ -178,16 +207,25 @@ class _FacebookFormState extends State<FacebookForm> {
 
   register(String username, String dateOfBirth, String gender) async{
     String email = await AuthService().getCurrentFirebaseUser().then((value) => value.email);
+
+    if(gender == '-'){
+      gender = "UNKNOWN";
+    }
+
+    if(dateOfBirth == null){
+      dateOfBirth = f.format(_dateTime);
+    }
+
     dynamic result = await AuthService().addInformationToDatabase(email, username, dateOfBirth, gender);
 
     if(result != null){
-      print('here');
       Navigator.pop(context);
       Navigator.push(context, MaterialPageRoute(
           builder: (context) => Wrapper()
       ));
     }else{
-      //TODO: ERROR MESSAGE
+      snackText = 'Something went wrong with adding your information.';
+      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
     }
   }
 }

@@ -5,8 +5,9 @@ class Dog{
   String gender;
   bool neutered;
   String description;
+  final String uuid;
 
-  Dog({this.name, this.breed, this.dateOfBirth, this.gender, this.neutered, this.description});
+  Dog({this.name, this.breed, this.dateOfBirth, this.gender, this.neutered, this.description, this.uuid});
 
   factory Dog.fromJson(Map<String, dynamic> json){
     return Dog(
@@ -16,6 +17,7 @@ class Dog{
       gender: json['gender'],
       neutered: json['neutered'],
       description: json['description'],
+      uuid: json['uuid']
     );
   }
 

@@ -7,16 +7,16 @@ import 'package:dog_prototype/models/User.dart';
 
 import 'profileViewer.dart';
 
-class Search extends StatefulWidget {
+class FindFriends extends StatefulWidget {
 
   final User user;
-  Search({this.user});
+  FindFriends({this.user});
 
   @override
-  SearchState createState() => SearchState();
+  FindFriendsState createState() => FindFriendsState();
 }
 
-class SearchState extends State<Search> {
+class FindFriendsState extends State<FindFriends> {
 
 
   List<User> users = new List<User>();
@@ -29,7 +29,7 @@ class SearchState extends State<Search> {
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
         centerTitle: true,
-        title: Text('Search'),
+        title: Text('Find friends'),
       ),
       body: Column(
         children: <Widget>[
@@ -63,7 +63,7 @@ class SearchState extends State<Search> {
 
                             FlatButton.icon(
                             onPressed: (){
-                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => profileViewer(otherUser: users[index])));
+                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: users[index])));
                             },
                             icon: Icon(
                             Icons.keyboard_arrow_right,
