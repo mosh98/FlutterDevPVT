@@ -66,6 +66,7 @@ class ProfileState extends State<ProfilePage>{
     if(user == null){
       user = widget.user;
     }
+    print(user.userId);
     _getProfileImage();
     super.initState();
   }
@@ -195,10 +196,11 @@ class ProfileState extends State<ProfilePage>{
                       icon: Icon(Icons.add),
                       onPressed: () async{
                         await showDialog(context: context, barrierDismissible: false, child: DogDialog());
+                        setState(() {
+                          _loadingProfile = true;
+                        });
                         User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
-                        print(newUser.toString());
-                        setState(() {user = newUser;});
-                        print(newUser.toString());
+                        setState(() {user = newUser; _loadingProfile = false;});
                       },
                       iconSize: 16
                   )
@@ -539,7 +541,10 @@ class _DialogState extends State<DogDialog>{
                   SizedBox(
                     width: double.infinity,
                     child: RaisedButton(
-                      onPressed: ()async{await _addDog();Navigator.of(context).pop();},
+                      onPressed: ()async{
+                        await _addDog();
+                        Navigator.of(context).pop();
+                        },
                       child: Text('Add dog'),
                       shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
                     ),

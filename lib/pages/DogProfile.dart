@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/services/Authentication.dart';
@@ -23,21 +24,26 @@ class DogProfile extends StatefulWidget {
 class _DogProfileState extends State<DogProfile> {
 
   ProfileState _state = ProfileState.About;
-  File _image;
   Dog dog;
+  bool _loading = false;
+  bool _loadingImage = false;
+  String profileImage;
+
 
   @override
   void initState() {
     if(dog == null){
       dog = widget.dog;
     }
+    _getProfileImage();
     super.initState();
   }
 
-  bool _loading = false;
-
   @override
   Widget build(BuildContext context) {
+    if(profileImage == null){
+      return DefaultLoader();
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
@@ -61,24 +67,31 @@ class _DogProfileState extends State<DogProfile> {
     );
   }
 
+
+
   Widget _pictureSection(){
-    //TODO, WHEN PICTURES IS FINISHED
     return Expanded(
-      flex: 2,
+      flex: 1,
       child: Center(
-        child: Column(
-            children: [
-              GestureDetector(
-                  onTap: getImage,
-                  child: _image == null
-                      ? CircleAvatar(radius: 40, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
-                      : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
-              ),
-              Padding(padding: EdgeInsets.only(top:25.0)),
-              _stateSection()
-            ],
+        child: GestureDetector(
+            onTap: getImage,
+            child: Container(
+                height:100,
+                width:100,
+                child:
+                ClipRRect(
+                    borderRadius: BorderRadius.circular(10000.0),
+                    child: _loadingImage == true ?
+                    DefaultLoader()
+                        :
+                    CachedNetworkImage(
+                        imageUrl: profileImage,
+                        placeholder: (context, url) => DefaultLoader(),
+                        errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey))
+                )
+            )
         ),
-      )
+      ),
     );
   }
 
@@ -210,6 +223,83 @@ class _DogProfileState extends State<DogProfile> {
     );
   }
 
+  Future getImage() async{
+
+    var tempImage = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      _loadingImage = true;
+    });
+
+    bool uploadSuccessful = await _uploadImage(tempImage);
+    if(uploadSuccessful){
+      _getProfileImage();
+    }else{
+      String snackText = "Something went wrong with uploading picture.";
+
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
+
+      setState(() {_loadingImage = false;});
+    }
+  }
+
+  Future<bool> _uploadImage(File image) async{
+    try{
+      String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+
+      final response = await http.put('https://dogsonfire.herokuapp.com/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
+
+      if(response != null){
+        print('First put of picture-upload went through :' + response.statusCode.toString());
+        print('Response body :' + response.body);
+        try{
+          final nextResponse = await http.put(response.body,
+              body: image.readAsBytesSync());
+          if(nextResponse.statusCode == 200){
+            print('Second put of picture-upload went through :' + response.statusCode.toString());
+
+            return true;
+          }else{
+            print('Something went wrong with uploading picture, second put: ' + response.statusCode.toString());
+            //TODO: POPUP USER
+            return false;
+          }
+        }catch(e){
+          print(e);
+          return false;
+        }
+      }else{
+        print('Something went wrong with first put of profilepicture: ' + response.statusCode.toString());
+        print(response.body);
+        return false;
+      }
+    }catch(e){
+      print(e);
+      return false;
+    }
+  }
+
+
+  _getProfileImage() async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+    try{
+      final url = await http.get('https://dogsonfire.herokuapp.com/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
+      if(url.statusCode==200){
+        setState(() {
+          profileImage = url.body;
+        });
+      }
+      setState(() {
+        _loadingImage = false;
+      });
+    }catch(e){
+      print(e);
+      setState(() {
+        _loadingImage = false;
+      });
+    }
+  }
+
   _editDescription() async{
 
     String desc = "";
@@ -252,14 +342,6 @@ class _DogProfileState extends State<DogProfile> {
       );
     }
     );
-  }
-
-  Future getImage() async {
-    final image = await ImagePicker.pickImage(source: ImageSource.gallery);
-
-    setState(() {
-      _image = image;
-    });
   }
 
   void _setName() async{
