@@ -86,7 +86,7 @@ class AuthService{
   Future signInWithFacebook(BuildContext context) async{
     String clientID = '340936393545904';
     String url = 'https://www.facebook.com/connect/login_success.html';
-    https://www.facebook.com/dialog/oauth?client_id=340936393545904&redirect_uri=https://www.facebook.com/connect/login_success.html&response_type=token&scope=email,public_profile
+
     try{
       String result = await Navigator.push(context, MaterialPageRoute(
         builder: (context) => CustomWebView(
@@ -103,16 +103,19 @@ class AuthService{
     }
   }
 
-  _signInToFBWithFirebase(String result)async{
+  Future _signInToFBWithFirebase(String result)async{
     try{
       final facebookAuthCred = FacebookAuthProvider.getCredential(accessToken:result);
       if(facebookAuthCred != null){
         final res = await _auth.signInWithCredential(facebookAuthCred);
+        return res.user;
       }else{
         print('something went wrong with facebook log in');
+        return null;
       }
     }catch(e){
       print(e);
+      return null;
     }
   }
 

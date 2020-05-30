@@ -16,12 +16,6 @@ import 'placeHolderHome.dart';
 
 class Signup extends StatelessWidget {
   @override
-
-  //TODO:
-  /**
-   * - Create default value for date of birth variable, returns null if not clicked on it now.
-   */
-
   Widget build(BuildContext context) {
     final appTitle = 'Sign up';
 
@@ -207,15 +201,6 @@ class MyCustomFormState extends State<MyCustomForm> {
                     ),
                   ),
                 ),
-//                  GenderSelector(
-//                      onChanged: (gender) {
-//                        if(gender == Gender.FEMALE) {
-//                          gender_type = "FEMALE";
-//                        } else {
-//                          gender_type = "MALE";
-//                        }
-//                      }
-//                  )
               ),
 
               Padding(
