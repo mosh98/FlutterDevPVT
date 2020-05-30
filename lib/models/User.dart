@@ -47,8 +47,6 @@ class User{
 
   void setDateOfBirth(String dateOfBirth){this.dateOfBirth = dateOfBirth;}
 
-  void removeDog(){}
-
   @override
   String toString() {
     return "Name: $username Email: $email Date of birth: $dateOfBirth Gender: $gender Description: $desc Created at: $createdDate Dogs: $dogs";

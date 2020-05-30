@@ -25,11 +25,11 @@ class _SettingsPageState extends State<SettingsPage> {
   final AuthService _auth = AuthService();
   String gender = "";
   String dateOfBirth = "";
-  String snackText = "";
   String profileImage;
   bool _loadingImage = false;
   Widget _loading = DefaultLoader();
   bool _loadingProfile = false;
+  String snackText = "";
 
   @override
   void initState() {
@@ -146,7 +146,7 @@ class _SettingsPageState extends State<SettingsPage> {
     if(uploadSuccessful){
       _getProfileImage();
     }else{
-      String snackText = "Something went wrong with uploading picture.";
+      snackText = "Something went wrong with uploading picture.";
 
       Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
 
@@ -293,7 +293,11 @@ class _SettingsPageState extends State<SettingsPage> {
                       ,
                       trailing: RaisedButton(
                           child: Text('Yes'),
-                          onPressed: (){setState(() {_loadingProfile = true;}); _deleteAccount(); Navigator.pop(context);},
+                          onPressed: (){
+                            setState(() {_loadingProfile = true;});
+                            _deleteAccount();
+                            Navigator.pop(context);
+                            },
                           shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
                   ),
                 ),
@@ -305,36 +309,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _deleteAccount() async{
-    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
-    try{
-      final response = await http.delete('https://dogsonfire.herokuapp.com/users/${widget.user.userId}', headers:{'Authorization': 'Bearer $token'});
-      if(response.statusCode == 204){
-        print(response.statusCode);
-        print('deleted');
-
-        setState(() {
-          _loadingProfile = false;
-        });
-        snackText = 'Successfully deleted your profile.';
-      }else{
-        print(response.statusCode);
-        print(response.body);
-        print('not deleted');
-
-        setState(() {
-          _loadingProfile = false;
-        });
-        snackText = 'Something went wrong with deleting your profile.';
-      }
-    }catch(e){
-      print(e);
-      setState(() {
-        _loadingProfile = false;
-      });
-      snackText = 'Something went wrong with deleting your profile.';
+    bool deletedAccount = await AuthService().deleteAccount();
+    if(deletedAccount){
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }else{
+      snackText = "Something went wrong with deleting your account.";
+      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
     }
-
-    Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
   }
 
   void _logout() async{

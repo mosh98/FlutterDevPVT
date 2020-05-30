@@ -67,7 +67,6 @@ class ProfileState extends State<ProfilePage>{
     if(user == null){
       user = widget.user;
     }
-    print(user.userId);
     _getProfileImage();
     super.initState();
   }

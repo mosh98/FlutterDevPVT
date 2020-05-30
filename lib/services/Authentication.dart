@@ -21,6 +21,7 @@ class AuthService{
     });
   }
 
+  //create user model
   Future<User> createUserModel(Future<IdTokenResult> token) async{
     try{
       String t = await token.then((value) => value.token);
@@ -41,6 +42,28 @@ class AuthService{
       print(e);
       return null;
     }
+  }
+
+  Future<bool> deleteAccount()async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+    try{
+      final response = await http.delete('https://dogsonfire.herokuapp.com/users', headers:{'Authorization': 'Bearer $token'});
+      if(response.statusCode == 204){
+        await signOut();
+        print('Successfully deleted account: ' + response.statusCode.toString());
+        return true;
+      }
+      return false;
+    }catch(e){
+      print(e);
+      return false;
+    }
+  }
+
+  //password reset with email
+  resetPasswordUsingEmail(String email){
+    print(email);
+    _auth.sendPasswordResetEmail(email: email);
   }
 
   //sign in with email and password String email, String password

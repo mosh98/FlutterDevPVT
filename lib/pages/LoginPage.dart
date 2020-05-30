@@ -129,12 +129,47 @@ class LoginPageState extends State<LoginPage> {
           ),
           FlatButton(
             child: Text("Forgot your password? Retrieve it here."),
-            onPressed: (){print('test');},
+            onPressed: (){_resetPasswordDialog();},
           )
         ],
       ),
     );
   }
+
+  _resetPasswordDialog() async{
+    String email;
+
+    await showDialog(
+        context: context,
+        child: SimpleDialog(
+          contentPadding: EdgeInsets.all(10.0),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))
+          ),
+          children: [
+            Container(
+              child: Row(
+                children: [
+                  Text(
+                    'E-mail:',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                  Padding(padding: EdgeInsets.only(left:10),),
+                  Container(child:TextField(onChanged: (String newEmail){email = newEmail;},), width: 150,),
+                  Padding(padding: EdgeInsets.only(left:25),),
+                  IconButton(icon: Icon(Icons.done), onPressed: ()async{await _resetPassword(email); Navigator.of(context, rootNavigator:true).pop();})
+                ],
+              ),
+            )
+          ],
+        ),
+    );
+  }
+
+  _resetPassword(String email){
+    AuthService().resetPasswordUsingEmail(email);
+  }
+
 
   Widget _wrongCredentials(){
     return wrongCredent ? Text('Wrong username or password',style: TextStyle(color:Colors.red),) : Text('');
