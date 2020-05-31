@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/Validator.dart';
 import 'package:flutter/material.dart';
 import 'RegisterPage.dart';
 
@@ -15,6 +16,7 @@ class LoginPageState extends State<LoginPage> {
 
   final AuthService _auth = AuthService();
   final _formkey = GlobalKey<FormState>();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   String email,password = "";
   bool wrongCredent = false;
   bool _isLoading = false;
@@ -22,6 +24,7 @@ class LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
         body: Form(
           key: _formkey,
           child: _isLoading ? Center(child:DefaultLoader()) : ListView(
@@ -58,7 +61,7 @@ class LoginPageState extends State<LoginPage> {
               hintText: "Email* ",
               icon: Icon(Icons.person),
             ),
-            validator: UserNameValidator.validate,
+            validator: Validator.usernameValidator,
             keyboardType: TextInputType.text,
             onChanged: (emailValue){
               setState(() => email = emailValue);
@@ -70,7 +73,7 @@ class LoginPageState extends State<LoginPage> {
               hintText: "Password* ",
               icon: Icon(Icons.lock),
             ),
-            validator: PasswordValidator.validate,
+            validator: Validator.passwordValidator,
             obscureText: true,
             keyboardType: TextInputType.text,
               onChanged: (passwordValue){
@@ -97,7 +100,7 @@ class LoginPageState extends State<LoginPage> {
             child: new Text("Sign in"),
             onPressed: () async {
               setState(() => _isLoading = true);
-              dynamic result = _firebaseLogin(email, password);
+              dynamic result = _login(email, password);
               if(result==null){
                 setState(() {
                   _wrongCredentials();
@@ -125,7 +128,9 @@ class LoginPageState extends State<LoginPage> {
           ),
           FlatButton(
             child: Text("Forgot your password? Retrieve it here."),
-            onPressed: (){_resetPasswordDialog();},
+            onPressed: ()async{
+              await _resetPasswordDialog();
+              },
           )
         ],
       ),
@@ -153,7 +158,13 @@ class LoginPageState extends State<LoginPage> {
                   Padding(padding: EdgeInsets.only(left:10),),
                   Container(child:TextField(onChanged: (String newEmail){email = newEmail;},), width: 150,),
                   Padding(padding: EdgeInsets.only(left:25),),
-                  IconButton(icon: Icon(Icons.done), onPressed: ()async{await _resetPassword(email); Navigator.of(context, rootNavigator:true).pop();})
+                  IconButton(
+                      icon: Icon(Icons.done),
+                      onPressed: ()async{
+                        String snackText = await _resetPassword(email);
+                        Navigator.of(context, rootNavigator:true).pop();
+                        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
+                      })
                 ],
               ),
             )
@@ -162,8 +173,15 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  _resetPassword(String email){
-    AuthService().resetPasswordUsingEmail(email);
+  Future<String> _resetPassword(String email) async{
+    String snackText = "";
+    dynamic result = await AuthService().resetPasswordUsingEmail(email);
+    if(result != null){
+      snackText = "A reset-mail has been sent to your e-mail.";
+    }else{
+      snackText = "E-mail could not be found.";
+    }
+    return snackText;
   }
 
 
@@ -171,7 +189,7 @@ class LoginPageState extends State<LoginPage> {
     return wrongCredent ? Text('Wrong username or password',style: TextStyle(color:Colors.red),) : Text('');
   }
 
-  _firebaseLogin(String email, String password) async{
+  _login(String email, String password) async{
     final formState = _formkey.currentState;
     if(formState.validate()){
       formState.save();
@@ -195,17 +213,5 @@ class LoginPageState extends State<LoginPage> {
 
   void _signInWithFacebook() {
     AuthService().signInWithFacebook(context);
-  }
-}
-
-class UserNameValidator{
-  static String validate(String input){
-    return input.isEmpty || input.trim().isEmpty ? 'Username cant be empty' : null;
-  }
-}
-
-class PasswordValidator{
-  static String validate(String input){
-    return input.isEmpty || input.trim().isEmpty ? 'Password cant be empty' : null;
   }
 }

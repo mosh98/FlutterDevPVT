@@ -61,9 +61,14 @@ class AuthService{
   }
 
   //password reset with email
-  resetPasswordUsingEmail(String email){
-    print(email);
-    _auth.sendPasswordResetEmail(email: email);
+  resetPasswordUsingEmail(String email)async{
+    try{
+      await _auth.sendPasswordResetEmail(email: email);
+      return true;
+    }catch(e){
+     print(e);
+     return null;
+    }
   }
 
   //sign in with email and password String email, String password
