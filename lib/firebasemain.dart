@@ -7,6 +7,7 @@ import 'package:dog_prototype/pages/ProfilePage.dart';
 import 'package:dog_prototype/pages/OldPagesSavedIncaseProblem/signup.dart';
 import 'package:dog_prototype/pages/placeHolderHome.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/Validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

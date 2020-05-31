@@ -85,202 +85,206 @@ class MyCustomFormState extends State<MyCustomForm> {
       customLoader
       :
       Container(
-      child: Column(
-        children: <Widget>[
-          Expanded(
-            flex: 7,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.only(left:20, right: 20, top: 20),
-                    child:
-                    TextFormField(
-                      key: Key('email'),
-                      controller: emailController,
-                      decoration: new InputDecoration(
-                          labelText: 'Email*',
-                          border: new OutlineInputBorder(
-                              borderSide: new BorderSide()
-                          )
-                      ),
-                      keyboardType: TextInputType.text,
-                      validator: Validator.emailValidator,
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(left:20, right: 20, top: 10),
-                    child:
-                    TextFormField(
-                      key: Key('password'),
-                      controller: passwordController,
-                      decoration: new InputDecoration(
-                          labelText: 'Choose password*',
-                          border: new OutlineInputBorder(
-                              borderSide: new BorderSide()
-                          )
-                      ),
-                      obscureText: true,
-                      keyboardType: TextInputType.text,
-                      validator: Validator.passwordValidator,
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(left:20, right: 20, top: 10),
-                    child:
-                    TextFormField(
-                      key: Key('username'),
-                      controller: usernameController,
-                      decoration: new InputDecoration(
-                          labelText: 'Choose username*',
-                          border: new OutlineInputBorder(
-                              borderSide: new BorderSide()
-                          )
-                      ),
-                      keyboardType: TextInputType.text,
-                      validator: Validator.usernameValidator,
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.only(left:20, right: 20, top: 10),
-                    child:  Container(
-                      decoration: BoxDecoration(
-                          borderRadius: new BorderRadius.circular(5.0),
-                          border: Border.all(color: Colors.black.withOpacity(0.4))
-                      ),
-                      child: ListTile(
-                        title: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                              'Gender*',
-                              textAlign: TextAlign.left,
-                              style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4))),
+     child: ListView(
+            children:[ Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.only(left:20, right: 20, top: 20),
+                      child:
+                      TextFormField(
+                        key: Key('email'),
+                        controller: emailController,
+                        decoration: new InputDecoration(
+                            labelText: 'Email*',
+                            border: new OutlineInputBorder(
+                                borderSide: new BorderSide()
+                            )
                         ),
-                        trailing: DropdownButton<String>(
-                          value: gender_type,
-
-                          onChanged: (String newValue) {
-                            setState(() {
-                              gender_type = newValue;
-                            });
-                          },
-                          items: <String>[
-                            'MALE', 'FEMALE', '-'
-                          ].map<DropdownMenuItem<String>>((String value){
-                            return DropdownMenuItem<String>(
-                              value:value,
-                              child:Text(value, style: TextStyle(fontSize: 15.0),),
-                            );
-                          }).toList(),
-                        ),
+                        keyboardType: TextInputType.text,
+                        validator: Validator.emailValidator,
                       ),
                     ),
-                  ),
 
-                  Padding(
-                    padding: const EdgeInsets.only(left:20, right: 20, top: 10),
-                    child:
-                    MaterialButton(
-                        minWidth: 375,
-                        height: 50,
-                        shape: new RoundedRectangleBorder(
+                    Padding(
+                      padding: const EdgeInsets.only(left:20, right: 20, top: 10),
+                      child:
+                      TextFormField(
+                        key: Key('password'),
+                        controller: passwordController,
+                        decoration: new InputDecoration(
+                            labelText: 'Choose password*',
+                            border: new OutlineInputBorder(
+                                borderSide: new BorderSide()
+                            )
+                        ),
+                        obscureText: true,
+                        keyboardType: TextInputType.text,
+                        validator: Validator.passwordValidator,
+                      ),
+                    ),
 
+                    Padding(
+                      padding: const EdgeInsets.only(left:20, right: 20, top: 10),
+                      child:
+                      TextFormField(
+                        key: Key('repeatPassword'),
+                        decoration: new InputDecoration(
+                            labelText: 'Repeat password*',
+                            border: new OutlineInputBorder(
+                                borderSide: new BorderSide()
+                            )
+                        ),
+                        obscureText: true,
+                        keyboardType: TextInputType.text,
+                        validator: (String pass2){return Validator.matchPasswords(passwordController.text, pass2);}
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.only(left:20, right: 20, top: 10),
+                      child:
+                      TextFormField(
+                        key: Key('username'),
+                        controller: usernameController,
+                        decoration: new InputDecoration(
+                            labelText: 'Choose username*',
+                            border: new OutlineInputBorder(
+                                borderSide: new BorderSide()
+                            )
+                        ),
+                        keyboardType: TextInputType.text,
+                        validator: Validator.usernameValidator,
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.only(left:20, right: 20, top: 10),
+                      child:  Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
                             borderRadius: new BorderRadius.circular(5.0),
-                            side: BorderSide(color: Colors.black.withOpacity(0.4)))
-                        ,
-                        onPressed: () {
-                          showCupertinoModalPopup<void>(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return _buildBottomPicker(
-                                CupertinoDatePicker(
-                                  mode: CupertinoDatePickerMode.date,
-                                  maximumDate: DateTime.now(),
-                                  minimumDate: DateTime(1900),
-                                  initialDateTime: DateTime(1990),
-                                  onDateTimeChanged: (DateTime newDateTime) {
-                                    if (mounted) {
-                                      setState(() => _dateTime = newDateTime
-
-                                      );
-                                      print("You Selected Date: ${newDateTime}");
-                                      date_of_birth = '${f.format(_dateTime)}';
-
-
-                                    }
-                                  },
-                                ),
-                              );
+                            border: Border.all(color: Colors.black.withOpacity(0.4))
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.only(left:10),
+                          child: DropdownButton<String>(
+                            value: gender_type,
+                            isExpanded: true,
+                            onChanged: (String newValue) {
+                              setState(() {
+                                gender_type = newValue;
+                              });
                             },
-                          );
-                        },
+                            items: <String>[
+                              'MALE', 'FEMALE', '-'
+                            ].map<DropdownMenuItem<String>>((String value){
+                              return DropdownMenuItem<String>(
+                                value:value,
+                                child:Text(value, style: TextStyle(fontSize: 15.0),),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.only(left:20, right: 20, top: 10),
+                      child:
+                      MaterialButton(
+                          minWidth: 375,
+                          height: 50,
+                          shape: new RoundedRectangleBorder(
+
+                              borderRadius: new BorderRadius.circular(5.0),
+                              side: BorderSide(color: Colors.black.withOpacity(0.4)))
+                          ,
+                          onPressed: () {
+                            showCupertinoModalPopup<void>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return _buildBottomPicker(
+                                  CupertinoDatePicker(
+                                    mode: CupertinoDatePickerMode.date,
+                                    maximumDate: DateTime.now(),
+                                    minimumDate: DateTime(1900),
+                                    initialDateTime: DateTime(1990),
+                                    onDateTimeChanged: (DateTime newDateTime) {
+                                      if (mounted) {
+                                        setState(() => _dateTime = newDateTime
+
+                                        );
+                                        print("You Selected Date: ${newDateTime}");
+                                        date_of_birth = '${f.format(_dateTime)}';
+
+
+                                      }
+                                    },
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                          child:
+                          Align(
+                              alignment: Alignment.centerLeft,
+                              key:Key('date_of_birth'),
+                              child:
+
+                              Text('Date of Birth ${f.format(_dateTime)}',
+                                  textAlign: TextAlign.left,
+                                  style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4)))
+                          )
+                      ),
+
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left:20, right: 20, top: 40),
+                      child: Center(
+                        child: Text(
+                          'By proceeding you also agree \n to the Terms of Service and Privacy Policy',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontFamily: 'RobotoMono', color: Colors.black.withOpacity(0.3)),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                        padding: const EdgeInsets.only(left:20, right: 20, top: 20),
                         child:
-                        Align(
-                            alignment: Alignment.centerLeft,
-                            key:Key('date_of_birth'),
-                            child:
-
-                            Text('Date of Birth ${f.format(_dateTime)}',
-                                textAlign: TextAlign.left,
-                                style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4)))
-                        )),
-
-                  ),
-                ],
+                        MaterialButton(
+                            minWidth: 375,
+                            height: 50,
+                            shape: new RoundedRectangleBorder(
+                                borderRadius: new BorderRadius.circular(10.0),
+                                side: BorderSide(color: Colors.grey[850])),
+                            onPressed: () {
+                              // Validate returns true if the form is valid, or false
+                              // otherwise.
+                              if (_formKey.currentState.validate()) {
+                                // If the form is valid, display a Snackbar.
+                                setState(() {
+                                  customLoader = CustomLoader(textWidget: Text('Processing data..'),padding: Padding(padding:EdgeInsets.only(top:15)));
+                                  _isLoading = true;
+                                });
+                                register(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
+                              }
+                            },
+                            color: Colors.white,
+                            textColor: Colors.black,
+                            child: Text('Sign up',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.6)))
+                        )
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ]
           ),
-          Expanded(
-            flex:3,
-            child: Column(
-              children: [
-                Center(
-                    child:
-                    Text(
-                      'By proceeding you also agree \n to the Terms of Service and Privacy Policy',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'RobotoMono', color: Colors.black.withOpacity(0.3)),
-                    )
-                ),
 
-                Padding(
-                    padding: const EdgeInsets.only(left:20, right: 20, top: 20),
-                    child:
-                    MaterialButton(
-                        minWidth: 375,
-                        height: 50,
-                        shape: new RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(10.0),
-                            side: BorderSide(color: Colors.grey[850])),
-                        onPressed: () {
-                          // Validate returns true if the form is valid, or false
-                          // otherwise.
-                          if (_formKey.currentState.validate()) {
-                            // If the form is valid, display a Snackbar.
-                            setState(() {
-                              customLoader = CustomLoader(textWidget: Text('Processing data..'),padding: Padding(padding:EdgeInsets.only(top:15)));
-                              _isLoading = true;
-                            });
-                            register(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
-                          }
-                        },
-                        color: Colors.white,
-                        textColor: Colors.black,
-                        child: Text('Sign up',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.6)))
-                    )
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
     );
   }
 

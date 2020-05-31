@@ -25,4 +25,11 @@ class Validator{
       return null;
     }
   }
+
+  static String matchPasswords(String pass1, String pass2){
+    if(pass1 != pass2){
+      return 'Passwords do not match.';
+    }
+    return null;
+  }
 }
