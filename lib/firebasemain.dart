@@ -39,7 +39,6 @@ class Wrapper extends StatelessWidget{
       final bool isLoggedIn = snapshot.hasData;
 
         return isLoggedIn ?
-        //PlaceHolderApp(futureUser: AuthService().createUserModel(snapshot.data.getIdToken()))
         Redirect()
          :
         StartPage();
