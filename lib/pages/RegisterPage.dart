@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dog_prototype/loaders/CustomLoader.dart';
 import 'package:dog_prototype/pages/mapPage.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/Validator.dart';
@@ -75,11 +76,15 @@ class MyCustomFormState extends State<MyCustomForm> {
   final emailController = TextEditingController();
   String date_of_birth;
   String gender_type = 'MALE'; //DEFAULT
+  bool _isLoading = false;
+  CustomLoader customLoader = CustomLoader();
 
   @override
   Widget build(BuildContext context) {
-
-    return Container(
+    return _isLoading == true ?
+      customLoader
+      :
+      Container(
       child: Column(
         children: <Widget>[
           Expanded(
@@ -257,8 +262,10 @@ class MyCustomFormState extends State<MyCustomForm> {
                           // otherwise.
                           if (_formKey.currentState.validate()) {
                             // If the form is valid, display a Snackbar.
-                            Scaffold.of(context)
-                                .showSnackBar(SnackBar(content: Text('Processing Data')));
+                            setState(() {
+                              customLoader = CustomLoader(textWidget: Text('Processing data..'),padding: Padding(padding:EdgeInsets.only(top:15)));
+                              _isLoading = true;
+                            });
                             register(usernameController.text, emailController.text, passwordController.text, date_of_birth, gender_type);
                           }
                         },
@@ -289,12 +296,12 @@ class MyCustomFormState extends State<MyCustomForm> {
 
       dynamic result = await _auth.registerWithEmailAndPassword(username, email, dateOfBirth, gender, password);
 
-      if(result != null){
-        //Successfully created firebase account
-        //Navigator.of(context).push(MaterialPageRoute(builder: (context) => PlaceHolderApp(user:result)));
-      }else{
-        //Something went wrong
-        print('did not work');
+      setState(() {
+        _isLoading = false;
+      });
+
+      if(result != null || result != '200'){
+        Scaffold.of(context).showSnackBar(SnackBar(content: Text(result.toString())));
       }
     } catch (e) {
       print(e.message + "catch");

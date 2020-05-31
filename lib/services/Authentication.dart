@@ -177,13 +177,12 @@ class AuthService{
   }
 
   //register with email and password
-  Future<User> registerWithEmailAndPassword(String username, String email, String dateOfBirth, String gender, String password) async{
+  Future<String> registerWithEmailAndPassword(String username, String email, String dateOfBirth, String gender, String password) async{
     try{
       dynamic result = await _registerToDatabase(username, email, dateOfBirth, gender, password);
-      print("this was the result: " + result);
+
       if(result != null){
-        print('in here');
-        return User(); //TODO
+        return result;
       }else{
         return null;
       }
@@ -193,7 +192,8 @@ class AuthService{
     }
   }
 
-  _registerToDatabase(String username, String email, String dateOfBirth, String gender, String password)async{
+  Future<String> _registerToDatabase(String username, String email, String dateOfBirth, String gender, String password)async{
+
     try {
       final http.Response response = await http.post( //register to database
           'https://dogsonfire.herokuapp.com/users/register',
@@ -210,15 +210,18 @@ class AuthService{
           })
       );
 
-      if(response.statusCode==200){ // Successfully created database account
+      if(response.statusCode==200){
         print(response.statusCode);
         await signInWithEmailAndPassword(email, password);
-      }else{ //Something went wrong
+        return response.statusCode.toString();
+      }else{
         print(response.statusCode);
         print(response.body);
+        return json.decode(response.body)['message'];
       }
     } catch (e) {
       print("catch: " + e.message);
+      return null;
     }
   }
 
