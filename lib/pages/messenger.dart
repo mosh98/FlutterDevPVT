@@ -24,10 +24,7 @@ class Messenger extends StatelessWidget {
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
-  Messenger(User user, User peer){
-    this.peer = peer;
-    this.user = user;
-  }
+  Messenger({this.user,this.peer});
 
 
   Future<TokenFcmJson> retireveRecipientToken(String username) async{

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/CustomLoader.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
+import 'package:dog_prototype/pages/messenger.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image/network.dart';
@@ -17,13 +18,14 @@ class FindFriends extends StatefulWidget {
   FindFriends({this.user});
 
   @override
-  FindFriendsState createState() => FindFriendsState();
+  FindFriendsState createState() => FindFriendsState(currentUser:this.user);
 }
 
 class FindFriendsState extends State<FindFriends> {
-  
-  Map<User, String> users = new Map<User, String>();
 
+  FindFriendsState({this.currentUser});
+  Map<User, String> users = new Map<User, String>();
+  User currentUser;
   final textFieldController = TextEditingController();
   bool _loading = false;
   CustomLoader loader = CustomLoader(textWidget: Text("Finding friends.."),);
@@ -97,7 +99,7 @@ class FindFriendsState extends State<FindFriends> {
                             children: <Widget>[
                               FlatButton.icon(
                                 onPressed: (){
-                                  print('go to messenger');
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => Messenger(user: currentUser,peer: user)));
                                 },
                                 icon: Icon(
                                     Icons.chat_bubble_outline, size: 30, color: Colors.black

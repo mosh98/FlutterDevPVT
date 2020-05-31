@@ -20,7 +20,7 @@ class MessageTile extends StatelessWidget {
     return ListTile(
       onTap: (){ //Navigator.push(context, MaterialPageRoute(builder: (context) => NewMessage()));
 
-        //Navigator.push(context, MaterialPageRoute(builder: (context) => Messenger() ));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => Messenger() ));
      },
         leading: CircleAvatar(
           radius: 30,
