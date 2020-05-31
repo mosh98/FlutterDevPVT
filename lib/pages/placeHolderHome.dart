@@ -55,7 +55,7 @@ class HomePageState extends State<PlaceHolderApp> {
       mapPage = MapPage();
       profilePage = ProfilePage(user:user);
       messages = Messages();
-      search = FindFriends();
+      search = FindFriends(user: user,);
       pages = [profilePage, mapPage, search, messages];
       currentPage = pages[selectedIndex];
     }

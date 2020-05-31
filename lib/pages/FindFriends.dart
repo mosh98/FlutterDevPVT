@@ -5,21 +5,24 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:dog_prototype/models/User.dart';
 
+import 'messenger.dart';
 import 'profileViewer.dart';
 
 class FindFriends extends StatefulWidget {
-
   final User user;
+
   FindFriends({this.user});
 
   @override
-  FindFriendsState createState() => FindFriendsState();
+  FindFriendsState createState() => FindFriendsState(user);
 }
 
 class FindFriendsState extends State<FindFriends> {
-
-
   List<User> users = new List<User>();
+  User user;
+  FindFriendsState(User user){
+    this.user = user;
+  }
 
   final textFieldController = TextEditingController();
 
@@ -59,49 +62,59 @@ class FindFriendsState extends State<FindFriends> {
                         ),
                         Row(
                           children: <Widget>[
-                            Icon(Icons.chat_bubble_outline, size: 30, color: Colors.black),
-
+                            IconButton(
+                              icon: Icon(Icons.chat_bubble_outline,
+                                  size: 30, color: Colors.black),
+                              onPressed: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => Messenger(user,users[index])));
+                              },
+                            ),
                             FlatButton.icon(
-                            onPressed: (){
-                            Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: users[index])));
-                            },
-                            icon: Icon(
-                            Icons.keyboard_arrow_right,
-                            color: Colors.black,
-                            ),
-                            label: Text(
-                            '',
-                            style: TextStyle(color:Colors.white),
-                            ),
-                          )
+                              onPressed: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => ProfileViewer(
+                                        otherUser: users[index])));
+                              },
+                              icon: Icon(
+                                Icons.keyboard_arrow_right,
+                                color: Colors.black,
+                              ),
+                              label: Text(
+                                '',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            )
                           ],
                         ),
                       ],
                     ),
                   );
-                }
-            ),
+                }),
           ),
         ],
       ),
     );
   }
 
-
   void _getUser(String input) async {
     users.clear();
-    try{
+    try {
+      String token = await AuthService()
+          .getCurrentFirebaseUser()
+          .then((value) => value.getIdToken().then((value) => value.token));
 
-      String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
-
-      final response = await http.get('https://dogsonfire.herokuapp.com/users?search=$input', headers: {
-        'Authorization': 'Bearer $token',
-      });
-
+      final response = await http.get(
+          'https://dogsonfire.herokuapp.com/users?search=$input',
+          headers: {
+            'Authorization': 'Bearer $token',
+          });
 
       if (response.statusCode == 200) {
         List userData = json.decode(response.body);
-        userData.forEach((element) {users.add(User.fromJson(element));});
+        userData.forEach((element) {
+          users.add(User.fromJson(element));
+        });
       } else {
         print('Failed to fetch username' + response.statusCode.toString());
         print(response.body);
@@ -122,8 +135,6 @@ class FindFriendsState extends State<FindFriends> {
       Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
 
       setState(() {});
-    }catch(e){
-
-    }
+    } catch (e) {}
   }
 }
