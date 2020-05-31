@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dog_prototype/loaders/CustomLoader.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,8 @@ class FindFriendsState extends State<FindFriends> {
   Map<User, String> users = new Map<User, String>();
 
   final textFieldController = TextEditingController();
+  bool _loading = false;
+  CustomLoader loader = CustomLoader(textWidget: Text("Finding friends.."),);
 
   @override
   Widget build(BuildContext context) {
@@ -43,9 +46,15 @@ class FindFriendsState extends State<FindFriends> {
                 keyboardType: TextInputType.text,
                 controller: textFieldController,
                 onSubmitted: (String input) {
+                  setState(() {
+                    _loading = true;
+                  });
                   _getUser(input);
                 }),
           ),
+          _loading == true ?
+          Expanded(child: loader,)
+          :
           Expanded(
             child: ListView.builder(
                 itemCount: users.length,
@@ -55,6 +64,7 @@ class FindFriendsState extends State<FindFriends> {
                   return GestureDetector(
                     onTap: (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));},
                     child: Card(
+                      color: Colors.brown[100],
                       key: ValueKey(index),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -71,12 +81,12 @@ class FindFriendsState extends State<FindFriends> {
                                       Icon(Icons.person)
                                           :
                                       CachedNetworkImage(
-                                        key: ValueKey(index),
-                                        imageUrl: users[user],
-                                        useOldImageOnUrlChange: true,
-                                        placeholder: (context, url) => Icon(Icons.person),
-                                        errorWidget: (context, url, error) => Icon(Icons.person),
-                                        fit: BoxFit.fill
+                                          key: ValueKey(index),
+                                          imageUrl: users[user],
+                                          useOldImageOnUrlChange: true,
+                                          placeholder: (context, url) => Icon(Icons.person),
+                                          errorWidget: (context, url, error) => Icon(Icons.person),
+                                          fit: BoxFit.fill
                                       )
                                   )
                               ),
@@ -99,18 +109,18 @@ class FindFriendsState extends State<FindFriends> {
                               ),
 
                               FlatButton.icon(
-                              onPressed: (){
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));
-                              },
-                              icon: Icon(
-                              Icons.keyboard_arrow_right,
-                              color: Colors.black,
-                              ),
-                              label: Text(
-                              '',
-                              style: TextStyle(color:Colors.white),
-                              ),
-                            )
+                                onPressed: (){
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));
+                                },
+                                icon: Icon(
+                                  Icons.keyboard_arrow_right,
+                                  color: Colors.black,
+                                ),
+                                label: Text(
+                                  '',
+                                  style: TextStyle(color:Colors.white),
+                                ),
+                              )
                             ],
                           ),
                         ],
@@ -179,7 +189,7 @@ class FindFriendsState extends State<FindFriends> {
 
       Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
 
-      setState(() {});
+      setState(() {_loading = false;});
     }catch(e){
 
     }
