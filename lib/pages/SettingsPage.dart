@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/Validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -30,6 +31,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _loading = DefaultLoader();
   bool _loadingProfile = false;
   String snackText = "";
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -71,6 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     if(widget.user == null){
       return Scaffold(
+        key: _scaffoldKey,
         appBar: AppBar(
           backgroundColor: Colors.grey[850],
           title: Text('Settings'),
@@ -83,9 +86,13 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     return _loadingProfile == true || profileImage == null ?
-        _loading
+    Scaffold(
+      key: _scaffoldKey,
+      body: DefaultLoader(),
+        )
         :
     Scaffold(
+        key: _scaffoldKey,
       resizeToAvoidBottomPadding: false,
         appBar: AppBar(
           backgroundColor: Colors.grey[850],
@@ -248,7 +255,7 @@ class _SettingsPageState extends State<SettingsPage> {
             tiles: [
               ListTile(
                 title: Text('Change Password'),
-                onTap: (){_changePassword();},
+                onTap: (){_reAuthenticateDialog();},
               ),
               ListTile(
                 title: Text('Delete account'),
@@ -457,63 +464,136 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  //TODO: NOT FINISHED
-  _changePassword()async{
+  _reAuthenticateDialog()async{
     String password = "";
 
-    await showDialog(context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context){
-          return Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 200.0, maxWidth: 450.0),
-                  child: Dialog(
-                    child: ListView(
-                      padding: EdgeInsets.all(10.0),
-                      children: [
-                        TextFormField(
-                          decoration: new InputDecoration(
-                            hintText: "New password* ",
-                          ),
-                          obscureText: true,
-                          onChanged: (String value){
-                            password = value;
-                          },
-                        ),
-                        Row(
-                          children: [
-                            RaisedButton(
-                              child: Text('Back'),
-                              onPressed: (){Navigator.of(context, rootNavigator: true).pop('dialog'); return;},
-                            ),
-                            Padding(padding:EdgeInsets.only(left:20)),
-                            RaisedButton(
-                              child: Text('Renew password'),
-                              onPressed: () async{
-                                Navigator.of(context, rootNavigator: true).pop('dialog');
-                              },
-                            )
-                          ],
-                        )
-                      ],
-                    ),
+    await showDialog(
+        context: context,
+        child: SimpleDialog(
+          contentPadding: EdgeInsets.all(10.0),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))
+          ),
+          children: [
+            Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Text(
+                    'Enter your current password:',
+                    style: TextStyle(fontSize: 17),
                   ),
                 ),
-              );
-        },
+                TextFormField(
+                  onChanged: (String newPassword){password = newPassword;},
+                  obscureText: true,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top:20),
+                  child: ListTile(
+                      leading: RaisedButton(
+                          child: Text('Enter'),
+                          onPressed: (){setState(() {
+                            _loadingProfile = true;});
+                          _authenticate(password);
+                          Navigator.pop(context);
+                          },
+                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                      ,
+                      trailing: RaisedButton(
+                          child: Text('Back'),
+                          onPressed: (){
+                            Navigator.pop(context);
+                          },
+                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                  ),
+                ),
+              ],
+            ),
+          ],
+        )
     );
+  }
 
-    if(password.trim().isNotEmpty && password.length > 5){
-      print('here');
-      bool changedPassword = await AuthService().changePassword(password);
-      if(changedPassword){
-        print('worked'); //TODO: NOTIFY USER
-        await _auth.signOut();
-      }else{
-        print('did not work'); //TODO: NOTIFY USER
-      }
+  _authenticate(String password) async{
+    dynamic reAuthenticated = await AuthService().reauthenticateUser(password);
+
+    if(reAuthenticated != null){
+      _changePasswordDialog();
     }else{
-      print('cant be empty or less than 6 symbols'); //TODO: NOTIFY USER
+      snackText = "The password you entered was incorrect.";
+      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
     }
+    setState(() {
+      _loadingProfile = false;
+    });
+  }
+
+  _changePasswordDialog()async{
+    String password = "";
+
+    await showDialog(
+        context: context,
+        child: SimpleDialog(
+          contentPadding: EdgeInsets.all(10.0),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))
+          ),
+          children: [
+            Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Text(
+                    'Enter a new password:',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
+                TextFormField(
+                  onChanged: (String newPassword){password = newPassword;},
+                  obscureText: true,
+                  validator: Validator.passwordValidator,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(top:20),
+                  child: ListTile(
+                      leading: RaisedButton(
+                          child: Text('Enter'),
+                          onPressed: (){setState(() {
+                            _loadingProfile = true;});
+                          _renewPassword(password);
+                          Navigator.pop(context);
+                          },
+                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                      ,
+                      trailing: RaisedButton(
+                          child: Text('Back'),
+                          onPressed: (){
+                            Navigator.pop(context);
+                          },
+                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                  ),
+                ),
+              ],
+            ),
+          ],
+        )
+    );
+  }
+  
+  _renewPassword(String password) async{
+    dynamic renewedPassword = await AuthService().changePassword(password);
+    if(renewedPassword == true){
+      snackText = "Your password has been updated. Signing out.";
+    }else{
+      snackText = "Something went wrong with updating your password.";
+    }
+    _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
+    await Future.delayed(Duration(seconds:4));
+    setState(() {
+      _loadingProfile = false;
+      AuthService().signOut();
+      Navigator.pop(context);
+    });
   }
 }

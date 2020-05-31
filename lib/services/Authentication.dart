@@ -233,15 +233,33 @@ class AuthService{
     }
   }
 
+  Future reauthenticateUser(String password)async{
+    final user = _auth.currentUser();
+    if(user != null){
+      FirebaseUser firebaseUser = await user;
+      AuthCredential credential = EmailAuthProvider.getCredential(
+          email:firebaseUser.email,
+          password:password
+      );
+
+      AuthResult result = await firebaseUser.reauthenticateWithCredential(credential).catchError((error){print(error); return null;});
+      if(result != null){
+        return result;
+      }
+      return null;
+    }else{
+      return null;
+    }
+  }
+
   Future changePassword(String password) async{
     try{
       FirebaseUser user = await _auth.currentUser();
       user.updatePassword(password);
-      signOut();
       return true;
     }catch(e){
       print(e);
-      return null;
+      return false;
     }
   }
 
