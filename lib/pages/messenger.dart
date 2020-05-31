@@ -11,14 +11,35 @@ import 'dart:convert';
 class Messenger extends StatelessWidget {
 
   final databaseReference = Firestore.instance;
-  final String recipient = "norp@florp.com";
+  final String recipient = "norp@florp.com";//TODO: This is going to be the UID or username
   FirebaseAuth auth = FirebaseAuth.instance;
   FirebaseUser user;
+  String recipientToken;
+  //String recipientUsername;
 
   final textController = TextEditingController();
   ScrollController scrollController = ScrollController();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+
+
+
+  Future<TokenFcmJson> retireveRecipientToken(String username) async{
+    //get https://fcm-token.herokuapp.com/user/getFcmByUsername?username=username
+    String link = 'https://fcm-token.herokuapp.com/user/getFcmByUsername?username='+ username;
+    final response = await http.get(link);
+
+
+    if(response.statusCode == 200){
+      return TokenFcmJson.fromJson(json.decode(response.body));
+
+    }else {
+      // If the server did not return a 200 OK response,
+      // then throw an exception.
+      throw Exception('Failed to load User');
+    }
+
+  }
 
   Future<Map<String, dynamic>> sendAndRetrieveMessage(String body, String title) async {
     await _firebaseMessaging.requestNotificationPermissions(
@@ -26,7 +47,14 @@ class Messenger extends StatelessWidget {
           sound: true, badge: true, alert: true, provisional: false),
     );
 
-    String recipientToken = 'dSlNvWn9-FQ:APA91bHU3vCNpLz6tHMW8GSFJzqGDl_2B2j7uoDYeMSjMg_ac9lmdtDCKIFiElTUZDezNUvBCHm0wOA4nf-23ADkbTUvmJJvN02eRBCMMec9DMqhXH8K9qrJJff609c9Rnu6GNOP3XMe';
+    if(recipientToken.isEmpty){
+         Future<TokenFcmJson> jayZ = retireveRecipientToken(recipient);
+
+      // update recipient token.
+       jayZ.then((value) => recipientToken = value.fcmToken);
+    }
+
+    //String recipientToken = 'dSlNvWn9-FQ:APA91bHU3vCNpLz6tHMW8GSFJzqGDl_2B2j7uoDYeMSjMg_ac9lmdtDCKIFiElTUZDezNUvBCHm0wOA4nf-23ADkbTUvmJJvN02eRBCMMec9DMqhXH8K9qrJJff609c9Rnu6GNOP3XMe';
 
     await http.post(
       'https://fcm.googleapis.com/fcm/send',
@@ -87,6 +115,9 @@ class Messenger extends StatelessWidget {
       'text': content,
       'timestamp': DateTime.now().toIso8601String().toString()
     });
+
+    String nameOfSender; //This will be the name of this user
+    sendAndRetrieveMessage(content, nameOfSender);
   }
 
   @override
@@ -107,15 +138,18 @@ class Messenger extends StatelessWidget {
                   flex: 10,
                   child: StreamBuilder(
                     stream: Firestore.instance
-                        //.collection('users').document(user.email).collection('chats').document(recipient).collection('messages').orderBy('timestamp')
-                        .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
+                        .collection('users').document(user.email).collection('chats').document(recipient).collection('messages').orderBy('timestamp')
+                       // .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
                         .snapshots(),
 
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) return Text('Data is coming');
 
                       List<DocumentSnapshot> docs = snapshot.data.documents;
+                      //get the recipient token
                       List<Widget> messages = docs.map((doc) =>
+
+
                           Message(
                             message: doc.data['text'],
                             timeStamp: doc.data['timestamp'],
@@ -194,6 +228,29 @@ class Message extends StatelessWidget {
       ),
     );
   }
+}
+
+class TokenFcmJson {
+
+  int id;
+  String username;
+  String email;
+  String fcmToken;
+
+
+  TokenFcmJson({this.id, this.username, this.email, this.fcmToken});
+
+  factory TokenFcmJson.fromJson(Map<String, dynamic> json) => TokenFcmJson(
+      id: json['id'],
+      username: json['username'],
+      email: json['email'],
+      fcmToken: json['fcmToken']
+    );
+
+
+
+
+
 }
 
 //  @override
