@@ -23,6 +23,7 @@ class Signup extends StatelessWidget {
     return MaterialApp(
       title: appTitle,
       home: Scaffold(
+        backgroundColor: Colors.brown[100],
         appBar: AppBar(
             title: Text(appTitle),
             backgroundColor: Colors.grey[850],

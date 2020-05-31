@@ -28,7 +28,6 @@ class _SettingsPageState extends State<SettingsPage> {
   String dateOfBirth = "";
   String profileImage;
   bool _loadingImage = false;
-  Widget _loading = DefaultLoader();
   bool _loadingProfile = false;
   String snackText = "";
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -75,6 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     if (widget.user == null) {
       return Scaffold(
+        backgroundColor: Colors.brown[100],
         key: _scaffoldKey,
         appBar: AppBar(
           backgroundColor: Colors.grey[850],
@@ -89,11 +89,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return _loadingProfile == true || profileImage == null ?
     Scaffold(
+      backgroundColor: Colors.brown[100],
       key: _scaffoldKey,
       body: DefaultLoader(),
     )
         :
     Scaffold(
+        backgroundColor: Colors.brown[100],
         key: _scaffoldKey,
         resizeToAvoidBottomPadding: false,
         appBar: AppBar(

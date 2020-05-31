@@ -107,6 +107,7 @@ class ProfileState extends State<ProfilePage>{
     _loading
         :
     Scaffold(
+      backgroundColor: Colors.brown[100],
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
         title: Text('Profile'),
@@ -181,7 +182,11 @@ class ProfileState extends State<ProfilePage>{
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('About', style: TextStyle(fontSize: 16)),
+              ListTile(
+                title: Text('About', style: TextStyle(fontSize: 16)),
+                trailing: IconButton(icon:Icon(Icons.edit), onPressed: (){_setDescription();}),
+              ),
+
               Padding(padding: EdgeInsets.only(top:10),),
               GestureDetector(
                 child: ListTile(title: Text(user.desc ?? 'Add a description of yourself')),
@@ -495,6 +500,7 @@ class _DialogState extends State<DogDialog>{
   double _kPickerSheetHeight = 75.0;
   double _kPickersheetWidth = 250.0;
   String gender = 'MALE'; //DEFAULT
+  String neutered = 'Yes';
 
   DateTime _dateTime = DateTime.now();
   final f = new DateFormat('yyyy-MM-dd');
@@ -545,6 +551,7 @@ class _DialogState extends State<DogDialog>{
                     ),
                     onChanged: (String value){breed = value;},
                   ),
+
                   Padding(padding:EdgeInsets.only(top:10)),
 
                   Container(
@@ -558,7 +565,7 @@ class _DialogState extends State<DogDialog>{
                         child: Text(
                             'Gender:',
                             textAlign: TextAlign.left,
-                            style: TextStyle(fontFamily: 'RobotoMono', fontSize: 16, color: Colors.black.withOpacity(0.4))),
+                            style: TextStyle(fontSize: 16)),
                       ),
                       trailing: DropdownButton<String>(
                         value: gender,
@@ -580,6 +587,33 @@ class _DialogState extends State<DogDialog>{
                       ),
                     ),
                   ),
+
+                  Padding(padding:EdgeInsets.only(top:10)),
+
+                  if(gender == 'MALE')
+    Container(
+    decoration: BoxDecoration(
+    borderRadius: new BorderRadius.circular(20.0),
+    border: Border.all(color: Colors.black.withOpacity(0.4))
+    ),
+      child: ListTile(
+      title: Text('Neutered:'),
+      trailing: DropdownButton<String>(
+      value: neutered,
+      onChanged: (String newValue){setState(() {
+      neutered = newValue;
+      });},
+      items: <String>[
+      'Yes', 'No'
+      ].map<DropdownMenuItem<String>>((String value){
+      return DropdownMenuItem<String>(
+      value:value,
+      child:Text(value, style: TextStyle(fontSize: 16.0),),
+      );
+      }).toList(),
+      )
+      ),
+    ),
 
                   Padding(padding:EdgeInsets.only(top:10)),
 
@@ -672,6 +706,7 @@ class _DialogState extends State<DogDialog>{
 
   _addDog() async{
     String snackText = "";
+    bool neut = false;
     if(dateOfBirth.isEmpty){
       dateOfBirth = f.format(_dateTime);
     }
@@ -682,6 +717,17 @@ class _DialogState extends State<DogDialog>{
 
       Scaffold.of(widget.context).showSnackBar(SnackBar(content: Text(snackText)));
       return;
+    }
+
+    if(gender == 'FEMALE')
+      neutered = null;
+
+    if(neutered != null){
+      if(neutered == 'Yes'){
+        neut = true;
+      }else{
+        neut = false;
+      }
     }
 
     try{
@@ -698,7 +744,7 @@ class _DialogState extends State<DogDialog>{
             'breed':breed,
             'dateOfBirth':dateOfBirth,
             'gender':gender,
-            'neutered':null,
+            'neutered':neut.toString(),
             'description':null,
           })
       );

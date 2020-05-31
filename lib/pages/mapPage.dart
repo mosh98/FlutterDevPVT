@@ -65,6 +65,7 @@ class MainScreenState extends State<MainScreen> {
 				title: Text('Map'),
 				centerTitle: true,
 			),
+				backgroundColor: Colors.brown[100],
 			body: Stack(
 				children: <Widget>[
 					MapWidget(key: StateHandler.mapWidgetStateKey),

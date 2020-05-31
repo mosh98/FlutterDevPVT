@@ -1,30 +1,32 @@
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dog_prototype/loaders/CustomLoader.dart';
+import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image/network.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:dog_prototype/models/User.dart';
 
-import 'messenger.dart';
 import 'profileViewer.dart';
 
 class FindFriends extends StatefulWidget {
-  final User user;
 
+  final User user;
   FindFriends({this.user});
 
   @override
-  FindFriendsState createState() => FindFriendsState(user);
+  FindFriendsState createState() => FindFriendsState();
 }
 
 class FindFriendsState extends State<FindFriends> {
-  List<User> users = new List<User>();
-  User user;
-  FindFriendsState(User user){
-    this.user = user;
-  }
+  
+  Map<User, String> users = new Map<User, String>();
 
   final textFieldController = TextEditingController();
+  bool _loading = false;
+  CustomLoader loader = CustomLoader(textWidget: Text("Finding friends.."),);
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +36,7 @@ class FindFriendsState extends State<FindFriends> {
         centerTitle: true,
         title: Text('Find friends'),
       ),
+      backgroundColor: Colors.brown[100],
       body: Column(
         children: <Widget>[
           Container(
@@ -43,78 +46,130 @@ class FindFriendsState extends State<FindFriends> {
                 keyboardType: TextInputType.text,
                 controller: textFieldController,
                 onSubmitted: (String input) {
+                  setState(() {
+                    _loading = true;
+                  });
                   _getUser(input);
                 }),
           ),
+          _loading == true ?
+          Expanded(child: loader,)
+          :
           Expanded(
             child: ListView.builder(
                 itemCount: users.length,
                 itemBuilder: (context, index) {
-                  return Card(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Row(
-                          children: <Widget>[
-                            Icon(Icons.portrait, size: 50, color: Colors.black),
-                            Text(users[index].getName()),
-                          ],
-                        ),
-                        Row(
-                          children: <Widget>[
-                            IconButton(
-                              icon: Icon(Icons.chat_bubble_outline,
-                                  size: 30, color: Colors.black),
-                              onPressed: () {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) => Messenger(user,users[index])));
-                              },
-                            ),
-                            FlatButton.icon(
-                              onPressed: () {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) => ProfileViewer(
-                                        otherUser: users[index])));
-                              },
-                              icon: Icon(
-                                Icons.keyboard_arrow_right,
-                                color: Colors.black,
+                  User user = users.keys.elementAt(index);
+
+                  return GestureDetector(
+                    onTap: (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));},
+                    child: Card(
+                      color: Colors.brown[100],
+                      key: ValueKey(index),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              Container(
+                                  height:25,
+                                  width:25,
+                                  child:
+                                  ClipRRect(
+                                      borderRadius: BorderRadius.circular(10000.0),
+                                      child: users[user] == null ?
+                                      Icon(Icons.person)
+                                          :
+                                      CachedNetworkImage(
+                                          key: ValueKey(index),
+                                          imageUrl: users[user],
+                                          useOldImageOnUrlChange: true,
+                                          placeholder: (context, url) => Icon(Icons.person),
+                                          errorWidget: (context, url, error) => Icon(Icons.person),
+                                          fit: BoxFit.fill
+                                      )
+                                  )
                               ),
-                              label: Text(
-                                '',
-                                style: TextStyle(color: Colors.white),
+                              Padding(padding: EdgeInsets.only(left:5),child: Text(user.getName())),
+                            ],
+                          ),
+                          Row(
+                            children: <Widget>[
+                              FlatButton.icon(
+                                onPressed: (){
+                                  print('go to messenger');
+                                },
+                                icon: Icon(
+                                    Icons.chat_bubble_outline, size: 30, color: Colors.black
+                                ),
+                                label: Text(
+                                  '',
+                                  style: TextStyle(color:Colors.white),
+                                ),
                               ),
-                            )
-                          ],
-                        ),
-                      ],
+
+                              FlatButton.icon(
+                                onPressed: (){
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));
+                                },
+                                icon: Icon(
+                                  Icons.keyboard_arrow_right,
+                                  color: Colors.black,
+                                ),
+                                label: Text(
+                                  '',
+                                  style: TextStyle(color:Colors.white),
+                                ),
+                              )
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   );
-                }),
+                }
+            ),
           ),
         ],
       ),
     );
   }
 
+  Future <String> _getProfileImage(User user) async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+    try{
+      final url = await http.get('https://dogsonfire.herokuapp.com/images/profiles/${user.userId}',
+          headers:{'Authorization': 'Bearer $token'});
+      
+      if(url.statusCode==200){
+        return url.body;
+      }
+      return null;
+    }catch(e){
+      print(e);
+      return null;
+    }
+  }
+
+
   void _getUser(String input) async {
     users.clear();
-    try {
-      String token = await AuthService()
-          .getCurrentFirebaseUser()
-          .then((value) => value.getIdToken().then((value) => value.token));
+    try{
 
-      final response = await http.get(
-          'https://dogsonfire.herokuapp.com/users?search=$input',
-          headers: {
-            'Authorization': 'Bearer $token',
-          });
+      String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+
+      final response = await http.get('https://dogsonfire.herokuapp.com/users?search=$input', headers: {
+        'Authorization': 'Bearer $token',
+      });
+
 
       if (response.statusCode == 200) {
         List userData = json.decode(response.body);
-        userData.forEach((element) {
-          users.add(User.fromJson(element));
-        });
+        for(var element in userData){
+          User user = User.fromJson(element);
+          String image = await _getProfileImage(user);
+          users[user] = image;
+        }
       } else {
         print('Failed to fetch username' + response.statusCode.toString());
         print(response.body);
@@ -134,7 +189,9 @@ class FindFriendsState extends State<FindFriends> {
 
       Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
 
-      setState(() {});
-    } catch (e) {}
+      setState(() {_loading = false;});
+    }catch(e){
+
+    }
   }
 }
