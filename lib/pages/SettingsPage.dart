@@ -35,11 +35,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   void initState() {
-
     _getProfileImage();
 
-    if(widget.user.gender == "UNKNOWN") {
-      gender = "-"; 
+    if (widget.user.gender == "UNKNOWN") {
+      gender = "-";
     }
     else {
       gender = widget.user.gender;
@@ -49,11 +48,14 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
   }
 
-  _getProfileImage() async{
-    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
-    try{
-      final url = await http.get('https://dogsonfire.herokuapp.com/images/${widget.user.userId}', headers:{'Authorization': 'Bearer $token'});
-      if(url.statusCode==200){
+  _getProfileImage() async {
+    String token = await AuthService().getCurrentFirebaseUser().then((value) =>
+        value.getIdToken().then((value) => value.token));
+    try {
+      final url = await http.get(
+          'https://dogsonfire.herokuapp.com/images/${widget.user.userId}',
+          headers: {'Authorization': 'Bearer $token'});
+      if (url.statusCode == 200) {
         setState(() {
           profileImage = url.body;
         });
@@ -61,7 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() {
         _loadingImage = false;
       });
-    }catch(e){
+    } catch (e) {
       print(e);
       setState(() {
         _loadingImage = false;
@@ -71,7 +73,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if(widget.user == null){
+    if (widget.user == null) {
       return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
@@ -89,11 +91,11 @@ class _SettingsPageState extends State<SettingsPage> {
     Scaffold(
       key: _scaffoldKey,
       body: DefaultLoader(),
-        )
+    )
         :
     Scaffold(
         key: _scaffoldKey,
-      resizeToAvoidBottomPadding: false,
+        resizeToAvoidBottomPadding: false,
         appBar: AppBar(
           backgroundColor: Colors.grey[850],
           title: Text('Settings'),
@@ -105,9 +107,11 @@ class _SettingsPageState extends State<SettingsPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _pictureInformationBuilder(),
-              Text('PROFILE', style: TextStyle(fontSize: 15.0, color: Colors.grey)),
+              Text('PERSONAL INFORMATION',
+                  style: TextStyle(fontSize: 15.0, color: Colors.grey)),
               _profileInformationBuilder(),
-              Text('ACCOUNT', style: TextStyle(fontSize: 15.0, color: Colors.grey)),
+              Text('ACCOUNT',
+                  style: TextStyle(fontSize: 15.0, color: Colors.grey)),
               _accountInformationBuilder(),
             ],
           ),
@@ -115,15 +119,15 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _pictureInformationBuilder(){
+  Widget _pictureInformationBuilder() {
     return Expanded(
-      flex:3,
+      flex: 3,
       child: Center(
         child: GestureDetector(
             onTap: getImage,
             child: Container(
-                height:100,
-                width:100,
+                height: 100,
+                width: 100,
                 child:
                 ClipRRect(
                     borderRadius: BorderRadius.circular(10000.0),
@@ -133,7 +137,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     CachedNetworkImage(
                         imageUrl: profileImage,
                         placeholder: (context, url) => DefaultLoader(),
-                        errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey))
+                        errorWidget: (context, url, error) => CircleAvatar(
+                            radius: 60,
+                            child: Icon(Icons.add_a_photo, color: Colors.white),
+                            backgroundColor: Colors.grey))
                 )
             )
         ),
@@ -141,8 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future getImage() async{
-
+  Future getImage() async {
     var tempImage = await ImagePicker.pickImage(source: ImageSource.gallery);
 
     setState(() {
@@ -150,92 +156,105 @@ class _SettingsPageState extends State<SettingsPage> {
     });
 
     bool uploadSuccessful = await _uploadImage(tempImage);
-    if(uploadSuccessful){
+    if (uploadSuccessful) {
       _getProfileImage();
-    }else{
+    } else {
       snackText = "Something went wrong with uploading picture.";
 
       Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
 
-      setState(() {_loadingImage = false;});
+      setState(() {
+        _loadingImage = false;
+      });
     }
   }
 
-  Future<bool> _uploadImage(File image) async{
-    try{
-      String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+  Future<bool> _uploadImage(File image) async {
+    try {
+      String token = await AuthService().getCurrentFirebaseUser().then((
+          value) => value.getIdToken().then((value) => value.token));
 
-      final response = await http.put('https://dogsonfire.herokuapp.com/images/${widget.user.userId}', headers:{'Authorization': 'Bearer $token'});
+      final response = await http.put(
+          'https://dogsonfire.herokuapp.com/images/${widget.user.userId}',
+          headers: {'Authorization': 'Bearer $token'});
 
-      if(response != null){
-        print('First put of picture-upload went through :' + response.statusCode.toString());
+      if (response != null) {
+        print('First put of picture-upload went through :' +
+            response.statusCode.toString());
         print('Response body :' + response.body);
-        try{
+        try {
           final nextResponse = await http.put(response.body,
               body: image.readAsBytesSync());
-          if(nextResponse.statusCode == 200){
-            print('Second put of picture-upload went through :' + response.statusCode.toString());
+          if (nextResponse.statusCode == 200) {
+            print('Second put of picture-upload went through :' +
+                response.statusCode.toString());
 
             return true;
-          }else{
-            print('Something went wrong with uploading picture, second put: ' + response.statusCode.toString());
+          } else {
+            print('Something went wrong with uploading picture, second put: ' +
+                response.statusCode.toString());
             //TODO: POPUP USER
             return false;
           }
-        }catch(e){
+        } catch (e) {
           print(e);
           return false;
         }
-      }else{
-        print('Something went wrong with first put of profilepicture: ' + response.statusCode.toString());
+      } else {
+        print('Something went wrong with first put of profilepicture: ' +
+            response.statusCode.toString());
         print(response.body);
         return false;
       }
-    }catch(e){
+    } catch (e) {
       print(e);
       return false;
     }
   }
 
-  Widget _profileInformationBuilder(){
+  Widget _profileInformationBuilder() {
     return Expanded(
-        flex:5,
+        flex: 5,
         child: ListView(
           children: ListTile.divideTiles(
             context: context,
             tiles: [
               ListTile(
-                title: Text('Username'),
-                trailing: Text(widget.user.username ?? 'No username.'),
-                leading: Icon(Icons.lock)
+                  title: Text('Username'),
+                  trailing: Text(widget.user.username ?? 'No username.'),
+                  leading: Icon(Icons.lock)
               ),
               ListTile(
-                  title: Text('Email'),
-                  trailing: Text(widget.user.email ?? 'No email'),
-                  leading: Icon(Icons.lock),
+                title: Text('Email'),
+                trailing: Text(widget.user.email ?? 'No email'),
+                leading: Icon(Icons.lock),
               ),
               GestureDetector(
                 child: ListTile(
                   title: Text('Date of birth'),
                   trailing: Text(dateOfBirth ?? 'No date of birth'),
                 ),
-                onTap: (){_setDateOfBirth();},
+                onTap: () {
+                  _setDateOfBirth();
+                },
               ),
               ListTile(
                 title: Text('Gender'),
                 trailing: DropdownButton<String>(
                   value: gender,
 
-                  onChanged: (String newValue) {setState(() {
-                    _setGender(newValue);
-                    gender = newValue;
-                  });},
+                  onChanged: (String newValue) {
+                    setState(() {
+                      _setGender(newValue);
+                      gender = newValue;
+                    });
+                  },
                   items: <String>[
                     'MALE', 'FEMALE', '-'
-                  ].map<DropdownMenuItem<String>>((String value){
+                  ].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
-                      value:value,
-                      child:Text(value, style: TextStyle(fontSize: 15.0),),
+                      value: value,
+                      child: Text(value, style: TextStyle(fontSize: 15.0),),
                     );
                   }).toList(),
                 ),
@@ -246,25 +265,37 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _accountInformationBuilder(){
+  Widget _accountInformationBuilder() {
     return Expanded(
-        flex:2,
+        flex: 2,
         child: ListView(
           children: ListTile.divideTiles(
             context: context,
             tiles: [
               ListTile(
                 title: Text('Change Password'),
-                onTap: (){_reAuthenticateDialog();},
+                onTap: () async {
+                  await showDialog(context: context,
+                      barrierDismissible: false,
+                      child: ChangePasswordDialog(
+                        context: context, scaffoldKey: _scaffoldKey,));
+                },
               ),
               ListTile(
-                title: Text('Delete account'),
-                trailing: Icon(Icons.error),
-                onTap:(){_deleteAccountConfirmation();}
+                  title: Text('Delete account'),
+                  trailing: Icon(Icons.error),
+                  onTap: () async {
+                    await showDialog(context: context,
+                        barrierDismissible: false,
+                        child: DeleteAccountDialog(
+                          context: context, scaffoldKey: _scaffoldKey,));
+                  }
               ),
               ListTile(
                 title: Text('Log out'),
-                onTap: (){_logout();},
+                onTap: () {
+                  _logout();
+                },
               ),
             ],
           ).toList(),
@@ -272,60 +303,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _deleteAccountConfirmation() async{
-    await showDialog(
-        context: context,
-        child: SimpleDialog(
-          contentPadding: EdgeInsets.all(10.0),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(20.0))
-          ),
-          children: [
-            Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(10),
-                  child: Text(
-                    'Are you sure that you want to delete your profile? This is not reversible',
-                    style: TextStyle(fontSize: 17),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top:20),
-                  child: ListTile(
-                      leading: RaisedButton(
-                          child: Text('No'),
-                          onPressed: (){Navigator.pop(context);},
-                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
-                      ,
-                      trailing: RaisedButton(
-                          child: Text('Yes'),
-                          onPressed: (){
-                            setState(() {_loadingProfile = true;});
-                            _deleteAccount();
-                            Navigator.pop(context);
-                            },
-                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
-                  ),
-                ),
-              ],
-            ),
-          ],
-        )
-    );
-  }
-
-  void _deleteAccount() async{
-    bool deletedAccount = await AuthService().deleteAccount();
-    if(deletedAccount){
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    }else{
-      snackText = "Something went wrong with deleting your account.";
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
-    }
-  }
-
-  void _logout() async{
+  void _logout() async {
     await showDialog(context: context,
         barrierDismissible: false,
         child: AlertDialog(
@@ -333,14 +311,16 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: <Widget>[
             MaterialButton(
               child: Text('No'),
-              onPressed: (){Navigator.of(context, rootNavigator: true).pop('dialog');},
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop('dialog');
+              },
             ),
             MaterialButton(
               child: Text('Yes'),
-              onPressed: () async{
-               Navigator.of(context, rootNavigator: true).pop('dialog');
-               await _auth.signOut();
-               Navigator.pop(context);
+              onPressed: () async {
+                Navigator.of(context, rootNavigator: true).pop('dialog');
+                await _auth.signOut();
+                Navigator.pop(context);
               },
             )
           ],
@@ -349,7 +329,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   double _kPickerSheetHeight = 216.0;
-  _setDateOfBirth() async{ //TODO: FACTOR
+
+  _setDateOfBirth() async {
+    //TODO: FACTOR
     DateTime _dateTime = DateTime.now();
     final f = new DateFormat('yyyy-MM-dd');
     await showCupertinoModalPopup<void>(
@@ -378,33 +360,33 @@ class _SettingsPageState extends State<SettingsPage> {
     });
 
 
-    try{
-
+    try {
       final http.Response response = await http.put( //register to database
           'https://dogsonfire.herokuapp.com/users',
-          headers:<String, String>{
+          headers: <String, String>{
             "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer ${await AuthService()
+                .getCurrentFirebaseUser()
+                .then((value) =>
+                value.getIdToken().then((value) => value.token))}'
           },
-          body: jsonEncode(<String,String>{
+          body: jsonEncode(<String, String>{
             "dateOfBirth": dateOfBirth,
           })
       );
 
-      if(response.statusCode==200){ // Successfully created database account
+      if (response.statusCode == 200) { // Successfully created database account
         print(response.statusCode);
 
         setState(() {
-
           widget.user.setDateOfBirth(dateOfBirth);
         });
-
-      }else{ //Something went wrong
+      } else { //Something went wrong
         print(response.statusCode);
         print(response.body);
       }
-    }catch(e){
+    } catch (e) {
       print(e);
     }
   }
@@ -431,87 +413,231 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  _setGender(String gender) async{
-    if(gender == "-") {
+  _setGender(String gender) async {
+    if (gender == "-") {
       gender = "UNKNOWN";
     }
 
-    try{
+    try {
       final http.Response response = await http.put(
           'https://dogsonfire.herokuapp.com/users',
-          headers:<String, String>{
+          headers: <String, String>{
             "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer ${await AuthService()
+                .getCurrentFirebaseUser()
+                .then((value) =>
+                value.getIdToken().then((value) => value.token))}'
           },
-          body: jsonEncode(<String,String>{
+          body: jsonEncode(<String, String>{
             "gender": gender,
           })
       );
 
-      if(response.statusCode==200){
+      if (response.statusCode == 200) {
         print(response.statusCode);
         setState(() {
-
           widget.user.setGender(gender);
         });
-      }else{ //Something went wrong
+      } else { //Something went wrong
         print(response.statusCode);
         print(response.body);
       }
-    }catch(e){
+    } catch (e) {
       print(e);
     }
   }
 
-  _reAuthenticateDialog()async{
-    String password = "";
+}
 
-    await showDialog(
-        context: context,
-        child: SimpleDialog(
-          contentPadding: EdgeInsets.all(10.0),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(20.0))
-          ),
-          children: [
-            Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(10),
-                  child: Text(
-                    'Enter your current password:',
-                    style: TextStyle(fontSize: 17),
-                  ),
+enum DeleteAccountState{Decision, AuthenticatedConfirm}
+
+class DeleteAccountDialog extends StatefulWidget {
+
+  final BuildContext context;
+  final scaffoldKey;
+  DeleteAccountDialog({this.context, this.scaffoldKey});
+
+  @override
+  _DeleteAccountDialogState createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
+
+  DeleteAccountState state = DeleteAccountState.Decision;
+  String snackText = "";
+  String password = "";
+
+  @override
+  Widget build(BuildContext context) {
+    return _showDialog();
+  }
+
+  Widget _showDialog(){
+    return SimpleDialog(
+        contentPadding: EdgeInsets.all(10.0),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(20.0))
+        ),
+        children: [
+          Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(10),
+                child: state == DeleteAccountState.Decision ?
+                Text(
+                  'Are you sure that you want to delete your profile? This is not reversible',
+                  style: TextStyle(fontSize: 17),
+                )
+                    :
+                Text(
+                  'Enter your password to confirm account deletion:',
+                  style: TextStyle(fontSize: 17),
                 ),
-                TextFormField(
-                  onChanged: (String newPassword){password = newPassword;},
-                  obscureText: true,
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top:20),
-                  child: ListTile(
-                      leading: RaisedButton(
-                          child: Text('Enter'),
-                          onPressed: (){setState(() {
-                            _loadingProfile = true;});
+              ),
+              if(state==DeleteAccountState.AuthenticatedConfirm)
+                TextField(
+    decoration: InputDecoration(hintText: 'Password*'),
+    onChanged: (String pass){password = pass;},
+    obscureText: true,
+    ),
+              Padding(
+                padding: EdgeInsets.only(top:20),
+                child: state == DeleteAccountState.Decision ?
+                ListTile(
+                    leading: RaisedButton(
+                        child: Text('No'),
+                        onPressed: (){Navigator.pop(context);},
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                    ,
+                    trailing: RaisedButton(
+                        child: Text('Yes'),
+                        onPressed: (){
+                          setState(() {
+                            state = DeleteAccountState.AuthenticatedConfirm;
+                          });
+                        },
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                )
+                    :
+                ListTile(
+                    leading: RaisedButton(
+                        child: Text('Back'),
+                        onPressed: (){Navigator.pop(context);},
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                    ,
+                    trailing: RaisedButton(
+                        child: Text('Delete'),
+                        onPressed: (){
                           _authenticate(password);
                           Navigator.pop(context);
-                          },
-                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
-                      ,
-                      trailing: RaisedButton(
-                          child: Text('Back'),
-                          onPressed: (){
-                            Navigator.pop(context);
-                          },
-                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
-                  ),
+                        },
+                        shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
                 ),
-              ],
+              ),
+            ],
+          ),
+        ],
+      );
+  }
+
+  void _authenticate(String password) async{
+    dynamic authenticated = await AuthService().reauthenticateUser(password);
+    if(authenticated != null){
+      _deleteAccount();
+    }else{
+      snackText = "Password was incorrect.";
+      widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
+    }
+  }
+
+  void _deleteAccount() async{
+    bool deletedAccount = await AuthService().deleteAccount();
+    if(deletedAccount){
+      snackText = "Deleting account.";
+      widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
+      await Future.delayed(Duration(seconds:4));
+      Navigator.of(widget.context).popUntil((route) => route.isFirst);
+    }else{
+      snackText = "Something went wrong with deleting your account.";
+      widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
+    }
+  }
+}
+
+enum ChangePasswordState{Authenticate, NewPassword}
+
+class ChangePasswordDialog extends StatefulWidget {
+
+  final BuildContext context;
+  final scaffoldKey;
+  ChangePasswordDialog({this.context, this.scaffoldKey});
+
+  @override
+  _ChangePasswordDialogState createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
+
+  ChangePasswordState state = ChangePasswordState.Authenticate;
+  String snackText = "";
+
+  @override
+  Widget build(BuildContext context) {
+    return _showDialog();
+  }
+
+  Widget _showDialog(){
+
+    String password = "";
+
+    return SimpleDialog(
+      contentPadding: EdgeInsets.all(10.0),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(20.0))
+      ),
+      children: [
+        Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(10),
+              child: state == ChangePasswordState.Authenticate ?
+              Text(
+                'Enter your current password:',
+                style: TextStyle(fontSize: 17),
+              )
+                  :
+              Text(
+                'Authenticated. Enter a new password:',
+                style: TextStyle(fontSize: 17),
+              ),
+            ),
+            TextFormField(
+              onChanged: (String newPassword){password = newPassword;},
+              obscureText: true,
+            ),
+            Padding(
+              padding: EdgeInsets.only(top:20),
+              child: ListTile(
+                  leading: RaisedButton(
+                      child: state == ChangePasswordState.Authenticate ?
+                      Text('Enter') : Text('Renew'),
+                      onPressed: ()async{
+                        state == ChangePasswordState.Authenticate ? await _authenticate(password) : await _renewPassword(password);
+                      },
+                      shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+                  ,
+                  trailing: RaisedButton(
+                      child: Text('Back'),
+                      onPressed: (){
+                        Navigator.pop(context);
+                      },
+                      shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
+              ),
             ),
           ],
-        )
+        ),
+      ],
     );
   }
 
@@ -519,81 +645,29 @@ class _SettingsPageState extends State<SettingsPage> {
     dynamic reAuthenticated = await AuthService().reauthenticateUser(password);
 
     if(reAuthenticated != null){
-      _changePasswordDialog();
+      setState(() {
+        state = ChangePasswordState.NewPassword;
+      });
     }else{
       snackText = "The password you entered was incorrect.";
-      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
+      widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
+      Navigator.pop(context);
     }
-    setState(() {
-      _loadingProfile = false;
-    });
   }
 
-  _changePasswordDialog()async{
-    String password = "";
-
-    await showDialog(
-        context: context,
-        child: SimpleDialog(
-          contentPadding: EdgeInsets.all(10.0),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(20.0))
-          ),
-          children: [
-            Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(10),
-                  child: Text(
-                    'Enter a new password:',
-                    style: TextStyle(fontSize: 17),
-                  ),
-                ),
-                TextFormField(
-                  onChanged: (String newPassword){password = newPassword;},
-                  obscureText: true,
-                  validator: Validator.passwordValidator,
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top:20),
-                  child: ListTile(
-                      leading: RaisedButton(
-                          child: Text('Enter'),
-                          onPressed: (){setState(() {
-                            _loadingProfile = true;});
-                          _renewPassword(password);
-                          Navigator.pop(context);
-                          },
-                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
-                      ,
-                      trailing: RaisedButton(
-                          child: Text('Back'),
-                          onPressed: (){
-                            Navigator.pop(context);
-                          },
-                          shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
-                  ),
-                ),
-              ],
-            ),
-          ],
-        )
-    );
-  }
-  
   _renewPassword(String password) async{
     dynamic renewedPassword = await AuthService().changePassword(password);
     if(renewedPassword == true){
       snackText = "Your password has been updated. Signing out.";
+      widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
+      await Future.delayed(Duration(seconds:4));
+      AuthService().signOut();
+      Navigator.of(widget.context).popUntil((route) => route.isFirst);
     }else{
       snackText = "Something went wrong with updating your password.";
-    }
-    _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
-    await Future.delayed(Duration(seconds:4));
-    setState(() {
-      _loadingProfile = false;
-      AuthService().signOut();
+      widget.scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
       Navigator.pop(context);
-    });
+    }
   }
 }
+
