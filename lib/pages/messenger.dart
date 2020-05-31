@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dog_prototype/models/User.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,7 +14,8 @@ class Messenger extends StatelessWidget {
   final databaseReference = Firestore.instance;
   final String recipient = "norp@florp.com";//TODO: This is going to be the UID or username
   FirebaseAuth auth = FirebaseAuth.instance;
-  FirebaseUser user;
+  User user;
+  User peer;
   String recipientToken;
   //String recipientUsername;
 
@@ -22,6 +24,7 @@ class Messenger extends StatelessWidget {
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
+  Messenger({this.user,this.peer});
 
 
   Future<TokenFcmJson> retireveRecipientToken(String username) async{
@@ -90,13 +93,13 @@ class Messenger extends StatelessWidget {
     //This user
     Firestore.instance
         .collection('users')
-        .document(user.email)
+        .document(user.userId)
         .collection('chats')
-        .document(recipient)
+        .document(peer.userId)
         .collection('messages')
         .document()
         .setData({
-      'from': recipient,
+      'from': peer.username,
       'text': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
       'senderToken': senderToken
@@ -105,13 +108,13 @@ class Messenger extends StatelessWidget {
     //The other user or the recipient
     Firestore.instance
         .collection('users')
-        .document(recipient)
+        .document(peer.userId)
         .collection('chats')
-        .document(user.email)
+        .document(user.userId)
         .collection('messages')
         .document()
         .setData({
-      'from': user.email,
+      'from': user.username,
       'text': content,
       'timestamp': DateTime.now().toIso8601String().toString()
     });
@@ -138,7 +141,7 @@ class Messenger extends StatelessWidget {
                   flex: 10,
                   child: StreamBuilder(
                     stream: Firestore.instance
-                        .collection('users').document(user.email).collection('chats').document(recipient).collection('messages').orderBy('timestamp')
+                        .collection('users').document(user.userId).collection('chats').document(peer.userId).collection('messages').orderBy('timestamp')
                        // .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
                         .snapshots(),
 
