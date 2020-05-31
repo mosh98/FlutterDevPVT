@@ -44,8 +44,6 @@ void main(){
 
   /**
    * TESTING WIDGET OF LOGIN_PAGE
-   *
-   * Source: https://www.youtube.com/watch?v=75i5VmTI6A0 //TODO: DELETE LINE
    */
   testWidgets('username or password is wrong, does not sign-in AND show helper-text', (WidgetTester tester) async{
 

@@ -121,7 +121,7 @@ class StartPageState extends State<StatefulStartPage>{
                 onTap: (){ Navigator.of(context).push(
                     MaterialPageRoute<Null>(
                         builder: (BuildContext context) {
-                          return new Signup();
+                          return new RegisterPage();
                         }));},
               ),
             )

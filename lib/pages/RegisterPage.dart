@@ -15,7 +15,7 @@ import 'package:gender_selector/gender_selector.dart';
 import 'ProfilePage.dart';
 import 'placeHolderHome.dart';
 
-class Signup extends StatelessWidget {
+class RegisterPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appTitle = 'Sign up';
@@ -162,6 +162,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                     ),
 
                     Padding(
+                      key: Key('gender'),
                       padding: const EdgeInsets.only(left:20, right: 20, top: 10),
                       child:  Container(
                         width: double.infinity,
@@ -196,6 +197,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                       padding: const EdgeInsets.only(left:20, right: 20, top: 10),
                       child:
                       MaterialButton(
+                        key: Key('dateOfBirth'),
                           minWidth: 375,
                           height: 50,
                           shape: new RoundedRectangleBorder(
@@ -256,6 +258,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                         padding: const EdgeInsets.only(left:20, right: 20, top: 20),
                         child:
                         MaterialButton(
+                          key: Key('signUp'),
                             minWidth: 375,
                             height: 50,
                             shape: new RoundedRectangleBorder(
