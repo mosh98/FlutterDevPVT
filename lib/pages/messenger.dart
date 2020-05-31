@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'dart:async';
@@ -14,6 +15,9 @@ class Messenger extends StatelessWidget {
   FirebaseAuth auth = FirebaseAuth.instance;
   FirebaseUser user;
 
+  final textController = TextEditingController();
+  ScrollController scrollController = ScrollController();
+
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
 
   Future<Map<String, dynamic>> sendAndRetrieveMessage(String body, String title) async {
@@ -22,7 +26,7 @@ class Messenger extends StatelessWidget {
           sound: true, badge: true, alert: true, provisional: false),
     );
 
-    String teken = 'dSlNvWn9-FQ:APA91bHU3vCNpLz6tHMW8GSFJzqGDl_2B2j7uoDYeMSjMg_ac9lmdtDCKIFiElTUZDezNUvBCHm0wOA4nf-23ADkbTUvmJJvN02eRBCMMec9DMqhXH8K9qrJJff609c9Rnu6GNOP3XMe';
+    String recipientToken = 'dSlNvWn9-FQ:APA91bHU3vCNpLz6tHMW8GSFJzqGDl_2B2j7uoDYeMSjMg_ac9lmdtDCKIFiElTUZDezNUvBCHm0wOA4nf-23ADkbTUvmJJvN02eRBCMMec9DMqhXH8K9qrJJff609c9Rnu6GNOP3XMe';
 
     await http.post(
       'https://fcm.googleapis.com/fcm/send',
@@ -44,7 +48,7 @@ class Messenger extends StatelessWidget {
             'id': '1',
             'status': 'done'
           },
-          'to': teken,
+          'to': recipientToken,
         },
       ),
     );
@@ -87,8 +91,73 @@ class Messenger extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
+    return SafeArea(
+        bottom: true,
+        child: Scaffold(
+          //resizeToAvoidBottomInset: true,
+          appBar: AppBar(
+            title: Text('Chat window'),
+          ),
+          body: SafeArea(
+
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Expanded(
+                  flex: 10,
+                  child: StreamBuilder(
+                    stream: Firestore.instance
+                        //.collection('users').document(user.email).collection('chats').document(recipient).collection('messages').orderBy('timestamp')
+                        .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
+                        .snapshots(),
+
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return Text('Data is coming');
+
+                      List<DocumentSnapshot> docs = snapshot.data.documents;
+                      List<Widget> messages = docs.map((doc) =>
+                          Message(
+                            message: doc.data['text'],
+                            timeStamp: doc.data['timestamp'],
+                            nameUser: doc.data['from'],
+                          )).toList();
+
+                      return ListView(
+
+                        controller: scrollController,
+                        children: <Widget>[
+                          ...messages,
+                        ],
+                      );
+
+                    },
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: textController,
+                    decoration: InputDecoration(
+                        hintText: "Skicka ett meddelande",
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            _onSendMessage(textController.text, "b2YxBTdWCTTbxSb6lSvJyskuyN22","ZPdRVUxgUzeMozR6Z6WAhqV13ZZ2");
+                            textController.clear();
+                            scrollController.animateTo(scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
+                          },
+                          icon: Icon(
+                            Icons.send,
+                            color: Colors.blue,
+                          ),
+
+                          //color: Colors.blue,
+                        )),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ));
   }
 }
 
@@ -127,8 +196,8 @@ class Message extends StatelessWidget {
   }
 }
 
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
-  }
+//  @override
+//  Widget build(BuildContext context) {
+//    // TODO: implement build
+//    throw UnimplementedError();
+//  }
