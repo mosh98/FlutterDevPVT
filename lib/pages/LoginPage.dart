@@ -25,6 +25,7 @@ class LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
+        backgroundColor: Colors.brown[100],
         body: Form(
           key: _formkey,
           child: _isLoading ? Center(child:DefaultLoader()) : ListView(
@@ -43,12 +44,22 @@ class LoginPageState extends State<LoginPage> {
 
   Container headerSection() {
     return Container(
-      child:Image(
-        image: new AssetImage('assets/loginpicture.jpg'),
-        height: 100.0,
-      ),
+      color: Colors.transparent,
+      child:Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text('PVT', style: TextStyle(fontSize: 45, fontWeight: FontWeight.bold, fontStyle: FontStyle.italic)),
+          Text('Dog parks',style: TextStyle(fontSize: 45,fontWeight: FontWeight.bold,fontStyle: FontStyle.italic)),
+        ],
+      )
     );
   }
+
+//  Image(
+//  image: new AssetImage('assets/loginpicture.jpg'),
+//  height: 100.0,
+//  ),
 
   Container textFieldSection(){
     return Container(

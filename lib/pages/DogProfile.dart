@@ -50,6 +50,7 @@ class _DogProfileState extends State<DogProfile> {
         title: Text('Dog Profile'),
         centerTitle: true,
       ),
+      backgroundColor: Colors.brown[100],
       body: ModalProgressHUD(
         inAsyncCall: _loading,
         progressIndicator: DefaultLoader(),

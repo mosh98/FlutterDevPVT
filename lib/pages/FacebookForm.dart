@@ -35,6 +35,7 @@ class _FacebookFormState extends State<FacebookForm> {
           backgroundColor: Colors.grey[850],
           centerTitle: true
       ),
+      backgroundColor: Colors.brown[100],
       body: _formSection(),
     );
   }
