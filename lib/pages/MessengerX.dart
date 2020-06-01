@@ -10,6 +10,18 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 
+class MessengerX extends StatelessWidget {
+  User user;
+  User peer;
+
+  MessengerX({User user, User peer});
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return MessengerHandler(user: user, peer: peer);
+  }
+}
 
 class MessengerHandler extends StatefulWidget{
   User user;
@@ -26,9 +38,6 @@ class MessengerHandler extends StatefulWidget{
 //    // TODO: implement createState
 //     new Messenger(user: user,peer: peer);
 //  }
-
- 
-
 
 
 }

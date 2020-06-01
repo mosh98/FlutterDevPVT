@@ -1088,41 +1088,41 @@ class ReviewPageState extends State<ReviewPage> {
 	}
 
 	void _uploadImage() async {
-		setState(() {
-			_isLoading = true;
-		});
-
-		int _dogParkID = widget.selectedDogPark.id;
-
-		final String url = 'https://dog-park-micro.herokuapp.com/image/addImage?id=$_dogParkID';
-
-		ImagePicker imagePicker = ImagePicker();
-
-		var tempImage = await imagePicker.getImage(source: ImageSource.gallery);
-
-		final postUri = Uri.parse(url);
-		http.MultipartRequest request = http.MultipartRequest('POST', postUri);
-
-		http.MultipartFile multipartFile = await http.MultipartFile.fromPath(
-			'file', tempImage.path);
-
-		request.files.add(multipartFile);
-
-
-		await request.send().then((response) async {
-			response.stream.transform(utf8.decoder).listen((value) {
-
-			});
-		}).catchError((e) {
-			print(e);
-		});
-
-		await _getImageURLs();
-
-
-		setState(() {
-			_isLoading = false;
-		});
+//		setState(() {
+//			_isLoading = true;
+//		});
+//
+//		int _dogParkID = widget.selectedDogPark.id;
+//
+//		final String url = 'https://dog-park-micro.herokuapp.com/image/addImage?id=$_dogParkID';
+//
+//		ImagePicker imagePicker = ImagePicker();
+//
+//		var tempImage = await imagePicker.getImage(source: ImageSource.gallery);
+//
+//		final postUri = Uri.parse(url);
+//		http.MultipartRequest request = http.MultipartRequest('POST', postUri);
+//
+//		http.MultipartFile multipartFile = await http.MultipartFile.fromPath(
+//			'file', tempImage.path);
+//
+//		request.files.add(multipartFile);
+//
+//
+//		await request.send().then((response) async {
+//			response.stream.transform(utf8.decoder).listen((value) {
+//
+//			});
+//		}).catchError((e) {
+//			print(e);
+//		});
+//
+//		await _getImageURLs();
+//
+//
+//		setState(() {
+//			_isLoading = false;
+//		});
 	}
 
 

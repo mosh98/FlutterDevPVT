@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/CustomLoader.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
-import 'package:dog_prototype/pages/MessengerHandler.dart';
+import 'package:dog_prototype/pages/MessengerX.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image/network.dart';
@@ -29,6 +29,8 @@ class FindFriendsState extends State<FindFriends> {
   final textFieldController = TextEditingController();
   bool _loading = false;
   CustomLoader loader = CustomLoader(textWidget: Text("Finding friends.."),);
+
+  //User ussr = new User()
 
   @override
   Widget build(BuildContext context) {
@@ -61,10 +63,10 @@ class FindFriendsState extends State<FindFriends> {
             child: ListView.builder(
                 itemCount: users.length,
                 itemBuilder: (context, index) {
-                  User user = users.keys.elementAt(index);
+                  User otherUser = users.keys.elementAt(index);
 
                   return GestureDetector(
-                    onTap: (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));},
+                    onTap: (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: otherUser)));},
                     child: Card(
                       color: Colors.brown[100],
                       key: ValueKey(index),
@@ -79,12 +81,12 @@ class FindFriendsState extends State<FindFriends> {
                                   child:
                                   ClipRRect(
                                       borderRadius: BorderRadius.circular(10000.0),
-                                      child: users[user] == null ?
+                                      child: users[otherUser] == null ?
                                       Icon(Icons.person)
                                           :
                                       CachedNetworkImage(
                                           key: ValueKey(index),
-                                          imageUrl: users[user],
+                                          imageUrl: users[otherUser],
                                           useOldImageOnUrlChange: true,
                                           placeholder: (context, url) => Icon(Icons.person),
                                           errorWidget: (context, url, error) => Icon(Icons.person),
@@ -92,14 +94,16 @@ class FindFriendsState extends State<FindFriends> {
                                       )
                                   )
                               ),
-                              Padding(padding: EdgeInsets.only(left:5),child: Text(user.getName())),
+                              Padding(padding: EdgeInsets.only(left:5),child: Text(otherUser.getName())),
                             ],
                           ),
                           Row(
                             children: <Widget>[
                               FlatButton.icon(
                                 onPressed: (){
-                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessengerHandler(user: currentUser, peer: user)));
+                                  print(currentUser);
+                                  print(otherUser);
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessengerX(user: currentUser, peer: otherUser)));
                                 },
                                 icon: Icon(
                                     Icons.chat_bubble_outline, size: 30, color: Colors.black
@@ -112,7 +116,7 @@ class FindFriendsState extends State<FindFriends> {
 
                               FlatButton.icon(
                                 onPressed: (){
-                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: otherUser)));
                                 },
                                 icon: Icon(
                                   Icons.keyboard_arrow_right,
