@@ -80,7 +80,6 @@ class ProfileState extends State<ProfilePage>{
     _loading
         :
     Scaffold(
-      backgroundColor: Colors.brown[100],
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
         title: Text('Profile'),

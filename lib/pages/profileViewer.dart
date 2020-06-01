@@ -71,7 +71,6 @@ Widget build(BuildContext context) {
   Widget _profile(){
 
     return Scaffold(
-      backgroundColor: Colors.brown[100],
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
         title: Text(widget.otherUser.username),

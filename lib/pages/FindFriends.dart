@@ -38,7 +38,7 @@ class FindFriendsState extends State<FindFriends> {
         centerTitle: true,
         title: Text('Find friends'),
       ),
-      backgroundColor: Colors.brown[100],
+
       body: Column(
         children: <Widget>[
           Container(

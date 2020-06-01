@@ -25,7 +25,6 @@ class LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-        backgroundColor: Colors.brown[100],
         body: Form(
           key: _formkey,
           child: _isLoading ? Center(child:DefaultLoader()) : ListView(
