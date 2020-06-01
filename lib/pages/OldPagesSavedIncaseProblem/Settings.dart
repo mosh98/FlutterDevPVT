@@ -70,13 +70,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               onLongPress: (){print('clicked username');},
             ),
-            GestureDetector(
-              child: ListTile(
-                  title: Text('Email'),
-                  trailing: Text(widget.user.email ?? 'No email')
-              ),
-              onLongPress: (){_setEmail();},
-            ),
+//            GestureDetector(
+//              child: ListTile(
+//                  title: Text('Email'),
+//                  trailing: Text(widget.user.email ?? 'No email')
+//              ),
+//              onLongPress: (){_setEmail();},
+//            ),
             GestureDetector(
               child: ListTile(
                   title: Text('Date of birth'),
@@ -155,46 +155,6 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _setProfilePicture(){return true;}
 
   bool _setUsername(){return true;}
-
-  _setEmail() async{
-
-    String email = widget.user.username;
-
-    AlertDialog alert = AlertDialog(
-      title: Text('Enter new email'),
-      content: SingleChildScrollView(
-        child: TextFormField(
-          onChanged: (value){email = value;},
-        ),
-      ),
-      actions: <Widget>[
-        MaterialButton(
-          child: Text('Change email'),
-          onPressed: (){Navigator.of(context).pop();},
-        ),
-        MaterialButton(
-          child: Text('Back'),
-          onPressed: (){Navigator.of(context).pop(); return;},
-        )
-      ],
-    );
-    showDialog(context: context, builder: (BuildContext context){return alert;});
-
-    try{
-      final response = await http.put('https://redesigned-backend.herokuapp.com/user/update?username=${widget.user.username}&email=$email');
-
-      if(response.statusCode == 200){
-        setState(() {
-          widget.user.setEmail(email);
-        });
-      }else{
-        throw Exception('Failed to change email');
-      }
-    }catch(e){
-      print(e);
-    }
-    //"https://redesigned-backend.herokuapp.com/user/update?username=XXXX&email=XXXXX"
-  }
 
   bool _setDateOfBirth(){return true;}
 

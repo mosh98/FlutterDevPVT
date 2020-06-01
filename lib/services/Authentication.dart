@@ -124,7 +124,7 @@ class AuthService{
     }
   }
 
-  addInformationToDatabase(String email, String username, String dateOfBirth, String gender) async{
+  addInformationToDatabase(String username, String dateOfBirth, String gender) async{
     try{
       final http.Response response = await http.post( //register to database
           'https://dogsonfire.herokuapp.com/users/register',
@@ -135,7 +135,6 @@ class AuthService{
           },
           body: jsonEncode(<String,String>{
             "username": username,
-            "email": email,
             "dateOfBirth": dateOfBirth,
             "gender": gender,
           })
@@ -198,7 +197,6 @@ class AuthService{
   }
 
   Future<String> _registerToDatabase(String username, String email, String dateOfBirth, String gender, String password)async{
-
     try {
       final http.Response response = await http.post( //register to database
           'https://dogsonfire.herokuapp.com/users/register',

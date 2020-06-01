@@ -207,7 +207,6 @@ class _FacebookFormState extends State<FacebookForm> {
   }
 
   register(String username, String dateOfBirth, String gender) async{
-    String email = await AuthService().getCurrentFirebaseUser().then((value) => value.email);
 
     if(gender == '-'){
       gender = "UNKNOWN";
@@ -217,7 +216,7 @@ class _FacebookFormState extends State<FacebookForm> {
       dateOfBirth = f.format(_dateTime);
     }
 
-    dynamic result = await AuthService().addInformationToDatabase(email, username, dateOfBirth, gender);
+    dynamic result = await AuthService().addInformationToDatabase(username, dateOfBirth, gender);
 
     if(result != null){
       Navigator.pop(context);

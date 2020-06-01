@@ -2,7 +2,7 @@ import 'Dog.dart';
 
 class User{
   final String username;
-  String email;
+  //String email;
   String dateOfBirth;
   String gender;
   String desc;
@@ -12,13 +12,13 @@ class User{
   final String userId;
   final bucket;
 
-  User({this.userId,this.username, this.email, this.dateOfBirth, this.gender, this.desc, this.createdDate, this.dogs, this.photoUrl, this.bucket});
+  User({this.userId,this.username, this.dateOfBirth, this.gender, this.desc, this.createdDate, this.dogs, this.photoUrl, this.bucket});
 
   factory User.fromJson(Map<String, dynamic> json){
     return User(
       userId: json['userId'],
       username: json['username'],
-      email: json['email'],
+      //email: json['email'],
       gender: json['gender'],
       dateOfBirth: json['dateOfBirth'],
       desc: json['description'],
@@ -30,14 +30,14 @@ class User{
   }
 
   String getName(){return username;}
-  String getEmail(){return email;}
+  //String getEmail(){return email;}
   String getDateOfBirth(){return dateOfBirth;}
   String getGender(){return gender;}
   String getDesc(){return desc;}
   String getCreatedDate(){return createdDate;}
   List getDogs(){return dogs;}
 
-  void setEmail(String email){this.email = email;}
+  //void setEmail(String email){this.email = email;}
 
   void setPhotoUrl(String photoUrl){this.photoUrl = photoUrl;}
 
@@ -51,6 +51,6 @@ class User{
 
   @override
   String toString() {
-    return "Name: $username Email: $email Date of birth: $dateOfBirth Gender: $gender Description: $desc Created at: $createdDate Dogs: $dogs";
+    return "Name: $username Date of birth: $dateOfBirth Gender: $gender Description: $desc Created at: $createdDate Dogs: $dogs";
   }
 }

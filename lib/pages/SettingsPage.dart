@@ -6,6 +6,7 @@ import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/Validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -31,10 +32,15 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _loadingProfile = false;
   String snackText = "";
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  FirebaseUser firebaseUser;
 
   @override
   void initState() {
+    setState(() {
+      _loadingProfile= true;
+    });
     _getProfileImage();
+    _getFirebaseUser();
 
     if (widget.user.gender == "UNKNOWN") {
       gender = "-";
@@ -70,9 +76,16 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  _getFirebaseUser() async{
+    firebaseUser = await AuthService().getCurrentFirebaseUser();
+    setState(() {
+      _loadingProfile = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.user == null) {
+    if (widget.user == null || firebaseUser == null) {
       return Scaffold(
         backgroundColor: Colors.brown[100],
         key: _scaffoldKey,
@@ -228,7 +241,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               ListTile(
                 title: Text('Email'),
-                trailing: Text(widget.user.email ?? 'No email'),
+                trailing: Text(firebaseUser.email ?? 'No email'),
                 leading: Icon(Icons.lock),
               ),
               GestureDetector(
