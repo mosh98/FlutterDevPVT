@@ -304,7 +304,7 @@ class MyCustomFormState extends State<MyCustomForm> {
 
       dynamic result = await _auth.registerWithEmailAndPassword(username, email, dateOfBirth, gender, password);
 
-      createAndSaveToken(username, email);
+      dynamic zz = await createAndSaveToken(username, email);
 
       setState(() {
         _isLoading = false;
@@ -322,17 +322,17 @@ class MyCustomFormState extends State<MyCustomForm> {
     AuthService().signInWithFacebook(context);
   }
 
-  Future<http.Response>  createAndSaveToken(String username, String email) async {
+
+
+  Future<http.Response> createAndSaveToken(String username, String email) async {
 
     String token;
     FirebaseMessaging Fcm = new FirebaseMessaging();
 
-    Fcm.getToken().then((value) => token= value);
-
-
+    await Fcm.getToken().then((value) => token = value);
 
       return http.post(
-        'https://jsonplaceholder.typicode.com/albums',
+        'https://fcm-token.herokuapp.com/user/saveFcm',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -342,6 +342,7 @@ class MyCustomFormState extends State<MyCustomForm> {
           'fcmToken': token
         }),
       );
-
   }
+
+
 }

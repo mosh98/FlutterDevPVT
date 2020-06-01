@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dog_prototype/elements/CustomWebView.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -180,9 +181,11 @@ class AuthService{
     }
   }
 
+
   //register with email and password
   Future<String> registerWithEmailAndPassword(String username, String email, String dateOfBirth, String gender, String password) async{
     try{
+
       dynamic result = await _registerToDatabase(username, email, dateOfBirth, gender, password);
 
       if(result != null){
