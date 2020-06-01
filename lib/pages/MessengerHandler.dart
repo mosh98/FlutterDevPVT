@@ -10,29 +10,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 
-//class MessengerX extends StatelessWidget {
-//  User user;
-//  User peer;
-//
-//  MessengerX({User user, User peer})
-//  :super(key:user);
-//
-////  MessengerX(User user, User peer){
-////    this.user= user;
-////    this.peer= peer;
-////  }
-//
-//  @override
-//  Widget build(BuildContext context) {
-//    // TODO: implement build
-//    //return new
-//    print("user: "+ user.toString()+" peer: "+ peer.toString());
-//
-//    return MaterialApp(
-//      home: MessengerHandler(user: this.user, peer: this.peer),
-//    );
-//  }
-//}
+
 
 class MessengerHandler extends StatefulWidget{
   User user;
@@ -46,11 +24,6 @@ class MessengerHandler extends StatefulWidget{
   @override
   _Messenger createState() => _Messenger(user: this.user,peer: this.peer);
 
-//
-//  State<StatefulWidget> createState() {
-//    // TODO: implement createState
-//     new Messenger(user: user,peer: peer);
-//  }
 
 
 }
@@ -102,7 +75,7 @@ class _Messenger extends State<MessengerHandler> {
     final response = await http.get(link);
 
     if(response.statusCode == 200){
-      return TokenFcmJson.fromJson(json.decode(response.body));
+      return  TokenFcmJson.fromJson(json.decode(response.body));
     }else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
@@ -118,20 +91,18 @@ class _Messenger extends State<MessengerHandler> {
           sound: true, badge: true, alert: true, provisional: false),
     );
 
-    if(recipientToken.isEmpty){
-         Future<TokenFcmJson> jayZ = retireveRecipientToken(peer.username);
+
+         Future<TokenFcmJson> jayZ =  retireveRecipientToken(peer.username);
 
       // update recipient token.
-       jayZ.then((value) => recipientToken = value.fcmToken);
-    }
-
-    //String recipientToken = 'dSlNvWn9-FQ:APA91bHU3vCNpLz6tHMW8GSFJzqGDl_2B2j7uoDYeMSjMg_ac9lmdtDCKIFiElTUZDezNUvBCHm0wOA4nf-23ADkbTUvmJJvN02eRBCMMec9DMqhXH8K9qrJJff609c9Rnu6GNOP3XMe';
+       await jayZ.then((value) => recipientToken = value.fcmToken);
+        print(recipientToken);
 
     await http.post(
       'https://fcm.googleapis.com/fcm/send',
       headers: <String, String>{
         'Content-Type': 'application/json',
-        'Authorization': 'key=AAAApxhRlHQ:APA91bHl1eBjWN0jTAwguFZKAWPES8DnTa5A7Akw-DSrQiG4mE2lDo-12kzWLke1Kj1rAZ00yguG9FOsLZCODNHLq1-wZOLa_Ny1hKBz-7pRt3mgc8F4FgYk5nykcX7yBstZIQ4-8uuk',
+        'Authorization': 'key=AAAAfhwE_ps:APA91bGAiaPQ__s8EAcSqyX2oM4kAGsxuE3WXTm_FFQiHE6BbeIcKs2SGQwR4jOr6gCN9CCHwjRoFkcVuEj5aTEGPdllAKxQOfyb5AdQX7OV1TUGFEfxr-FHAgtcUqSuSpMDtEmuS6AX',
         //authrization is the firebase CloudStore server key
       },
 
@@ -170,7 +141,7 @@ class _Messenger extends State<MessengerHandler> {
       'from': peer.username,
       'text': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
-      'senderToken': senderToken
+      //'senderToken': senderToken
     });
 
     //The other user or the recipient
@@ -188,7 +159,7 @@ class _Messenger extends State<MessengerHandler> {
       'senderToken': senderToken
     });
 
-    String nameOfSender; //This will be the name of this user
+    String nameOfSender = peer.getName(); //This will be the name of this user
     sendAndRetrieveMessage(content, nameOfSender);
   }
 
@@ -224,7 +195,7 @@ class _Messenger extends State<MessengerHandler> {
                       //get the recipient token
                       //recipientToken = docs.elementAt(docs.length).,
 
-                      docs.map((e) => recipientToken = e.data['senderToken']);
+                     // docs.map((e) => recipientToken = e.data['senderToken']);
 
                       List<Widget> messages = docs.map((doc) =>
 
