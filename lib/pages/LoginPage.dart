@@ -43,22 +43,12 @@ class LoginPageState extends State<LoginPage> {
 
   Container headerSection() {
     return Container(
-      color: Colors.transparent,
-      child:Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text('PVT', style: TextStyle(fontSize: 45, fontWeight: FontWeight.bold, fontStyle: FontStyle.italic)),
-          Text('Dog parks',style: TextStyle(fontSize: 45,fontWeight: FontWeight.bold,fontStyle: FontStyle.italic)),
-        ],
-      )
+      child:Image(
+        image: new AssetImage('assets/loginpicture.jpg'),
+        height: 100.0,
+      ),
     );
   }
-
-//  Image(
-//  image: new AssetImage('assets/loginpicture.jpg'),
-//  height: 100.0,
-//  ),
 
   Container textFieldSection(){
     return Container(

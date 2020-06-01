@@ -41,7 +41,6 @@ class StartPageState extends State<StatefulStartPage>{
       return DefaultLoader();
     }else{
       return Scaffold(
-          backgroundColor: Colors.brown[100],
           body: ListView(
             padding: const EdgeInsets.fromLTRB(10, 250, 10, 0),
             children: <Widget>[

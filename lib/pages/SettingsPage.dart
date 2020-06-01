@@ -87,7 +87,6 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     if (widget.user == null || firebaseUser == null) {
       return Scaffold(
-        backgroundColor: Colors.brown[100],
         key: _scaffoldKey,
         appBar: AppBar(
           backgroundColor: Colors.grey[850],
