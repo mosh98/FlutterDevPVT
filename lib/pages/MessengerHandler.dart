@@ -10,28 +10,41 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 
-class MessengerX extends StatelessWidget {
-  User user;
-  User peer;
-
-  MessengerX({User user, User peer});
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return MessengerHandler(user: user, peer: peer);
-  }
-}
+//class MessengerX extends StatelessWidget {
+//  User user;
+//  User peer;
+//
+//  MessengerX({User user, User peer})
+//  :super(key:user);
+//
+////  MessengerX(User user, User peer){
+////    this.user= user;
+////    this.peer= peer;
+////  }
+//
+//  @override
+//  Widget build(BuildContext context) {
+//    // TODO: implement build
+//    //return new
+//    print("user: "+ user.toString()+" peer: "+ peer.toString());
+//
+//    return MaterialApp(
+//      home: MessengerHandler(user: this.user, peer: this.peer),
+//    );
+//  }
+//}
 
 class MessengerHandler extends StatefulWidget{
   User user;
   User peer;
 
 
-  MessengerHandler({User peer, User user});
+  MessengerHandler({ this.user,this.peer,});
+
+//  print("user: "+ user.toString()+" peer: "+ peer.toString());
 
   @override
-  _Messenger createState() => _Messenger(user: user,peer: peer);
+  _Messenger createState() => _Messenger(user: this.user,peer: this.peer);
 
 //
 //  State<StatefulWidget> createState() {
@@ -61,7 +74,7 @@ class _Messenger extends State<MessengerHandler> {
 
 //  _Messenger(User user, User peer);
 
-  _Messenger( {this.user,this.peer});
+  _Messenger({this.user,this.peer});
 
 
   @override
