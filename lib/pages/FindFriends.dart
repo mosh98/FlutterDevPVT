@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/CustomLoader.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
-import 'package:dog_prototype/pages/messenger.dart';
+import 'package:dog_prototype/pages/MessengerHandler.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image/network.dart';
@@ -99,7 +99,7 @@ class FindFriendsState extends State<FindFriends> {
                             children: <Widget>[
                               FlatButton.icon(
                                 onPressed: (){
-                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => Messenger(user: currentUser,peer: user)));
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessengerHandler(user: currentUser, peer: user)));
                                 },
                                 icon: Icon(
                                     Icons.chat_bubble_outline, size: 30, color: Colors.black

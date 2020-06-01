@@ -55,5 +55,11 @@ flutter {
     source '../..'
 }
 
+dependencies {
+    // ...
+
+    implementation 'com.google.firebase:firebase-messaging:17.4.2'
+}
+
 
 
