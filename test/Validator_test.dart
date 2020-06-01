@@ -1,4 +1,3 @@
-import 'package:dog_prototype/pages/RegisterPage.dart';
 import 'package:dog_prototype/services/Validator.dart';
 import 'package:flutter_test/flutter_test.dart';
 

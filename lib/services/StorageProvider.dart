@@ -10,7 +10,7 @@ class StorageProvider{
   final User user;
   StorageProvider({@required this.user});
 
-  _getProfileImage() async{
+  getProfileImage() async{
     String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
     try{
       final url = await http.get('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
@@ -24,7 +24,7 @@ class StorageProvider{
     }
   }
 
-  Future<bool> _uploadImage(File image) async{
+  Future<bool> uploadImage(File image) async{
     try{
       String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
 
