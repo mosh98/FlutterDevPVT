@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
+import 'dart:math';
+import 'dart:ui' as ui;
+
 
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/material.dart';
@@ -8,21 +12,16 @@ import 'package:flutter/painting.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
 import 'package:screen/screen.dart';
 import 'package:http/http.dart' as http;
-import 'dart:math';
-import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 
+
 /*
-    Befinner sig inte telefonen i stående länge så kommer allt gå åt helvete.
-
-    Går ju låsa den porträttläge i AndroidManifest eller i koden här.
+   TODO: FIXA SÅ DEN INTE RÄKNAR MED BREDDEN OM TELEFONEN ÄR LIGGANDE
  */
-
-
-
 
 
 // Gör det enkelt att filtera ut från Logcat
@@ -172,6 +171,7 @@ class _MainScreenState extends State<MainScreen> {
 			)
 		);
 	}
+
 
 
 	Widget _mapWidget() {
@@ -551,12 +551,7 @@ class _MainScreenState extends State<MainScreen> {
 					Colors.green,
 					Colors.black);
 			}
-			/*
-            String token;
-            await AuthService().getCurrentFirebaseUser().then(
-                    (value) =>
-                    value.getIdToken().then((value) => token = value.token));
-*/
+
 			DOGPARKS.forEach((element) {
 				_allMapMarkers.remove(element.marker);
 			});
@@ -571,16 +566,9 @@ class _MainScreenState extends State<MainScreen> {
 				.toString();
 
 
-			//String url = "https://dog-park-micro.herokuapp.com/api/v1/dog_park/find?latitude=$latitudeAsString&longitude=$longitudeAsString&distance=$DOGPARKS_SEARCH_DISTANCE";
-//print(url);
-			final http.Response response = await http.get(
-				//     url,
-				'https://dog-park-micro.herokuapp.com/api/v1/dog_park/all',
-				//    headers: <String, String>{
-				//  'Content-Type': 'application/json; charset=UTF-8',
-				//  'Authorization': "Bearer $token",
-				//},
-			);
+			String url = "https://dog-park-micro.herokuapp.com/api/v1/dog_park/find?latitude=$latitudeAsString&longitude=$longitudeAsString&distance=$DOGPARKS_SEARCH_DISTANCE";
+
+			final http.Response response = await http.get(url);
 
 
 			if (response.statusCode == 200) {
@@ -707,7 +695,7 @@ class SearchDogParksSettingsDialogState
 	@override
 	Widget build(BuildContext context) {
 		return AlertDialog(
-			shape:RoundedRectangleBorder(
+			shape: RoundedRectangleBorder(
 				borderRadius: BorderRadius.all(Radius.circular(32.0))),
 			title: Text('Hundparker', textAlign: TextAlign.center),
 
@@ -758,9 +746,11 @@ class SearchDogParksSettingsDialogState
 						(CURRENT_LOCATION_LATLNG == null)
 							? Container()
 							: FlatButton(
-							shape:RoundedRectangleBorder(
-								borderRadius: BorderRadius.all(Radius.circular(32.0))),
+							shape: RoundedRectangleBorder(
+								borderRadius: BorderRadius.all(
+									Radius.circular(32.0))),
 							color: Colors.lightBlueAccent,
+
 							child: Text('Sök från din position'),
 							onPressed: () {
 								SELECTED_SEARCH_LOCATION =
@@ -772,8 +762,9 @@ class SearchDogParksSettingsDialogState
 						(SEARCH_LOCATION_LATLNG == null)
 							? Container()
 							: FlatButton(
-							shape:RoundedRectangleBorder(
-								borderRadius: BorderRadius.all(Radius.circular(32.0))),
+							shape: RoundedRectangleBorder(
+								borderRadius: BorderRadius.all(
+									Radius.circular(32.0))),
 							color: Colors.lightBlueAccent,
 							child: Text('Sök från kartmarkering'),
 							onPressed: () {
@@ -820,7 +811,7 @@ class SearchWasteBinsSettingsDialogState
 	@override
 	Widget build(BuildContext context) {
 		return AlertDialog(
-			shape:RoundedRectangleBorder(
+			shape: RoundedRectangleBorder(
 				borderRadius: BorderRadius.all(Radius.circular(32.0))),
 			title: Text('Papperskorgar', textAlign: TextAlign.center),
 			content: Container(
@@ -868,8 +859,9 @@ class SearchWasteBinsSettingsDialogState
 						(CURRENT_LOCATION_LATLNG == null)
 							? Container()
 							: FlatButton(
-							shape:RoundedRectangleBorder(
-								borderRadius: BorderRadius.all(Radius.circular(32.0))),
+							shape: RoundedRectangleBorder(
+								borderRadius: BorderRadius.all(
+									Radius.circular(32.0))),
 							child: Text('Sök från din position'),
 							color: Colors.lightBlueAccent,
 							onPressed: () {
@@ -882,8 +874,9 @@ class SearchWasteBinsSettingsDialogState
 						(SEARCH_LOCATION_LATLNG == null)
 							? Container()
 							: FlatButton(
-							shape:RoundedRectangleBorder(
-								borderRadius: BorderRadius.all(Radius.circular(32.0))),
+							shape: RoundedRectangleBorder(
+								borderRadius: BorderRadius.all(
+									Radius.circular(32.0))),
 							color: Colors.lightBlueAccent,
 							child: Text('Sök från kartmarkering'),
 							onPressed: () {
@@ -963,8 +956,8 @@ class DogPark {
 	factory DogPark.fromJson(Map<String, dynamic> json) {
 		return DogPark(
 			id: json['id'],
-			latitude: json['longitude'],
-			longitude: json['latitude'],
+			latitude: json['latitude'],
+			longitude: json['longitude'],
 			name: json['name'],
 			description: json['description'],
 		);
@@ -1020,25 +1013,26 @@ class ReviewPage extends StatefulWidget {
 }
 
 class ReviewPageState extends State<ReviewPage> {
-
+	final double _paddingSize = 12;
 	List<Review> _reviews = new List<Review>();
+	List<String> _imageURLs = new List<String>();
+	double _listSideLength;
+
 	double _rating = 0;
-	bool isLoading = false;
+	bool _isLoading = false;
 
 	@override
 	void initState() {
 		super.initState();
-
+		_getImageURLs();
 		_getReviews();
-
-
 	}
 
 	void _getReviews() async {
 		_reviews.clear();
 		_rating = 0;
 		setState(() {
-			isLoading = true;
+			_isLoading = true;
 		});
 		try {
 			final int id = widget.selectedDogPark.id;
@@ -1063,72 +1057,224 @@ class ReviewPageState extends State<ReviewPage> {
 		}
 
 		setState(() {
-			isLoading=false;
+			_isLoading = false;
+		});
+	}
+
+
+	void _getImageURLs() async {
+		int _dogParkID = widget.selectedDogPark.id;
+
+
+		String url = "https://dog-park-micro.herokuapp.com/image/getImages?id=$_dogParkID";
+
+		await http.get(url).then((http.Response response) {
+			String result = utf8.decode(response.bodyBytes);
+			print("RESULT: " + result);
+			if (result.length > 2) {
+				// Är en lista med [url, url1, url2] osv kan inte parsa den
+
+				// Nu är den url, url1, url2
+				result = result.substring(1, result.length - 1);
+
+				// Nu är den url url1 url2
+				result = result.replaceAll(',', '');
+				_imageURLs = result.split(' ');
+
+				print(_imageURLs.toString());
+				print("---------->" + _imageURLs.length.toString());
+			}
+		});
+	}
+
+	void _uploadImage() async {
+		setState(() {
+			_isLoading = true;
 		});
 
+		int _dogParkID = widget.selectedDogPark.id;
 
+		final String url = 'https://dog-park-micro.herokuapp.com/image/addImage?id=$_dogParkID';
+
+		ImagePicker imagePicker = ImagePicker();
+
+		var tempImage = await imagePicker.getImage(source: ImageSource.gallery);
+
+		final postUri = Uri.parse(url);
+		http.MultipartRequest request = http.MultipartRequest('POST', postUri);
+
+		http.MultipartFile multipartFile = await http.MultipartFile.fromPath(
+			'file', tempImage.path);
+
+		request.files.add(multipartFile);
+
+
+		await request.send().then((response) async {
+			response.stream.transform(utf8.decoder).listen((value) {
+
+			});
+		}).catchError((e) {
+			print(e);
+		});
+
+		await _getImageURLs();
+
+
+		setState(() {
+			_isLoading = false;
+		});
 	}
 
 
 	@override
 	Widget build(BuildContext context) {
-		final double paddingSize = 12;
+		_listSideLength = MediaQuery
+			.of(context)
+			.size
+			.height / 4;
+
 
 		return Scaffold(
 			appBar: AppBar(
 				title: Text(widget.selectedDogPark.name),
 				centerTitle: true,
 			),
-			body: (isLoading == false) ? Container(
-
+			body: (_isLoading == false) ?
+			Container(
+				padding: EdgeInsets.all(_paddingSize),
 				child: Column(
 					children: <Widget>[
-						Container(
-							padding: EdgeInsets.all(paddingSize),
-							child: Text(widget.selectedDogPark.description),
-						),
 
-						Row(
-							mainAxisAlignment: MainAxisAlignment.center,
+						Expanded(
 
-							children: <Widget>[
-								(_rating >= 1) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
-								(_rating >= 2) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
-								(_rating >= 3) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
-								(_rating >= 4) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
-								(_rating >= 5) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
-								Text(_rating.toStringAsFixed(1).toString()),
-								Text("(" + _reviews.length.toString() + ")"),
-							],
+							child: _imageList(context),
+							//shrinkWrap: true,
 
 						),
+						Padding(
+							padding: EdgeInsets.all(_paddingSize / 2),
+							child:
+
+							Container(
+								decoration: BoxDecoration(
+
+									borderRadius: BorderRadius.circular(10),
+									border: Border.all(
+										color: Colors.blueAccent),
+
+								),
+
+								padding: EdgeInsets.all(_paddingSize),
+								child: Text(widget.selectedDogPark.description),
+							),
+						),
+						Padding(
+							padding: EdgeInsets.all(_paddingSize / 2),
+							child:
+							Container(
+
+
+								decoration: BoxDecoration(
+
+									borderRadius: BorderRadius.circular(10),
+									border: Border.all(
+										color: Colors.blueAccent),
+
+								),
+								child:
+
+								Row(
+
+									mainAxisAlignment: MainAxisAlignment.center,
+
+									children: <Widget>[
+										(_rating >= 1)
+											? Icon(
+											Icons.star, color: Colors.orange)
+											: Icon(
+											Icons.star_border,
+											color: Colors.orange),
+										(_rating >= 2)
+											? Icon(
+											Icons.star, color: Colors.orange)
+											: Icon(
+											Icons.star_border,
+											color: Colors.orange),
+										(_rating >= 3)
+											? Icon(
+											Icons.star, color: Colors.orange)
+											: Icon(
+											Icons.star_border,
+											color: Colors.orange),
+										(_rating >= 4)
+											? Icon(
+											Icons.star, color: Colors.orange)
+											: Icon(
+											Icons.star_border,
+											color: Colors.orange),
+										(_rating >= 5)
+											? Icon(
+											Icons.star, color: Colors.orange)
+											: Icon(
+											Icons.star_border,
+											color: Colors.orange),
+										Text(_rating.toStringAsFixed(1)
+											.toString()),
+										Text(
+											"(" + _reviews.length.toString() +
+												")"),
+									],
+
+								),
+							),
+						),
+
 						Expanded(
 							child: _reviewList(context),
 						),
-						Align(
-							alignment: Alignment.bottomCenter,
-							child: FlatButton(
-								child: Text('Betygsätt parken'),
-								onPressed: () {
-									Navigator.push(context,
-										MaterialPageRoute(builder: (context) =>
-											RatingPage(selectedDogPark: widget
-												.selectedDogPark)));
 
+						Row(
+							mainAxisAlignment: MainAxisAlignment.spaceAround,
+							children: <Widget>[
+								Container(
+									decoration: BoxDecoration(
+										borderRadius: BorderRadius.circular(10),
+										color: Colors.blueAccent,
+									),
+									child: FlatButton(
+										textColor: Colors.white,
+										child: Text('Ladda upp en bild!'),
+										onPressed: () {
+											_uploadImage();
+										}
+									),
+								),
 
-								},
-							),
+								Container(
+									decoration: BoxDecoration(
+										borderRadius: BorderRadius.circular(10),
+										color: Colors.blueAccent,
+									),
+									child: FlatButton(
+										textColor: Colors.white,
+										child: Text('Betygsätt och kommentera'),
+										onPressed: () async {
+											await Navigator.push(context,
+												MaterialPageRoute(builder: (
+													context) =>
+													RatingPage(
+														selectedDogPark: widget
+															.selectedDogPark)))
+												.then((_) {
+												_getReviews();
+											});
+										},
+									),
+								),
+
+							],
 						)
+
 					],
 				),
 
@@ -1137,42 +1283,163 @@ class ReviewPageState extends State<ReviewPage> {
 		);
 	}
 
+	Widget _imageList(BuildContext context) {
+		return ListView.builder(
+
+			scrollDirection: Axis.horizontal,
+			itemCount: _imageURLs.length,
+			itemBuilder: (BuildContext context,
+				int index) =>
+				Padding(
+					padding: EdgeInsets.all(_paddingSize / 2),
+					child:
+
+					Container(
+
+						decoration: BoxDecoration(
+
+							borderRadius: BorderRadius.circular(10),
+							border: Border.all(color: Colors.blueAccent),
+
+						),
+						child: GestureDetector(
+
+							onTap: () {
+								showDialog<void>(
+									context: context,
+									barrierDismissible: true,
+									builder: (BuildContext context) {
+										return AlertDialog(
+
+											content: GestureDetector(
+												onTap: () {
+													Navigator.pop(context);
+												},
+												child: Image.network(
+													_imageURLs[index]),
+											),
+											actions: <Widget>[
+											],
+										);
+									},
+								);
+							},
+							child: Container(
+								width: _listSideLength,
+								height: _listSideLength,
+								padding: EdgeInsets.all(_paddingSize),
+								child: Image.network(
+									_imageURLs[index]),
+							),
+						)
+					),
+				),
+
+		);
+	}
+
+	Widget _imageList2(BuildContext context) {
+		return ListView.builder(
+
+			scrollDirection: Axis.horizontal,
+			itemCount: _imageURLs.length,
+			itemBuilder: (BuildContext context,
+				int index) =>
+				Card(
+					child: GestureDetector(
+						onTap: () {
+							showDialog<void>(
+								context: context,
+								barrierDismissible: true,
+								builder: (BuildContext context) {
+									return AlertDialog(
+
+										content: GestureDetector(
+											onTap: () {
+												Navigator.pop(context);
+											},
+											child: Image.network(
+												_imageURLs[index]),
+										),
+										actions: <Widget>[
+										],
+									);
+								},
+							);
+						},
+						child: Container(
+							width: _listSideLength,
+							height: _listSideLength,
+
+							decoration: BoxDecoration(
+
+								borderRadius: BorderRadius.circular(10),
+								border: Border.all(color: Colors.blueAccent),
+
+							),
+							child: Image.network(
+								_imageURLs[index]),
+						),
+					)
+				),
+		);
+	}
 
 	Widget _reviewList(BuildContext context) {
-
 		return ListView.builder(
+			padding: EdgeInsets.all(_paddingSize),
 			itemCount: _reviews.length,
 			itemBuilder: (context, index) {
 				return Card(
+
+
 					child:
+
 					Row(
 						children: <Widget>[
 							Row(children: <Widget>[
-								(_reviews[index].rating >= 1) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
-								(_reviews[index].rating >= 2) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
-								(_reviews[index].rating >= 3) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
-								(_reviews[index].rating >= 4) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
-								(_reviews[index].rating >= 5) ? Icon(
-									Icons.star, color: Colors.orange) : Icon(
-									Icons.star_border, color: Colors.orange),
+								(_reviews[index].rating >= 1)
+									? Icon(
+									Icons.star, color: Colors.orange)
+									: Icon(
+									Icons.star_border,
+									color: Colors.orange),
+								(_reviews[index].rating >= 2)
+									? Icon(
+									Icons.star, color: Colors.orange)
+									: Icon(
+									Icons.star_border,
+									color: Colors.orange),
+								(_reviews[index].rating >= 3)
+									? Icon(
+									Icons.star, color: Colors.orange)
+									: Icon(
+									Icons.star_border,
+									color: Colors.orange),
+								(_reviews[index].rating >= 4)
+									? Icon(
+									Icons.star, color: Colors.orange)
+									: Icon(
+									Icons.star_border,
+									color: Colors.orange),
+								(_reviews[index].rating >= 5)
+									? Icon(
+									Icons.star, color: Colors.orange)
+									: Icon(
+									Icons.star_border,
+									color: Colors.orange),
 								Text(_reviews[index].rating.toString()),
 							]),
 							Expanded(
 								child:
+
 								ListTile(
 
 									title: Text(_reviews[index].comment),
 								),
 							)
 						],
+
 					),
 				);
 			},
@@ -1363,13 +1630,10 @@ class RatingPageState extends State<RatingPage> {
 			) : Container(child: Center(child: CircularProgressIndicator(),)),
 
 
-
 		);
 	}
 
 	void _saveComment(String str, int rating) async {
-
-
 		setState(() {
 			_isSaving = true;
 		});
@@ -1388,10 +1652,7 @@ class RatingPageState extends State<RatingPage> {
 		);
 
 
-
-
 		Navigator.pop(context, true);
-
 	}
 
 
