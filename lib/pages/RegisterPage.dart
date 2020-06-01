@@ -5,6 +5,7 @@ import 'package:dog_prototype/pages/mapPage.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/Validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -303,6 +304,8 @@ class MyCustomFormState extends State<MyCustomForm> {
 
       dynamic result = await _auth.registerWithEmailAndPassword(username, email, dateOfBirth, gender, password);
 
+      createAndSaveToken(username, email);
+
       setState(() {
         _isLoading = false;
       });
@@ -317,5 +320,28 @@ class MyCustomFormState extends State<MyCustomForm> {
 
   void _signInWithFacebook() {
     AuthService().signInWithFacebook(context);
+  }
+
+  Future<http.Response>  createAndSaveToken(String username, String email) async {
+
+    String token;
+    FirebaseMessaging Fcm = new FirebaseMessaging();
+
+    Fcm.getToken().then((value) => token= value);
+
+
+
+      return http.post(
+        'https://jsonplaceholder.typicode.com/albums',
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'username': username,
+          'email':email,
+          'fcmToken': token
+        }),
+      );
+
   }
 }
