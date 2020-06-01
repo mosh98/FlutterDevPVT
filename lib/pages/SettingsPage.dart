@@ -101,13 +101,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return _loadingProfile == true || profileImage == null ?
     Scaffold(
-      backgroundColor: Colors.brown[100],
       key: _scaffoldKey,
       body: DefaultLoader(),
     )
         :
     Scaffold(
-        backgroundColor: Colors.brown[100],
         key: _scaffoldKey,
         resizeToAvoidBottomPadding: false,
         appBar: AppBar(
