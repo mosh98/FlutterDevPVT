@@ -292,10 +292,10 @@ class MyCustomFormState extends State<MyCustomForm> {
     );
   }
 
-  Future<void>register(String username, String email, String password, String dateOfBirth, String gender)async{
+  Future<void>register(String username, String email, String password, String dateOfBirth, String gender) async {
     try {
       if(gender == "-") {
-        gender = "UNKNOWN"; 
+        gender = "UNKNOWN";
       }
 
       if(dateOfBirth == null){
@@ -323,26 +323,65 @@ class MyCustomFormState extends State<MyCustomForm> {
   }
 
 
-
-  Future<http.Response> createAndSaveToken(String username, String email) async {
-
+//  try {
+//  final http.Response response = await http.post( //register to database
+//  'https://dogsonfire.herokuapp.com/users/register',
+//  headers:<String, String>{
+//  "Accept": "application/json",
+//  'Content-Type' : 'application/json; charset=UTF-8', //ISO-8859-1
+//  },
+//  body: jsonEncode(<String,String>{
+//  "username": username,
+//  "email": email,
+//  "dateOfBirth": dateOfBirth,
+//  "gender": gender,
+//  "password":password
+//  })
+//  );
+//
+//  if(response.statusCode==200){
+//  print(response.statusCode);
+//  await signInWithEmailAndPassword(email, password);
+//  return response.statusCode.toString();
+//  }else{
+//  print(response.statusCode);
+//  print(response.body);
+//  return json.decode(response.body)['message'];
+//  }
+//  } catch (e) {
+//  print("catch: " + e.message);
+//  return null;
+//  }
+  Future<http.Response> createAndSaveToken(
+      String username, String email) async {
     String token;
     FirebaseMessaging Fcm = new FirebaseMessaging();
 
     await Fcm.getToken().then((value) => token = value);
 
-      return http.post(
+    print("FCM TEKEN"+ token);
+    try {
+      final http.Response response = await http.post(
         'https://fcm-token.herokuapp.com/user/saveFcm',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, String>{
           'username': username,
-          'email':email,
+          'email': email,
           'fcmToken': token
         }),
       );
+      if (response.statusCode == 200) {
+        print(response.statusCode);
+      } else {
+        print(response.statusCode);
+        print(response.body);
+        return json.decode(response.body)['message'];
+      }
+    } catch (e) {
+      print("catch: " + e.message);
+      return null;
+    }
   }
-
-
 }
