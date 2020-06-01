@@ -1,38 +1,69 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
-import 'dart:math';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:location/location.dart';
+
+import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
+import 'package:location/location.dart';
 import 'package:screen/screen.dart';
-
-
+import 'package:http/http.dart' as http;
+import 'dart:math';
+import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
 
 /*
-	TODO: Undvika hårdkodade värden för storlekar på knappar, kartmarkeringar osv.
-	TODO: Visa tydligare när appen söker efter hundparker eller papperskorgar,
-	      en timglasikon är för otydligt.
+    Befinner sig inte telefonen i stående länge så kommer allt gå åt helvete.
 
-
-	FIXAT: Storleken på knapparna för sök, position, hundparker och papperskorgar baseras nu
-	på skärmstorleken.
-	FIXAT: Bytt från timglasikon vid sökning till en snurrade animation
-
+    Går ju låsa den porträttläge i AndroidManifest eller i koden här.
  */
 
-// De fyra huvudknapparnas sidlängd ska vara 15% av skärmens bredd
-double gButtonLengthOfScreenWidth = 0.15;
 
 
 
 
+// Gör det enkelt att filtera ut från Logcat
+final bool PRINT_DEBUG_INFO = true;
+final String DEBUG_FILTER_STR = "DEBUG_MSG:";
+
+
+double DOGPARKS_SEARCH_DISTANCE = 1000;
+double DOGPARKS_MAX_SEARCH_DISTANCE = 5000;
+int DOGPARKS_MAX_RESULTS = 10;
+
+
+double WASTEBINS_SEARCH_DISTANCE = 2000;
+double WASTEBINS_MAX_SEARCH_DISTANCE = 5000;
+int WASTEBINS_MAX_RESULTS = 10;
+
+
+// Kan vara GPS-positionen eller en egen kartmarkering
+LatLng SELECTED_SEARCH_LOCATION;
+
+// Telefonens GPS-position
+LatLng CURRENT_LOCATION_LATLNG;
+
+// Markeringen på kartan
+Marker CURRENT_LOCATION_MARKER;
+
+// Markering på kartan om man vill söka på annan plats än sin egen
+LatLng SEARCH_LOCATION_LATLNG;
+Marker SEARCH_LOCATION_MARKER;
+
+
+List<DogPark> DOGPARKS = List<DogPark>();
+List<WasteBin> WASTEBINS = List<WasteBin>();
+
+BitmapDescriptor DOGPARK_MARKER_ICON;
+BitmapDescriptor WASTEBIN_MARKER_ICON;
+BitmapDescriptor CURRENT_LOCATION_MARKER_ICON;
+BitmapDescriptor SEARCH_LOCATION_MARKER_ICON;
+
+
+DogPark SELECTED_DOGPARK;
 
 
 void main() {
@@ -51,24 +82,64 @@ class MapPage extends StatelessWidget {
 
 class MainScreen extends StatefulWidget {
 	@override
-	MainScreenState createState() => MainScreenState();
+	_MainScreenState createState() => _MainScreenState();
 }
 
-class MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> {
 
+
+	// Huvudknapparnas sida ska vara 15% av skärmens bredd
+	double _buttonSideFactor = 0.15;
+
+	// Höjden och bredden för de kvadratiska huvudknapparna
+	// Sätts i Widget build hos _MainScreenState
+	double _buttonSideLength;
+
+	// Bakgrundsfärgen för huvudknapparna
+	Color _buttonBackgroundColor = Colors.lightBlueAccent;
+
+	// Används för att hitta telefonens position
+	Location _locationFinder = new Location();
+
+	// Innehåller kartans alla markeringar
+	Set<Marker> _allMapMarkers = new Set<Marker>();
+
+	// Gör det möjligt att kontrollera kartan
+	Completer<GoogleMapController> _googleMapController = Completer();
+
+	// Detta för kartan till stockholm, sen om användaren ger tillåtelse att
+	// avlägsa GPS så flyttar kartan sin position till användarens GPS-position
+	final CameraPosition _initCamPosition =
+	CameraPosition(target: LatLng(59, 18), zoom: 10);
+
+
+	bool _buttonSetSearchMarkerPressed = false;
+
+	// Om det pågår en sökning av hundparker eller papperskorgar
+	bool _isSearching = false;
 
 
 	@override
 	Widget build(BuildContext context) {
+		_buttonSideLength = MediaQuery
+			.of(context)
+			.size
+			.width * _buttonSideFactor;
+
 		return Scaffold(
 			appBar: AppBar(
 				title: Text('Map'),
 				centerTitle: true,
 			),
-				backgroundColor: Colors.brown[100],
 			body: Stack(
 				children: <Widget>[
-					MapWidget(key: StateHandler.mapWidgetStateKey),
+					_mapWidget(),
+
+					Center(
+						child: (_isSearching == false)
+							? Container()
+							: CircularProgressIndicator(),
+					),
 					Align(
 						alignment: Alignment.topRight,
 						child: Column(
@@ -76,1111 +147,1368 @@ class MainScreenState extends State<MainScreen> {
 							children: <Widget>[
 								Container(
 									padding: EdgeInsets.all(10),
-									child:
-									DogparkWidget(key: StateHandler
-										.dogparkWidgetStateKey),
+									child: _buttonSearchDogParks(),
 								),
 								Container(
 									padding: EdgeInsets.all(10),
-									child: WastebinWidget(
-										key: StateHandler
-											.wastebinWidgetStateKey),
+									child: _buttonSearchWasteBins(),
 								),
 								Container(
 									padding: EdgeInsets.all(10),
-									child: SearchPosWidget(
-										key: StateHandler
-											.searchPosWidgetStateKey),
+									child: _buttonSetSearchMarker(),
 								),
 								Container(
 									padding: EdgeInsets.all(10),
-									child: MyLocationWidget(
-										key: StateHandler
-											.myLocationWidgetStateKey),
+									child: _buttonFindMyLocation(),
 								),
+
+
 							],
 						),
-					)
+					),
+
+
 				],
+			)
+		);
+	}
+
+
+	Widget _mapWidget() {
+		return GoogleMap(
+			mapType: MapType.normal,
+			markers: _allMapMarkers,
+			onTap: _onMapWidgetTap,
+			initialCameraPosition: _initCamPosition,
+			onMapCreated: (GoogleMapController controller) {
+				_googleMapController.complete(controller);
+			});
+	}
+
+	void _onMapWidgetTap(LatLng tapPosition) async {
+		if (_buttonSetSearchMarkerPressed == true) {
+			if (SEARCH_LOCATION_MARKER != null) {
+				if (_allMapMarkers.contains(SEARCH_LOCATION_MARKER)) {
+					_allMapMarkers.remove(SEARCH_LOCATION_MARKER);
+				}
+			}
+			if (SEARCH_LOCATION_MARKER_ICON == null) {
+				SEARCH_LOCATION_MARKER_ICON = await createTextIcon(
+					"Sök härifrån!", Colors.white, Colors.blue);
+			}
+
+
+			SEARCH_LOCATION_LATLNG = tapPosition;
+			SEARCH_LOCATION_MARKER = Marker(
+				markerId: MarkerId('_buttonSetSearchMarker_id'),
+				position: SEARCH_LOCATION_LATLNG,
+				infoWindow: InfoWindow(title: 'Sök härifrån!'),
+				icon: SEARCH_LOCATION_MARKER_ICON,
+				onTap: () {
+					showDialog<void>(
+						context: context,
+						barrierDismissible: false,
+						builder: (BuildContext context) {
+							return AlertDialog(
+
+								title: Text('Sökmarkering'),
+								content: Text('Vill du ta bort sökmarkeringen'),
+								actions: <Widget>[
+									FlatButton(
+										child: Text('Ja'),
+										onPressed: () {
+											setState(() {
+												_allMapMarkers.remove(
+													SEARCH_LOCATION_MARKER);
+												SEARCH_LOCATION_MARKER = null;
+												SEARCH_LOCATION_LATLNG = null;
+											});
+											Navigator.of(context).pop();
+										},
+									),
+									FlatButton(
+										child: Text('Nej'),
+										onPressed: () {
+											Navigator.of(context).pop();
+										},
+									),
+								],
+							);
+						},
+					);
+				});
+
+			setCameraPosition(SEARCH_LOCATION_LATLNG, 15);
+			setState(() {
+				_buttonSetSearchMarkerPressed = false;
+				_allMapMarkers.add(SEARCH_LOCATION_MARKER);
+			});
+			showMarkerInfo(SEARCH_LOCATION_MARKER);
+		}
+	}
+
+	Widget _buttonSearchDogParks() {
+		return Container(
+			width: _buttonSideLength,
+			height: _buttonSideLength,
+			decoration: BoxDecoration(
+				borderRadius: BorderRadius.circular(10),
+				color: _buttonBackgroundColor,
+				border: Border.all(color: Colors.black),
+			),
+			child: IconButton(
+				iconSize: _buttonSideLength,
+				icon: ImageIcon(AssetImage('assets/dogparkicon.png')),
+				onPressed: _onPressedButtonSearchDogParks,
 			));
 	}
 
-	@override
-	void initState() {
-		// Förhindrar att googlemap låser sig
-
-		Screen.keepOn(true);
-
-	}
-}
-
-class MapWidget extends StatefulWidget {
-	MapWidget({Key key}) : super(key: key);
-
-	@override
-	MapWidgetState createState() => MapWidgetState();
-}
-
-class MapWidgetState extends State<MapWidget> {
-	LatLng currentLocation;
-	Location locationFinder = new Location();
-
-	Marker currentLocationMarker;
-	Marker searchLocationMarker;
-
-	BitmapDescriptor currentLocationIcon;
-	BitmapDescriptor searchLocationIcon;
-
-	Future<LocationData> getCurrentLocation() async {
-		bool _serviceEnabled;
-		PermissionStatus _permissionGranted;
-
-		_serviceEnabled = await locationFinder.serviceEnabled();
-		if (!_serviceEnabled) {
-			_serviceEnabled = await locationFinder.requestService();
-			if (!_serviceEnabled) {
-				return null;
-			}
-		}
-		_permissionGranted = await locationFinder.hasPermission();
-		if (_permissionGranted == PermissionStatus.denied) {
-			_permissionGranted = await locationFinder.requestPermission();
-			if (_permissionGranted != PermissionStatus.granted) {
-				return null;
-			}
-		}
-
-		return await locationFinder.getLocation();
+	void _onPressedButtonSearchDogParks() async {
+		_searchForDogParks();
 	}
 
-	Set<Marker> _markers = new Set<Marker>();
-	Completer<GoogleMapController> _controller = Completer();
+	Widget _buttonSearchWasteBins() {
+		return Container(
+			width: _buttonSideLength,
+			height: _buttonSideLength,
+			decoration: BoxDecoration(
+				borderRadius: BorderRadius.circular(10),
+				color: _buttonBackgroundColor,
+				border: Border.all(color: Colors.black),
+			),
+			child: IconButton(
+				iconSize: _buttonSideLength,
+				icon: ImageIcon(AssetImage('assets/wastebin_black.png')),
+				onPressed: _onPressedButtonSearchWasteBins,
+			));
+	}
+
+	void _onPressedButtonSearchWasteBins() async {
+		_searchForWasteBins();
+	}
+
+
+	Widget _buttonSetSearchMarker() {
+		double iconSize = _buttonSideLength * 0.7;
+		return Container(
+			width: _buttonSideLength,
+			height: _buttonSideLength,
+			decoration: BoxDecoration(
+				borderRadius: BorderRadius.circular(10),
+				color: (_buttonSetSearchMarkerPressed == false)
+					? _buttonBackgroundColor
+					: Colors.green,
+				border: Border.all(color: Colors.black),
+			),
+			child: IconButton(
+				iconSize: iconSize,
+				icon: Icon(Icons.add_location),
+				onPressed: _onPressedButtonSetSearchMarker,
+			));
+	}
+
+	void _onPressedButtonSetSearchMarker() {
+		setState(() {
+			_buttonSetSearchMarkerPressed = !_buttonSetSearchMarkerPressed;
+		});
+	}
+
+	Widget _buttonFindMyLocation() {
+		double iconSize = _buttonSideLength * 0.7;
+
+		return Container(
+			width: _buttonSideLength,
+			height: _buttonSideLength,
+			decoration: BoxDecoration(
+				borderRadius: BorderRadius.circular(10),
+				color: _buttonBackgroundColor,
+				border: Border.all(color: Colors.black),
+			),
+			child: IconButton(
+				iconSize: iconSize,
+				icon: Icon(Icons.my_location),
+				onPressed: _onPressedButtonFindMyLocation,
+			));
+	}
+
+	void _onPressedButtonFindMyLocation() async {
+		await getCurrentLocation().then((locationData) async {
+			if (locationData != null) {
+				CURRENT_LOCATION_LATLNG =
+					LatLng(locationData.latitude, locationData.longitude);
+
+				// Ta bort gamla markeringen
+				if (CURRENT_LOCATION_MARKER != null) {
+					if (_allMapMarkers.contains(CURRENT_LOCATION_MARKER)) {
+						_allMapMarkers.remove(CURRENT_LOCATION_MARKER);
+					}
+				}
+
+				await createCurrentPositionMarker(CURRENT_LOCATION_LATLNG);
+
+				setState(() {
+					_allMapMarkers.add(CURRENT_LOCATION_MARKER);
+				});
+
+				await setCameraPosition(CURRENT_LOCATION_LATLNG, 15);
+				await showMarkerInfo(CURRENT_LOCATION_MARKER);
+			}
+		});
+	}
 
 	@override
 	void initState() {
 		super.initState();
-		WidgetsBinding.instance.addPostFrameCallback((_) {
-			getCurrentLocation().then((locData) {
-				setCurrentPos();
-			});
+
+		// Förhindrar att GoogleMap låser sig
+		Screen.keepOn(true);
+
+		WidgetsBinding.instance.addPostFrameCallback((_) async {
+			_setCurrentPos();
 		});
 	}
 
-	void setCurrentPos() async {
-		if (currentLocationIcon == null) {
-			await MyFunctions.createTextIcon(
+	void _setCurrentPos() async {
+		if (CURRENT_LOCATION_MARKER_ICON == null) {
+			await createTextIcon(
 				"Här är du!", Colors.white, Colors.black87)
 				.then((icon) {
-				currentLocationIcon = icon;
+				CURRENT_LOCATION_MARKER_ICON = icon;
 			});
 		}
 
 
 		getCurrentLocation().then((locData) {
-			currentLocation = LatLng(locData.latitude, locData.longitude);
-			if (currentLocationMarker != null) {
-				_markers.remove(currentLocationMarker);
+			CURRENT_LOCATION_LATLNG =
+				LatLng(locData.latitude, locData.longitude);
+			if (CURRENT_LOCATION_MARKER != null) {
+				_allMapMarkers.remove(CURRENT_LOCATION_MARKER);
 			}
-			currentLocationMarker = Marker(
+			CURRENT_LOCATION_MARKER = Marker(
 				markerId: MarkerId('current_loc_id'),
-				position: currentLocation,
-				icon: currentLocationIcon,
+				position: CURRENT_LOCATION_LATLNG,
+				icon: CURRENT_LOCATION_MARKER_ICON,
 			);
 
 			setState(() {
-				_markers.add(currentLocationMarker);
+				_allMapMarkers.add(CURRENT_LOCATION_MARKER);
 			});
-			setCameraPosition(currentLocation, 15);
-			showMarkerInfo(currentLocationMarker.markerId);
+			setCameraPosition(CURRENT_LOCATION_LATLNG, 15);
+			showMarkerInfo(CURRENT_LOCATION_MARKER);
 		});
 	}
 
-	static final CameraPosition initCamPos =
-	CameraPosition(target: LatLng(59, 18), zoom: 10);
 
-	Future<void> showMarkerInfo(MarkerId markerId) async {
-		try {
-			final GoogleMapController controller = await _controller.future;
-			await controller.showMarkerInfoWindow(markerId);
-		} catch (error) {}
+	void _searchForWasteBins() async {
+		bool search = await showDialog<bool>(
+			context: context,
+			builder: (context) => SearchWasteBinsSettingsDialog(),
+		);
+
+		// Användaren tryckte på sök
+		if (search == true) {
+			if (WASTEBIN_MARKER_ICON == null) {
+				await createBorderedIcon(
+					'assets/wastebin_color.png', 100, 5, Colors.grey,
+					Colors.black)
+					.then((icon) {
+					WASTEBIN_MARKER_ICON = icon;
+				});
+			}
+
+
+			WASTEBINS.forEach((element) {
+				_allMapMarkers.remove(element.marker);
+			});
+			WASTEBINS.clear();
+
+			// Visar laddningsindikatorn mitt på kartan
+			setState(() {
+				_isSearching = true;
+			});
+
+
+			String token;
+			await AuthService().getCurrentFirebaseUser().then(
+					(value) =>
+					value.getIdToken().then((value) => token = value.token));
+
+			String lat = SELECTED_SEARCH_LOCATION.latitude.toString();
+			String lon = SELECTED_SEARCH_LOCATION.longitude.toString();
+
+			final http.Response response = await http.get(
+				'https://dogsonfire.herokuapp.com/wastebin?latitude=$lat&longitude=$lon&distance=$WASTEBINS_SEARCH_DISTANCE',
+				headers: <String, String>{
+					'Content-Type': 'application/json; charset=UTF-8',
+					'Authorization': "Bearer $token",
+				},
+			);
+
+			if (response.statusCode == 200) {
+				String jsonData = utf8.decode(response.bodyBytes);
+
+				List allBins = jsonDecode(jsonData);
+
+				List<WasteBin> tempBins = List<WasteBin>();
+
+				for (int i = 0; i < allBins.length; i++) {
+					WasteBin temp = WasteBin.fromJson(allBins[i]);
+					temp.distance =
+						getDistanceBetween(SELECTED_SEARCH_LOCATION.latitude,
+							SELECTED_SEARCH_LOCATION.longitude, temp.latitude,
+							temp.longitude);
+					tempBins.add(temp);
+				}
+
+				tempBins.sort((WasteBin a, WasteBin b) {
+					if (a.distance > b.distance)
+						return 1;
+					else if (a.distance < b.distance)
+						return -1;
+					else
+						return 0;
+				});
+
+				for (int i = 0; i < tempBins.length &&
+					i < WASTEBINS_MAX_RESULTS; i++) {
+					if (tempBins[i].distance <= WASTEBINS_SEARCH_DISTANCE) {
+						tempBins[i].marker = Marker(
+							markerId: MarkerId('wastebin_id_$i'),
+							infoWindow: InfoWindow(
+								title: 'Papperskorg',
+								snippet: tempBins[i].distance.toInt()
+									.toString() +
+									" m"),
+							icon: WASTEBIN_MARKER_ICON,
+							position: LatLng(
+								tempBins[i].latitude, tempBins[i].longitude),
+						);
+						WASTEBINS.add(tempBins[i]);
+						_allMapMarkers.add(tempBins[i].marker);
+					}
+				}
+			} else {
+				Scaffold.of(context).showSnackBar(
+					SnackBar(content: Text("Oops! Något gick fel")));
+			}
+
+
+			Scaffold.of(context)
+				.showSnackBar(
+				SnackBar(content: Text(
+					"Hittade " + WASTEBINS.length.toString() + " st.")));
+
+			setCameraPosition(SELECTED_SEARCH_LOCATION, 15);
+		} else {}
+		setState(() {
+			_isSearching = false;
+		});
+	}
+
+
+	void _dogparkMarkerTapped(int index) async {
+		Navigator.push(context, MaterialPageRoute(builder: (context) =>
+			ReviewPage(selectedDogPark: DOGPARKS[index])));
+	}
+
+
+	Future<LocationData> getCurrentLocation() async {
+		bool _serviceEnabled;
+		PermissionStatus _permissionGranted;
+
+		_serviceEnabled = await _locationFinder.serviceEnabled();
+		if (!_serviceEnabled) {
+			_serviceEnabled = await _locationFinder.requestService();
+			if (!_serviceEnabled) {
+				return null;
+			}
+		}
+		_permissionGranted = await _locationFinder.hasPermission();
+		if (_permissionGranted == PermissionStatus.denied) {
+			_permissionGranted = await _locationFinder.requestPermission();
+			if (_permissionGranted != PermissionStatus.granted) {
+				return null;
+			}
+		}
+
+		return await _locationFinder.getLocation();
+	}
+
+	void _searchForDogParks() async {
+		bool search = await showDialog<bool>(
+			context: context,
+			builder: (context) => SearchDogParksSettingsDialog(),
+		);
+
+
+		// Användaren tryckte på sök
+		if (search == true) {
+			if (DOGPARK_MARKER_ICON == null) {
+				DOGPARK_MARKER_ICON = await createBorderedIcon(
+					'assets/dogparkicon_color.png',
+					100,
+					5,
+					Colors.green,
+					Colors.black);
+			}
+			/*
+            String token;
+            await AuthService().getCurrentFirebaseUser().then(
+                    (value) =>
+                    value.getIdToken().then((value) => token = value.token));
+*/
+			DOGPARKS.forEach((element) {
+				_allMapMarkers.remove(element.marker);
+			});
+			DOGPARKS.clear();
+			setState(() {
+				_isSearching = true;
+			});
+
+			String latitudeAsString = SELECTED_SEARCH_LOCATION.latitude
+				.toString();
+			String longitudeAsString = SELECTED_SEARCH_LOCATION.longitude
+				.toString();
+
+
+			//String url = "https://dog-park-micro.herokuapp.com/api/v1/dog_park/find?latitude=$latitudeAsString&longitude=$longitudeAsString&distance=$DOGPARKS_SEARCH_DISTANCE";
+//print(url);
+			final http.Response response = await http.get(
+				//     url,
+				'https://dog-park-micro.herokuapp.com/api/v1/dog_park/all',
+				//    headers: <String, String>{
+				//  'Content-Type': 'application/json; charset=UTF-8',
+				//  'Authorization': "Bearer $token",
+				//},
+			);
+
+
+			if (response.statusCode == 200) {
+				String jsonData = utf8.decode(response.bodyBytes);
+
+				List allparks = jsonDecode(jsonData);
+
+
+				List<DogPark> allDogsParks = new List<DogPark>();
+				for (int i = 0; i < allparks.length; i++) {
+					DogPark temp = DogPark.fromJson(allparks[i]);
+					temp.distance = getDistanceBetween(
+						SELECTED_SEARCH_LOCATION.latitude,
+						SELECTED_SEARCH_LOCATION.longitude,
+						temp.latitude,
+						temp.longitude);
+					allDogsParks.add(temp);
+				}
+
+				allDogsParks.sort((DogPark a, DogPark b) {
+					if (a.distance > b.distance)
+						return 1;
+					else if (a.distance < b.distance)
+						return -1;
+					else
+						return 0;
+				});
+
+				for (int i = 0;
+				i < allDogsParks.length && i < DOGPARKS_MAX_RESULTS;
+				i++) {
+					if (allDogsParks[i].distance <= DOGPARKS_SEARCH_DISTANCE) {
+						allDogsParks[i].marker = Marker(
+							markerId: MarkerId('dogpark_id_$i'),
+							infoWindow: InfoWindow(
+								title: allDogsParks[i].name +
+									"\t" +
+									allDogsParks[i].distance.toInt()
+										.toString() +
+									" m",
+								snippet: allDogsParks[i].description),
+							position: LatLng(allDogsParks[i].latitude,
+								allDogsParks[i].longitude),
+							icon: DOGPARK_MARKER_ICON,
+							onTap: () {
+								_dogparkMarkerTapped(i);
+							},
+
+						);
+
+						DOGPARKS.add(allDogsParks[i]);
+						_allMapMarkers.add(allDogsParks[i].marker);
+					}
+				}
+			} else {
+				Scaffold.of(context).showSnackBar(
+					SnackBar(content: Text("Oops! Något gick fel")));
+			}
+
+
+			Scaffold.of(context)
+				.showSnackBar(
+				SnackBar(content: Text(
+					"Hittade " + DOGPARKS.length.toString() + " st.")));
+
+			setCameraPosition(SELECTED_SEARCH_LOCATION, 15);
+		} else {}
+
+		setState(() {
+			_isSearching = false;
+		});
+	}
+
+	Future<void> showMarkerInfo(Marker marker) async {
+		/*
+        await _googleMapController.future.then((controller) {
+            if (controller != null) {
+                try {
+                    controller.showMarkerInfoWindow(marker.markerId);
+                } catch (error) {}
+            } else {}
+        });
+
+         */
+	}
+
+	Future<void> setCameraPosition(LatLng pos, double zoom) async {
+		await _googleMapController.future.then((controller) {
+			controller.animateCamera(CameraUpdate.newCameraPosition(
+				CameraPosition(target: pos, zoom: zoom)));
+		});
+	}
+
+	Future<Marker> createCurrentPositionMarker(LatLng position) async {
+		if (CURRENT_LOCATION_MARKER_ICON == null) {
+			CURRENT_LOCATION_MARKER_ICON =
+			await createTextIcon("Här är du!", Colors.white, Colors.blue);
+		}
+		return Marker(
+			markerId: MarkerId('gCurrentLocationMarker_id'),
+			icon: CURRENT_LOCATION_MARKER_ICON,
+			position: position,
+			infoWindow: InfoWindow(title: 'Här är du!'),
+		);
+	}
+}
+
+
+class SearchDogParksSettingsDialog extends StatefulWidget {
+	const SearchDogParksSettingsDialog({Key key}) : super(key: key);
+
+	@override
+	SearchDogParksSettingsDialogState createState() =>
+		SearchDogParksSettingsDialogState();
+}
+
+class SearchDogParksSettingsDialogState
+	extends State<SearchDogParksSettingsDialog> {
+	@override
+	void initState() {
+		super.initState();
 	}
 
 	@override
 	Widget build(BuildContext context) {
-		return GoogleMap(
-			mapType: MapType.normal,
-			markers: _markers,
-			onTap: onMapTap,
-			initialCameraPosition: initCamPos,
-			onMapCreated: (GoogleMapController controller) {
-				_controller.complete(controller);
-			});
+		return AlertDialog(
+			shape:RoundedRectangleBorder(
+				borderRadius: BorderRadius.all(Radius.circular(32.0))),
+			title: Text('Hundparker', textAlign: TextAlign.center),
+
+			content: Container(
+
+				child: Column(
+					mainAxisSize: MainAxisSize.min,
+					children: <Widget>[
+						Text('Maximala avståndet till parken'),
+						Row(
+							children: <Widget>[
+								Slider(
+									value: DOGPARKS_SEARCH_DISTANCE,
+									min: 0,
+									max: DOGPARKS_MAX_SEARCH_DISTANCE,
+									divisions: 100,
+									onChanged: (value) {
+										setState(() {
+											DOGPARKS_SEARCH_DISTANCE = value;
+										});
+									},
+								),
+								Text(DOGPARKS_SEARCH_DISTANCE.toInt()
+									.toString() + " m"),
+							],
+						),
+						Text('Max sökträffar'),
+						Row(
+							children: <Widget>[
+								Slider(
+									value: DOGPARKS_MAX_RESULTS.toDouble(),
+									min: 1,
+									max: 20,
+									divisions: 20,
+									onChanged: (value) {
+										setState(() {
+											DOGPARKS_MAX_RESULTS =
+												value.toInt();
+										});
+									},
+								),
+								Text(DOGPARKS_MAX_RESULTS.toInt()
+									.toString() + " st"),
+							],
+						),
+
+
+						(CURRENT_LOCATION_LATLNG == null)
+							? Container()
+							: FlatButton(
+							shape:RoundedRectangleBorder(
+								borderRadius: BorderRadius.all(Radius.circular(32.0))),
+							color: Colors.lightBlueAccent,
+							child: Text('Sök från din position'),
+							onPressed: () {
+								SELECTED_SEARCH_LOCATION =
+									CURRENT_LOCATION_LATLNG;
+								Navigator.pop(context, true);
+							},
+						),
+
+						(SEARCH_LOCATION_LATLNG == null)
+							? Container()
+							: FlatButton(
+							shape:RoundedRectangleBorder(
+								borderRadius: BorderRadius.all(Radius.circular(32.0))),
+							color: Colors.lightBlueAccent,
+							child: Text('Sök från kartmarkering'),
+							onPressed: () {
+								SELECTED_SEARCH_LOCATION =
+									SEARCH_LOCATION_LATLNG;
+								Navigator.pop(context, true);
+							},
+						),
+
+
+					],
+				)
+
+			),
+			actions: <Widget>[
+
+				FlatButton(
+					onPressed: () {
+						Navigator.pop(context, false);
+					},
+					child: Text('Avbryt'),
+				)
+			],
+		);
+	}
+}
+
+
+class SearchWasteBinsSettingsDialog extends StatefulWidget {
+	const SearchWasteBinsSettingsDialog({Key key}) : super(key: key);
+
+	@override
+	SearchWasteBinsSettingsDialogState createState() =>
+		SearchWasteBinsSettingsDialogState();
+}
+
+class SearchWasteBinsSettingsDialogState
+	extends State<SearchWasteBinsSettingsDialog> {
+	@override
+	void initState() {
+		super.initState();
 	}
 
-	void onMapTap(LatLng position) async {
-		if (searchLocationIcon == null) {
-			await MyFunctions.createTextIcon(
-				"Sök härifrån!", Colors.white, Colors.black)
-				.then((icon) {
-				searchLocationIcon = icon;
-			});
-		}
+	@override
+	Widget build(BuildContext context) {
+		return AlertDialog(
+			shape:RoundedRectangleBorder(
+				borderRadius: BorderRadius.all(Radius.circular(32.0))),
+			title: Text('Papperskorgar', textAlign: TextAlign.center),
+			content: Container(
+				child: Column(
+					mainAxisSize: MainAxisSize.min,
+					children: <Widget>[
+						Text('Maximala avståndet'),
+						Row(
+							children: <Widget>[
+								Slider(
+									value: WASTEBINS_SEARCH_DISTANCE,
+									min: 0,
+									max: WASTEBINS_MAX_SEARCH_DISTANCE,
+									divisions: 100,
+									onChanged: (value) {
+										setState(() {
+											WASTEBINS_SEARCH_DISTANCE = value;
+										});
+									},
+								),
+								Text(WASTEBINS_SEARCH_DISTANCE.toInt()
+									.toString() + " m"),
+							],
+						),
+						Text('Max sökträffar'),
+						Row(
+							children: <Widget>[
+								Slider(
+									value: WASTEBINS_MAX_RESULTS.toDouble(),
+									min: 1,
+									max: 20,
+									divisions: 20,
+									onChanged: (value) {
+										setState(() {
+											WASTEBINS_MAX_RESULTS =
+												value.toInt();
+										});
+									},
+								),
+								Text(WASTEBINS_MAX_RESULTS.toInt()
+									.toString() + " st"),
+							],
+						),
+
+						(CURRENT_LOCATION_LATLNG == null)
+							? Container()
+							: FlatButton(
+							shape:RoundedRectangleBorder(
+								borderRadius: BorderRadius.all(Radius.circular(32.0))),
+							child: Text('Sök från din position'),
+							color: Colors.lightBlueAccent,
+							onPressed: () {
+								SELECTED_SEARCH_LOCATION =
+									CURRENT_LOCATION_LATLNG;
+								Navigator.pop(context, true);
+							},
+						),
+
+						(SEARCH_LOCATION_LATLNG == null)
+							? Container()
+							: FlatButton(
+							shape:RoundedRectangleBorder(
+								borderRadius: BorderRadius.all(Radius.circular(32.0))),
+							color: Colors.lightBlueAccent,
+							child: Text('Sök från kartmarkering'),
+							onPressed: () {
+								SELECTED_SEARCH_LOCATION =
+									SEARCH_LOCATION_LATLNG;
+								Navigator.pop(context, true);
+							},
+						),
 
 
-		if (StateHandler.searchPosWidgetStateKey.currentState.isButtonPressed ==
-			true) {
-			StateHandler.searchPosWidgetStateKey.currentState
-				.searchPosPressed();
-			if (searchLocationMarker != null) {
-				_markers.remove(searchLocationMarker);
-			}
-			searchLocationMarker = Marker(
-				markerId: MarkerId('search_loc_id'),
-				icon: searchLocationIcon,
-				position: position,
-				onTap: () {
-					showRemoveMarkerDialog();
-				},
+					],
+				)
+
+			),
+			actions: <Widget>[
+
+				FlatButton(
+					onPressed: () {
+						Navigator.pop(context, false);
+					},
+					child: Text('Avbryt'),
+				)
+			],
+		);
+	}
+}
+
+
+class Review {
+
+
+	int id;
+	int rating;
+	String comment;
+
+	Review({this.id, this.rating, this.comment});
+
+	factory Review.fromJson(Map<String, dynamic> json) {
+		return Review(
+			id: json['id'],
+			rating: json['rating'],
+			comment: json['comment'],
+		);
+	}
+
+	@override
+	String toString() {
+		return "$id\t$rating\t$comment";
+	}
+}
+
+class DogPark {
+	int id;
+	double latitude;
+	double longitude;
+	String name;
+	String description;
+	double distance;
+
+	Marker marker;
+
+	Marker getMarker() {
+		return marker;
+	}
+
+	void setMarker(Marker m) {
+		marker = m;
+	}
+
+	void setDistance(double value) {
+		this.distance = value;
+	}
+
+	DogPark(
+		{this.id, this.latitude, this.longitude, this.name, this.description});
+
+	factory DogPark.fromJson(Map<String, dynamic> json) {
+		return DogPark(
+			id: json['id'],
+			latitude: json['longitude'],
+			longitude: json['latitude'],
+			name: json['name'],
+			description: json['description'],
+		);
+	}
+
+	@override
+	String toString() {
+		return "id: $id, latitude: $latitude, longitude: $longitude, name: $name, description: $description";
+	}
+}
+
+class WasteBin {
+	double latitude;
+	double longitude;
+	double distance;
+
+	Marker marker;
+
+	Marker getMarker() {
+		return marker;
+	}
+
+	void setMarker(Marker m) {
+		marker = m;
+	}
+
+	void setDistance(double value) {
+		this.distance = value;
+	}
+
+	WasteBin({this.latitude, this.longitude});
+
+	factory WasteBin.fromJson(Map<String, dynamic> json) {
+		return WasteBin(
+			latitude: json['latitude'], longitude: json['longitude']);
+	}
+
+	@override
+	String toString() {
+		return "WasteBin: $distance\t$latitude\t$longitude";
+	}
+}
+
+
+class ReviewPage extends StatefulWidget {
+	final DogPark selectedDogPark;
+
+	const ReviewPage({Key key, this.selectedDogPark}) : super(key: key);
+
+
+	@override
+	ReviewPageState createState() => ReviewPageState();
+}
+
+class ReviewPageState extends State<ReviewPage> {
+
+	List<Review> _reviews = new List<Review>();
+	double _rating = 0;
+	bool isLoading = false;
+
+	@override
+	void initState() {
+		super.initState();
+
+		_getReviews();
+
+
+	}
+
+	void _getReviews() async {
+		_reviews.clear();
+		_rating = 0;
+		setState(() {
+			isLoading = true;
+		});
+		try {
+			final int id = widget.selectedDogPark.id;
+			final http.Response response = await http.get(
+				'https://dog-park-micro.herokuapp.com/api/v1/review/id/$id',
+
 			);
 
-			await setCameraPosition(position, 15);
-			_markers.add(searchLocationMarker);
+			if (response.statusCode == 200) {
+				String jsonData = utf8.decode(response.bodyBytes);
+				List decodedJson = jsonDecode(jsonData);
+				for (int i = 0; i < decodedJson.length; i++) {
+					Review tempReview = Review.fromJson(decodedJson[i]);
+					_reviews.add(tempReview);
+					_rating += tempReview.rating;
+				}
+				if (_reviews.length > 0)
+					_rating /= _reviews.length;
+			}
+		} catch (error) {
 
-			await showMarkerInfo(searchLocationMarker.markerId);
-			setState(() {});
 		}
+
+		setState(() {
+			isLoading=false;
+		});
+
+
 	}
 
-	Future<void> setCameraPosition(LatLng pos, double zoom) async {
-		final GoogleMapController controller = await _controller.future;
-		controller.animateCamera(CameraUpdate.newCameraPosition(
-			CameraPosition(target: pos, zoom: zoom)));
-	}
 
-	Future<void> showRemoveMarkerDialog() async {
-		return showDialog<void>(
-			context: context,
-			barrierDismissible: false,
-			builder: (BuildContext context) {
-				return AlertDialog(
-					title: Text('Sökmarkering'),
-					content: Text('Vill du ta bort sökmarkeringen'),
-					actions: <Widget>[
-						FlatButton(
-							child: Text('Ja'),
-							onPressed: () {
-								setState(() {
-									_markers.remove(searchLocationMarker);
-									searchLocationMarker = null;
-								});
-								Navigator.of(context).pop();
-							},
+	@override
+	Widget build(BuildContext context) {
+		final double paddingSize = 12;
+
+		return Scaffold(
+			appBar: AppBar(
+				title: Text(widget.selectedDogPark.name),
+				centerTitle: true,
+			),
+			body: (isLoading == false) ? Container(
+
+				child: Column(
+					children: <Widget>[
+						Container(
+							padding: EdgeInsets.all(paddingSize),
+							child: Text(widget.selectedDogPark.description),
 						),
-						FlatButton(
-							child: Text('Nej'),
-							onPressed: () {
-								Navigator.of(context).pop();
-							},
+
+						Row(
+							mainAxisAlignment: MainAxisAlignment.center,
+
+							children: <Widget>[
+								(_rating >= 1) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								(_rating >= 2) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								(_rating >= 3) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								(_rating >= 4) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								(_rating >= 5) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								Text(_rating.toStringAsFixed(1).toString()),
+								Text("(" + _reviews.length.toString() + ")"),
+							],
+
 						),
+						Expanded(
+							child: _reviewList(context),
+						),
+						Align(
+							alignment: Alignment.bottomCenter,
+							child: FlatButton(
+								child: Text('Betygsätt parken'),
+								onPressed: () {
+									Navigator.push(context,
+										MaterialPageRoute(builder: (context) =>
+											RatingPage(selectedDogPark: widget
+												.selectedDogPark)));
+
+
+								},
+							),
+						)
 					],
+				),
+
+
+			) : Container(child: Center(child: CircularProgressIndicator())),
+		);
+	}
+
+
+	Widget _reviewList(BuildContext context) {
+
+		return ListView.builder(
+			itemCount: _reviews.length,
+			itemBuilder: (context, index) {
+				return Card(
+					child:
+					Row(
+						children: <Widget>[
+							Row(children: <Widget>[
+								(_reviews[index].rating >= 1) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								(_reviews[index].rating >= 2) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								(_reviews[index].rating >= 3) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								(_reviews[index].rating >= 4) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								(_reviews[index].rating >= 5) ? Icon(
+									Icons.star, color: Colors.orange) : Icon(
+									Icons.star_border, color: Colors.orange),
+								Text(_reviews[index].rating.toString()),
+							]),
+							Expanded(
+								child:
+								ListTile(
+
+									title: Text(_reviews[index].comment),
+								),
+							)
+						],
+					),
 				);
 			},
 		);
 	}
 }
 
-class DogparkWidget extends StatefulWidget {
-	DogparkWidget({Key key});
+
+class RatingPage extends StatefulWidget {
+	final DogPark selectedDogPark;
+
+	const RatingPage({Key key, this.selectedDogPark}) : super(key: key);
+
 
 	@override
-	DogparkWidgetState createState() => DogparkWidgetState();
+	RatingPageState createState() => RatingPageState();
 }
 
-class DogparkWidgetState extends State<DogparkWidget> {
-	bool isPressed = false;
-	bool isSearching = false;
-	int maxDistance = 1000;
-	Set<Marker> dogparkMarkers = Set<Marker>();
-	BitmapDescriptor dogparkMarkerIcon;
+class RatingPageState extends State<RatingPage> {
+	int _rating = 0;
+	final _myController = TextEditingController();
 
-	@override
-	void initState() {
-		super.initState();
+
+	bool _isSaving = false;
+
+	void _updateRating(int rating) {
+		setState(() {
+			_rating = rating;
+		});
 	}
 
-
-	Widget searchButton() {
-		double sideLength = MediaQuery.of(context).size.width * gButtonLengthOfScreenWidth;
-		if (isSearching == true) {
-			return Container(
-				width: sideLength,
-				height: sideLength,
-				child: CircularProgressIndicator(strokeWidth: 5.0),
-			);
-		} else {
-			return
-				Container(
-						width: sideLength,
-						height: sideLength,
-			child:
-					IconButton(
-					iconSize: sideLength,
-					icon:
-					ImageIcon(AssetImage('assets/dogparkicon.png')),
-					onPressed: () {
-						print("dogpark pressed");
-						setState(() {
-							isPressed = true;
-						});
-					}
-					)
-			);
-		}
+	@override
+	void dispose() {
+		_myController.dispose();
+		super.dispose();
 	}
 
 
 	@override
 	Widget build(BuildContext context) {
-		if (isPressed == false) {
-			return Container(
-				decoration: BoxDecoration(
-					borderRadius: BorderRadius.circular(10),
-					color: Colors.lightBlueAccent,
-					border: Border.all(color: Colors.black),
-				),
-				child: searchButton()
+		final double paddingSize = 12;
+		final double _iconSize = 40;
+		return Scaffold(
 
-			);
-		} else {
-			return Container(
-				padding: EdgeInsets.all(12.0),
-				decoration: BoxDecoration(
-					borderRadius: new BorderRadius.all(
-						new Radius.circular(15.0)),
-					color: Colors.white,
-					border: Border.all(color: Colors.blue)),
-				child: Column(
-					mainAxisAlignment: MainAxisAlignment.center,
-					children: <Widget>[
-						Text('Max avstånd'),
-						Row(
-							mainAxisAlignment: MainAxisAlignment.center,
+			resizeToAvoidBottomInset: false,
+			appBar: AppBar(title: Text('Kommentar')),
+
+			body:
+
+
+			(_isSaving == false) ? Column(
+
+				children: <Widget>[
+
+
+					Container(
+						padding: EdgeInsets.all(20),
+						child: Column(
+
 							children: <Widget>[
-								Slider(
-									value: maxDistance.toDouble(),
-									min: 1,
-									max: 5000,
-									divisions: 100,
-									onChanged: (value) {
-										print(value);
-										setState(() {
-											maxDistance = value.toInt();
-										});
-									},
+
+								Text('Betyg'),
+
+
+								Row(
+									mainAxisAlignment: MainAxisAlignment.center,
+									children: <Widget>[
+										IconButton(
+											icon: (_rating >= 1)
+												? Icon(Icons.star)
+												: Icon(Icons.star_border),
+											iconSize: _iconSize,
+											color: Colors.orange,
+											onPressed: () {
+												_updateRating(1);
+											}
+										),
+										IconButton(
+											icon: (_rating >= 2)
+												? Icon(Icons.star)
+												: Icon(Icons.star_border),
+											iconSize: _iconSize,
+											color: Colors.orange,
+											onPressed: () {
+												_updateRating(2);
+											}
+										),
+										IconButton(
+											icon: (_rating >= 3)
+												? Icon(Icons.star)
+												: Icon(Icons.star_border),
+											iconSize: _iconSize,
+											color: Colors.orange,
+											onPressed: () {
+												_updateRating(3);
+											}
+										),
+										IconButton(
+											icon: (_rating >= 4)
+												? Icon(Icons.star)
+												: Icon(Icons.star_border),
+											iconSize: _iconSize,
+											color: Colors.orange,
+											onPressed: () {
+												_updateRating(4);
+											}
+										),
+										IconButton(
+											icon: (_rating >= 5)
+												? Icon(Icons.star)
+												: Icon(Icons.star_border),
+											iconSize: _iconSize,
+											color: Colors.orange,
+											onPressed: () {
+												_updateRating(5);
+											}
+										),
+									],
 								),
-								Text("$maxDistance m")
 							],
 						),
-						Row(
-							mainAxisAlignment: MainAxisAlignment.center,
-							children: <Widget>[
-								Container(
-									decoration: BoxDecoration(
-										borderRadius:
-										new BorderRadius.all(
-											new Radius.circular(10.0)),
-										color: Colors.white,
-										border: Border.all(color: Colors.blue)),
-									child: FlatButton(
-										onPressed: () {
-											setState(() {
-												isPressed = false;
-												isSearching = false;
-											});
-										},
-										child: Text('Avbryt'),
-									),
-								),
-								Spacer(),
-								Container(
-									decoration: BoxDecoration(
-										borderRadius:
-										new BorderRadius.all(
-											new Radius.circular(10.0)),
-										color: Colors.white,
-										border: Border.all(color: Colors.blue)),
-									child: FlatButton(
-										child: Text('Sök'),
-										onPressed: () {
-											setState(() {
-												isPressed = false;
-												isSearching = true;
-											});
-
-											searchForDogsParks();
-										},
-									),
-								),
-							],
-						)
-					],
-				));
-		}
-	}
-
-	void searchForDogsParks() async {
-		// Tar bort dogpark-markeringarna och uppdaterar kartan
-		StateHandler.mapWidgetStateKey.currentState.setState(() {
-			StateHandler.mapWidgetStateKey.currentState._markers
-				.removeAll(dogparkMarkers);
-		});
-		dogparkMarkers.clear();
-
-		// Om man inte satt ut en markering, använd den egna positionen
-		LatLng searchPosition =
-			StateHandler.mapWidgetStateKey.currentState.currentLocation;
-		if (StateHandler.mapWidgetStateKey.currentState.searchLocationMarker !=
-			null) {
-			searchPosition = LatLng(
-				StateHandler.mapWidgetStateKey.currentState.searchLocationMarker
-					.position.latitude,
-				StateHandler.mapWidgetStateKey.currentState.searchLocationMarker
-					.position.longitude);
-		}
-
-		String latitudeAsString = searchPosition.latitude.toString();
-		String longitudeAsString = searchPosition.longitude.toString();
-		String url =
-			'https://pvt-dogpark.herokuapp.com/dogpark/find?latitude=$latitudeAsString&longitude=$longitudeAsString&distance=$maxDistance';
-
-		try {
-			http.Response response = await http.get(url);
-			// Om data är null så kan man vara utanför sökområdet
-			// Om datans längd är 0 så hittades inga
-			if (response.body == null || response.body.length == 0) {
-				MyFunctions.showSimpleDialog(context, "Oops!",
-					"Hittade inga hundparker.\n\nTesta öka sökområdet!");
-			} else {
-				// Annars blir åäö fel
-				String jsonData = utf8.decode(response.bodyBytes);
-
-				// Lista med hundparker, varje hundpark är en map
-				List dataAsList = jsonDecode(jsonData);
-
-				// Spara alla hundparker i en lista som kan sorteras
-				List<Map<String, dynamic>> dogparks = new List<
-					Map<String, dynamic>>();
-
-				List<String> keys = [
-					'longitude',
-					'latitude',
-					'name',
-					'description'
-				];
-				for (int index = 0; index < dataAsList.length; index++) {
-					Map<String, dynamic> oneDogPark = new Map<String,
-						dynamic>();
-					keys.forEach(
-							(element) =>
-						oneDogPark[element] = dataAsList[index][element]);
-					oneDogPark['distance'] = MyFunctions.getDistanceBetween(
-						oneDogPark['latitude'],
-						oneDogPark['longitude'],
-						searchPosition.latitude,
-						searchPosition.longitude);
-
-					dogparks.add(oneDogPark);
-				}
-
-				// Sortera listan så kortaste avståndet ligger i början
-				dogparks.sort((Map a, Map b) {
-					if (a['distance'] > b['distance'])
-						return 1;
-					else if (a['distance'] < b['distance'])
-						return -1;
-					else
-						return 0;
-				});
-
-				// Skapa ikonen om den inte är skapad, görs bara en gång
-				if (dogparkMarkerIcon == null) {
-					dogparkMarkerIcon = await MyFunctions.createBorderedIcon(
-						'assets/dogparkicon_color.png',
-						100,
-						5,
-						Colors.green,
-						Colors.black);
-				}
-
-				String snackText = "Hittade " + dogparks.length.toString();
-				snackText += (dogparks.length == 1) ? " hundpark." : " hundparker.";
-
-				Scaffold.of(context)
-					.showSnackBar(SnackBar(content: Text(snackText)));
-
-				for (int i = 0; i < dogparks.length; i++) {
-					dogparkMarkers.add(new Marker(
-						markerId: MarkerId('hundpark' + i.toString()),
-						position: LatLng(
-							dogparks[i]['latitude'], dogparks[i]['longitude']),
-						icon: dogparkMarkerIcon,
-						onTap: () {
-							MyFunctions.showSimpleDialog(
-								context,
-								dogparks[i]['name'],
-								dogparks[i]['description'] +
-									"\n\n\n" +
-									dogparks[i]['distance'].toInt().toString() +
-									" meter från markeringen");
-						},
-					));
-
-					// Uppdatera kartan
-					StateHandler.mapWidgetStateKey.currentState.setState(() {
-						StateHandler.mapWidgetStateKey.currentState._markers
-							.addAll(dogparkMarkers);
-					});
-				}
-			}
-		} catch (error) {
-			MyFunctions.showSimpleDialog(context, "Oops!",
-				"Något gick fel, försök igen senare!");
-		}
-
-		setState(() {
-			isSearching = false;
-		});
-	}
-}
-
-class WastebinWidget extends StatefulWidget {
-	WastebinWidget({Key key});
-
-	@override
-	WastebinWidgetState createState() => WastebinWidgetState();
-}
-
-class WastebinWidgetState extends State<WastebinWidget> {
-	int maxWasteBins = 5;
-
-	bool isPressed = false;
-	bool isSearching = false;
-
-	Set<Marker> wastebinMarkers = Set<Marker>();
-
-	BitmapDescriptor wasteBinMarkerIcon;
-
-	@override
-	Widget build(BuildContext context) {
-		if (isPressed == false) {
-			return Container(
-					decoration: BoxDecoration(
-						borderRadius: BorderRadius.circular(10),
-						color: Colors.lightBlueAccent,
-						border: Border.all(color: Colors.black),
 					),
-					child: wastebinButton()
 
-			);
+					Container(
+						padding: EdgeInsets.all(20),
 
-		} else {
-			return Container(
-				padding: EdgeInsets.all(12.0),
-				decoration: BoxDecoration(
-					borderRadius: new BorderRadius.all(
-						new Radius.circular(15.0)),
-					color: Colors.white,
-					border: Border.all(color: Colors.blue)),
-				child: Column(
-					mainAxisAlignment: MainAxisAlignment.center,
-					children: <Widget>[
-						Text('Max antal papperskorgar'),
-						Row(
-							mainAxisAlignment: MainAxisAlignment.center,
+						child: Column(
+
 							children: <Widget>[
-								Slider(
-									value: maxWasteBins.toDouble(),
-									min: 1,
-									max: 10,
-									divisions: 9,
-									onChanged: (value) {
-										print(value);
-										setState(() {
-											maxWasteBins = value.toInt();
-										});
-									},
+								Text('Kommentera'),
+
+
+								TextField(
+									controller: _myController,
 								),
-								Text("$maxWasteBins st")
+
 							],
 						),
-						Row(
-							mainAxisAlignment: MainAxisAlignment.center,
-							children: <Widget>[
-								Container(
-									decoration: BoxDecoration(
-										borderRadius:
-										new BorderRadius.all(
-											new Radius.circular(10.0)),
-										color: Colors.white,
-										border: Border.all(color: Colors.blue)),
-									child: FlatButton(
-										onPressed: () {
-											isPressed = false;
-											setState(() {
-												isSearching = false;
-											});
-										},
-										child: Text('Avbryt'),
-									),
-								),
-								Spacer(),
-								Container(
-									decoration: BoxDecoration(
-										borderRadius:
-										new BorderRadius.all(
-											new Radius.circular(10.0)),
-										color: Colors.white,
-										border: Border.all(color: Colors.blue)),
-									child: FlatButton(
-										child: Text('Sök'),
-										onPressed: () {
-											setState(() {
-												isPressed = false;
-												isSearching = true;
-												searchForWasteBins();
-											});
-										},
-									),
-								),
-							],
-						)
-					],
-				));
-		}
-
-
-	}
-
-	Widget wastebinButton() {
-		double sideLength = MediaQuery.of(context).size.width * gButtonLengthOfScreenWidth;
-		if (isSearching == true) {
-			return Container(
-				width: sideLength,
-				height: sideLength,
-				child: CircularProgressIndicator(strokeWidth: 5.0),
-			);
-		} else {
-			return
-				Container(
-						width: sideLength,
-						height: sideLength,
-						child:
-						IconButton(
-								iconSize: sideLength,
-								icon:
-								ImageIcon(AssetImage('assets/wastebin_black.png')),
-								onPressed: () {
-									print("wastebin pressed");
-									setState(() {
-										isPressed = true;
-									});
-								}
-						)
-				);
-		}
-	}
-
-
-	void searchForWasteBins() async {
-
-
-		StateHandler.mapWidgetStateKey.currentState.setState(() {
-			StateHandler.mapWidgetStateKey.currentState._markers
-				.removeAll(wastebinMarkers);
-		});
-		wastebinMarkers.clear();
-
-		LatLng searchPosition =
-			StateHandler.mapWidgetStateKey.currentState.currentLocation;
-
-		if (StateHandler.mapWidgetStateKey.currentState.searchLocationMarker !=
-			null) {
-			searchPosition = LatLng(
-				StateHandler.mapWidgetStateKey.currentState.searchLocationMarker
-					.position.latitude,
-				StateHandler.mapWidgetStateKey.currentState.searchLocationMarker
-					.position.longitude);
-		}
-
-		String latitudeAsString = searchPosition.latitude.toString();
-		String longitudeAsString = searchPosition.longitude.toString();
-		String url =
-			'https://redesigned-backend.herokuapp.com/wastebin/find?Latitude=$latitudeAsString&Longitude=$longitudeAsString&MaxDistance=2000';
-
-		try {
-
-			http.Response response = await http.get(url);
-
-
-
-			String jsonData = response.body;
-			List dataAsList = jsonDecode(jsonData);
-			if (dataAsList.isEmpty) {
-				MyFunctions.showSimpleDialog(context, "Papperskorg",
-					"Hittade inga papperskorgar :(");
-			} else {
-				List<Map<String, dynamic>> wastebins = new List<
-					Map<String, dynamic>>();
-
-				List<String> keys = [
-					'longitude',
-					'latitude',
-				];
-
-
-				for (int index = 0; index < dataAsList.length; index++) {
-					Map<String, dynamic> oneWasteBin = new Map<String,
-						dynamic>();
-					keys.forEach(
-							(element) =>
-						oneWasteBin[element] = dataAsList[index][element]);
-					oneWasteBin['distance'] =
-						MyFunctions.getDistanceBetween(
-							oneWasteBin['latitude'],
-							oneWasteBin['longitude'],
-							searchPosition.latitude,
-							searchPosition.longitude);
-
-					wastebins.add(oneWasteBin);
-				}
-
-				// Sortera listan så kortaste avståndet ligger i början
-				wastebins.sort((Map a, Map b) {
-					if (a['distance'] > b['distance'])
-						return 1;
-					else if (a['distance'] < b['distance'])
-						return -1;
-					else
-						return 0;
-				});
-
-
-				// Skapa ikonen om den inte är skapad, görs bara en gång
-				if (wasteBinMarkerIcon == null) {
-					await MyFunctions.createBorderedIcon(
-						'assets/wastebin_color.png', 100, 5, Colors.grey,
-						Colors.black)
-						.then((icon) {
-						wasteBinMarkerIcon = icon;
-					});
-				}
-
-
-				for (int i = 0; i < wastebins.length &&
-					i < maxWasteBins; i++) {
-					wastebinMarkers.add(new Marker(
-						markerId: MarkerId('trashbin' + i.toString()),
-						position: LatLng(
-							wastebins[i]['latitude'],
-							wastebins[i]['longitude']),
-						icon: wasteBinMarkerIcon,
-						infoWindow: InfoWindow(
-							title: 'Papperskorg',
-							snippet: wastebins[i]['distance']
-								.toInt()
-								.toString() +
-								" m"),
-					));
-				}
-
-				StateHandler.mapWidgetStateKey.currentState.setState(() {
-					StateHandler.mapWidgetStateKey.currentState._markers
-						.addAll(wastebinMarkers);
-				});
-			}
-
-
-		} catch (error) {
-			MyFunctions.showSimpleDialog(context, "Papperskorg",
-				"Något gick fel, försök igen senare!");
-		}
-		setState(() {
-			isSearching = false;
-		});
-	}
-
-
-
-	void searchForWasteBins2() async {
-		StateHandler.mapWidgetStateKey.currentState.setState(() {
-			StateHandler.mapWidgetStateKey.currentState._markers
-				.removeAll(wastebinMarkers);
-		});
-		wastebinMarkers.clear();
-
-		LatLng searchPosition =
-			StateHandler.mapWidgetStateKey.currentState.currentLocation;
-		if (StateHandler.mapWidgetStateKey.currentState.searchLocationMarker !=
-			null) {
-			searchPosition = LatLng(
-				StateHandler.mapWidgetStateKey.currentState.searchLocationMarker
-					.position.latitude,
-				StateHandler.mapWidgetStateKey.currentState.searchLocationMarker
-					.position.longitude);
-		}
-
-		String lat_str = searchPosition.latitude.toString();
-		String long_str = searchPosition.longitude.toString();
-		String url =
-			'https://redesigned-backend.herokuapp.com/wastebin/find?Latitude=$lat_str&Longitude=$long_str&MaxDistance=2000';
-
-		if (wasteBinMarkerIcon == null) {
-			await MyFunctions.createBorderedIcon(
-				'assets/wastebin_color.png', 100, 5, Colors.grey, Colors.black)
-				.then((icon) {
-				wasteBinMarkerIcon = icon;
-			});
-		}
-		try {
-			await http.get(url).then((response) {
-				setState(() {
-					isSearching = false;
-				});
-
-				String jsonData = response.body;
-				print(jsonData);
-				List dataAsList = jsonDecode(jsonData);
-
-				if (dataAsList.isEmpty) {
-					MyFunctions.showSimpleDialog(
-						context, "Papperskorg",
-						"Hittade tyvärr inga papperskorgar.");
-					return;
-				}
-
-
-
-				List<Map<String, double>> binData = new List<
-					Map<String, double>>();
-				for (int i = 0; i < dataAsList.length; i++) {
-					double tempLat = dataAsList[i]['latitude'];
-					double tempLong = dataAsList[i]['longitude'];
-					double tempDist = MyFunctions.getDistanceBetween(
-						tempLat, tempLong,
-						searchPosition.latitude, searchPosition.longitude);
-					binData.add({
-						'latitude': tempLat,
-						'longitude': tempLong,
-						'distance': tempDist
-					});
-				}
-
-				binData.sort((Map a, Map b) {
-					if (a['distance'] > b['distance'])
-						return 1;
-					else if (a['distance'] < b['distance'])
-						return -1;
-					else
-						return 0;
-				});
-
-				for (int i = 0; i < binData.length && i < maxWasteBins; i++) {
-					wastebinMarkers.add(new Marker(
-						markerId: MarkerId('trashbin' + i.toString()),
-						position: LatLng(
-							binData[i]['latitude'], binData[i]['longitude']),
-						icon: wasteBinMarkerIcon,
-						infoWindow: InfoWindow(
-							title: 'Papperskorg',
-							snippet: binData[i]['distance'].toInt().toString() +
-								" m"),
-					));
-				}
-
-				StateHandler.mapWidgetStateKey.currentState.setState(() {
-					StateHandler.mapWidgetStateKey.currentState._markers
-						.addAll(wastebinMarkers);
-				});
-			});
-		} catch (error) {
-			MyFunctions.showSimpleDialog(
-				context, "Hoppsan!", "Något gick fel, försök igen senare.");
-			setState(() {
-				isSearching = false;
-			});
-		}
-	}
-}
-
-class SearchPosWidget extends StatefulWidget {
-	SearchPosWidget({Key key}) : super(key: key);
-
-	@override
-	SearchPosWidgetState createState() => SearchPosWidgetState();
-}
-
-class SearchPosWidgetState extends State<SearchPosWidget> {
-	bool isButtonPressed = false;
-
-	@override
-	Widget build(BuildContext context) {
-		double sideLength = MediaQuery.of(context).size.width * gButtonLengthOfScreenWidth;
-
-		if (isButtonPressed) {
-			return Container(
-
-				decoration: BoxDecoration(
-					color: Colors.white,
-					border: Border.all(
-						width: 3.0, color: Colors.lightBlueAccent),
-					borderRadius: BorderRadius.all(Radius.circular(5.0) //
 					),
 
-				),
-				child: FlatButton(
-					child: Text('Peka på kartan!'),
-					onPressed: searchPosPressed,
-				),
-			);
-		} else {
-			return Container(
-					width: sideLength,
-					height: sideLength,
-				decoration: BoxDecoration(
-					borderRadius: BorderRadius.circular(10),
-					color: Colors.lightBlueAccent,
-					border: Border.all(color: Colors.black),
-				),
-				child: Container(
-					child: IconButton(
-						iconSize: 40,
-						icon: Icon(Icons.navigation),
-						onPressed: searchPosPressed,
-					),
-				));
-		}
-	}
+					Expanded(
 
-	void searchPosPressed() {
-		setState(() {
-			if (isButtonPressed == true) {
-				isButtonPressed = false;
-			} else {
-				isButtonPressed = true;
-			}
-		});
-	}
-}
+						child: Align(
+							alignment: Alignment.bottomCenter,
 
-class MyLocationWidget extends StatefulWidget {
-	MyLocationWidget({Key key});
+							child: Row(
 
-	@override
-	MyLocationWidgetState createState() => MyLocationWidgetState();
-}
+								mainAxisAlignment: MainAxisAlignment
+									.spaceBetween,
+								children: <Widget>[
+									Padding(
+										padding: EdgeInsets.all(20),
+										child:
 
-class MyLocationWidgetState extends State<MyLocationWidget> {
-	@override
-	Widget build(BuildContext context) {
-		double sideLength = MediaQuery.of(context).size.width * gButtonLengthOfScreenWidth;
+										RaisedButton(
+											textColor: Colors.white,
+											color: Colors.blueAccent,
+											shape: StadiumBorder(),
+											onPressed: () {
+												Navigator.pop(context, true);
+											},
+											child: Text("Tillbaka"),
+										)
+									),
+									Padding(
+										padding: EdgeInsets.all(20),
+										child:
 
-		return Container(
-			width: sideLength,
-			height: sideLength,
-			decoration: BoxDecoration(
-				borderRadius: BorderRadius.circular(10),
-				color: Colors.lightBlueAccent,
-				border: Border.all(color: Colors.black),
-			),
-			child: Container(
-				width: sideLength,
-				height: sideLength,
-				child: IconButton(
-					iconSize: 40,
-					icon: Icon(Icons.my_location),
-					onPressed: () {
-						StateHandler.mapWidgetStateKey.currentState
-							.setCurrentPos();
-					},
-				),
-			),
-		);
-	}
-}
+										RaisedButton(
+											textColor: Colors.white,
+											color: Colors.blueAccent,
+											shape: StadiumBorder(),
+											onPressed: () {
+												_saveComment(_myController.text,
+													_rating);
+											},
+											child: Text("Spara"),
+										)
+									),
 
-class MyFunctions {
-	/* Räknar ut avståndet i meter mellan två positioner */
-	static double getDistanceBetween(double lat1, double long1, double lat2,
-		double long2) {
-		const double radie = 6371e3;
-		double lat1_radian = lat1 * pi / 180.0;
-		double lat2_radian = lat2 * pi / 180.0;
-		double delta_lat_radian = (lat2 - lat1) * pi / 180.0;
-		double delta_long_radian = (long2 - long1) * pi / 180.0;
-		double a = sin(delta_lat_radian / 2.0) * sin(delta_lat_radian / 2.0) +
-			cos(lat1_radian) *
-				cos(lat2_radian) *
-				sin(delta_long_radian / 2.0) *
-				sin(delta_long_radian / 2.0);
-		double c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
-		double dist = radie * c;
-		return dist;
-	}
 
-	/* Läser in en bild från assets och scalar den med avseende på width */
-	static Future<Uint8List> getBytesFromAsset(String path, int width) async {
-		ByteData data = await rootBundle.load(path);
-		ui.Codec codec = await ui.instantiateImageCodec(
-			data.buffer.asUint8List(),
-			targetWidth: width);
-		ui.FrameInfo fi = await codec.getNextFrame();
-		return (await fi.image.toByteData(format: ui.ImageByteFormat.png))
-			.buffer
-			.asUint8List();
-	}
-
-	/* Returnerar en assetsbild i sin ursprungsform som en ui.Image */
-	static Future<ui.Image> loadUiImage(String assetPath) async {
-		final data = await rootBundle.load(assetPath);
-		final list = Uint8List.view(data.buffer);
-		final completer = Completer<ui.Image>();
-		ui.decodeImageFromList(list, completer.complete);
-		return completer.future;
-	}
-
-	/* Visar en enkel ruta med titel, body samt en ok-knapp */
-	static showSimpleDialog(context, String title, String body) {
-		showDialog(
-			context: context,
-			barrierDismissible: false,
-			builder: (BuildContext context) =>
-				AlertDialog(
-
-					shape: RoundedRectangleBorder(
-
-						borderRadius: BorderRadius.all(
-							Radius.circular(10),
-
-						)),
-					title: Text(title),
-
-					content: Text(body),
-					actions: <Widget>[
-						FlatButton(
-							child: Text('Ok'),
-							onPressed: () {
-								Navigator.of(context).pop();
-							},
+								],
+							),
 						),
-					],
-				),
+					),
+
+				],
+			) : Container(child: Center(child: CircularProgressIndicator(),)),
+
+
+
 		);
 	}
 
+	void _saveComment(String str, int rating) async {
 
-	/* Skapar en kvadradisk ikon med avrundade hörn och med en ram */
-	static Future<BitmapDescriptor> createBorderedIcon(String path,
-		double finalSize,
-		double borderSize,
-		Color bgColor,
-		Color borderColor) async {
-		final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
-		final Canvas canvas = Canvas(pictureRecorder);
 
-		double imageSize = finalSize - borderSize * 4;
-		double imgPosX = borderSize * 2;
-		double imgPosY = borderSize * 2;
+		setState(() {
+			_isSaving = true;
+		});
 
-		Uint8List imgBytes = await getBytesFromAsset(path, imageSize.toInt());
+		final http.Response response = await http.post(
+			'https://dog-park-micro.herokuapp.com/api/v1/review',
+			headers: <String, String>{
+				'Content-Type': 'application/json; charset=UTF-8',
+			},
+			body: jsonEncode(<String, dynamic>{
+				"comment": "$str",
+				"rating": "$rating",
+				"dogParkId": widget.selectedDogPark.id,
+			}),
 
-		ui.Image im = await decodeImageFromList(imgBytes);
+		);
 
-		canvas.drawRRect(
-			ui.RRect.fromLTRBR(
-				0, 0, finalSize, finalSize, Radius.circular((finalSize / 10))),
-			new Paint()
-				..color = borderColor
-				..style = PaintingStyle.fill);
-		canvas.drawRRect(
-			ui.RRect.fromLTRBR(borderSize, borderSize, finalSize - borderSize,
-				finalSize - borderSize, Radius.circular((finalSize / 10))),
-			new Paint()
-				..color = bgColor
-				..style = PaintingStyle.fill);
 
-		canvas.drawImage(im, ui.Offset(imgPosX, imgPosY), new Paint());
-		final image = await pictureRecorder
-			.endRecording()
-			.toImage(finalSize.toInt(), finalSize.toInt());
-		final data = await image.toByteData(format: ui.ImageByteFormat.png);
-		return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+
+
+		Navigator.pop(context, true);
+
 	}
 
-	/* Skapar markeringar med text*/
-	static Future<BitmapDescriptor> createTextIcon(String textStr,
-		Color bgColor, Color borderColor) async {
-		final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
-		final Canvas canvas = Canvas(pictureRecorder);
-		final Paint paint = Paint()
-			..color = Colors.white;
 
-		TextSpan span = new TextSpan(
-			style: new TextStyle(
-				fontWeight: FontWeight.bold, color: Colors.black, fontSize: 40),
-			text: textStr);
-		TextPainter tp = new TextPainter(
-			text: span,
-			textAlign: TextAlign.left,
-			textDirection: TextDirection.ltr);
-		tp.layout();
+}
 
-		double mBorderSize = tp.height / 8.0;
-		double mWidth = tp.width * 1.2 + mBorderSize * 2;
-		double mHeight = tp.height * 1.2 + mBorderSize * 2;
-
-		double mTextPosX = (mWidth - tp.width) / 2;
-		double mTextPosY = (mHeight - tp.height) / 2;
-
-		canvas.drawRRect(
-			ui.RRect.fromLTRBR(
-				0, 0, mWidth, mHeight, Radius.circular((mWidth / 10))),
-			new Paint()
-				..color = borderColor
-				..style = PaintingStyle.fill);
-
-		canvas.drawRRect(
-			ui.RRect.fromLTRBR(mBorderSize, mBorderSize, mWidth - mBorderSize,
-				mHeight - mBorderSize, Radius.circular((mWidth / 10))),
-			new Paint()
-				..color = bgColor
-				..style = PaintingStyle.fill);
-
-		tp.paint(canvas, new Offset(mTextPosX, mTextPosY));
-
-		final image = await pictureRecorder
-			.endRecording()
-			.toImage(mWidth.toInt(), mHeight.toInt());
-		final data = await image.toByteData(format: ui.ImageByteFormat.png);
-		return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
-	}
-
-	static bool SHOW_DEBUG_MESSAGE = true;
-
-	static void debugMessage(String str) {
-		if (SHOW_DEBUG_MESSAGE) print("DEBUG_MESSAGE: " + str);
-	}
+/* Räknar ut avståndet i meter mellan två positioner */
+double getDistanceBetween(double lat1, double long1, double lat2,
+	double long2) {
+	const double radie = 6371e3;
+	double lat1_radian = lat1 * pi / 180.0;
+	double lat2_radian = lat2 * pi / 180.0;
+	double delta_lat_radian = (lat2 - lat1) * pi / 180.0;
+	double delta_long_radian = (long2 - long1) * pi / 180.0;
+	double a = sin(delta_lat_radian / 2.0) * sin(delta_lat_radian / 2.0) +
+		cos(lat1_radian) *
+			cos(lat2_radian) *
+			sin(delta_long_radian / 2.0) *
+			sin(delta_long_radian / 2.0);
+	double c = 2.0 * atan2(sqrt(a), sqrt(1.0 - a));
+	double dist = radie * c;
+	return dist;
 }
 
 
-class StateHandler {
-	static final GlobalKey<MapWidgetState> mapWidgetStateKey =
-	GlobalKey<MapWidgetState>();
-	static final GlobalKey<DogparkWidgetState> dogparkWidgetStateKey =
-	GlobalKey<DogparkWidgetState>();
-	static final GlobalKey<WastebinWidgetState> wastebinWidgetStateKey =
-	GlobalKey<WastebinWidgetState>();
-	static final GlobalKey<SearchPosWidgetState> searchPosWidgetStateKey =
-	GlobalKey<SearchPosWidgetState>();
-	static final GlobalKey<MyLocationWidgetState> myLocationWidgetStateKey =
-	GlobalKey<MyLocationWidgetState>();
+/* Skapar en kvadradisk ikon med avrundade hörn och med en ram */
+Future<BitmapDescriptor> createBorderedIcon(String path,
+	double finalSize,
+	double borderSize,
+	Color bgColor,
+	Color borderColor) async {
+	final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+	final Canvas canvas = Canvas(pictureRecorder);
+
+	double imageSize = finalSize - borderSize * 4;
+	double imgPosX = borderSize * 2;
+	double imgPosY = borderSize * 2;
+
+	Uint8List imgBytes = await getBytesFromAsset(path, imageSize.toInt());
+
+	ui.Image im = await decodeImageFromList(imgBytes);
+
+	canvas.drawRRect(
+		ui.RRect.fromLTRBR(
+			0, 0, finalSize, finalSize, Radius.circular((finalSize / 10))),
+		new Paint()
+			..color = borderColor
+			..style = PaintingStyle.fill);
+	canvas.drawRRect(
+		ui.RRect.fromLTRBR(borderSize, borderSize, finalSize - borderSize,
+			finalSize - borderSize, Radius.circular((finalSize / 10))),
+		new Paint()
+			..color = bgColor
+			..style = PaintingStyle.fill);
+
+	canvas.drawImage(im, ui.Offset(imgPosX, imgPosY), new Paint());
+	final image = await pictureRecorder
+		.endRecording()
+		.toImage(finalSize.toInt(), finalSize.toInt());
+	final data = await image.toByteData(format: ui.ImageByteFormat.png);
+	return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+}
+
+
+Future<Uint8List> getBytesFromAsset(String path, int width) async {
+	ByteData data = await rootBundle.load(path);
+	ui.Codec codec = await ui.instantiateImageCodec(
+		data.buffer.asUint8List(),
+		targetWidth: width);
+	ui.FrameInfo fi = await codec.getNextFrame();
+	return (await fi.image.toByteData(format: ui.ImageByteFormat.png))
+		.buffer
+		.asUint8List();
+}
+/* Skapar markeringar med text*/
+Future<BitmapDescriptor> createTextIcon(String textStr,
+	Color bgColor, Color borderColor) async {
+	final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+	final Canvas canvas = Canvas(pictureRecorder);
+	final Paint paint = Paint()
+		..color = Colors.white;
+
+	TextSpan span = new TextSpan(
+		style: new TextStyle(
+			fontWeight: FontWeight.bold, color: Colors.black, fontSize: 40),
+		text: textStr);
+	TextPainter tp = new TextPainter(
+		text: span,
+		textAlign: TextAlign.left,
+		textDirection: TextDirection.ltr);
+	tp.layout();
+
+	double mBorderSize = tp.height / 8.0;
+	double mWidth = tp.width * 1.2 + mBorderSize * 2;
+	double mHeight = tp.height * 1.2 + mBorderSize * 2;
+
+	double mTextPosX = (mWidth - tp.width) / 2;
+	double mTextPosY = (mHeight - tp.height) / 2;
+
+	canvas.drawRRect(
+		ui.RRect.fromLTRBR(
+			0, 0, mWidth, mHeight, Radius.circular((mWidth / 10))),
+		new Paint()
+			..color = borderColor
+			..style = PaintingStyle.fill);
+
+	canvas.drawRRect(
+		ui.RRect.fromLTRBR(mBorderSize, mBorderSize, mWidth - mBorderSize,
+			mHeight - mBorderSize, Radius.circular((mWidth / 10))),
+		new Paint()
+			..color = bgColor
+			..style = PaintingStyle.fill);
+
+	tp.paint(canvas, new Offset(mTextPosX, mTextPosY));
+
+	final image = await pictureRecorder
+		.endRecording()
+		.toImage(mWidth.toInt(), mHeight.toInt());
+	final data = await image.toByteData(format: ui.ImageByteFormat.png);
+	return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
 }
