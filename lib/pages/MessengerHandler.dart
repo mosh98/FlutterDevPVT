@@ -4,15 +4,39 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 
 import 'dart:async';
 import 'dart:convert';
 
-class Messenger extends StatelessWidget {
+
+class MessengerHandler extends StatefulWidget{
+  User user;
+  User peer;
+
+
+  MessengerHandler({User peer, User user});
+
+  @override
+  _Messenger createState() => _Messenger(user: user,peer: peer);
+
+//
+//  State<StatefulWidget> createState() {
+//    // TODO: implement createState
+//     new Messenger(user: user,peer: peer);
+//  }
+
+ 
+
+
+
+}
+
+class _Messenger extends State<MessengerHandler> {
 
   final databaseReference = Firestore.instance;
-  final String recipient = "norp@florp.com";//TODO: This is going to be the UID or username
+
   FirebaseAuth auth = FirebaseAuth.instance;
   User user;
   User peer;
@@ -22,20 +46,41 @@ class Messenger extends StatelessWidget {
   final textController = TextEditingController();
   ScrollController scrollController = ScrollController();
 
+
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-  Messenger({this.user,this.peer});
+//  _Messenger(User user, User peer);
 
+  _Messenger( {this.user,this.peer});
+
+
+  @override
+  void initState() {
+
+    _firebaseMessaging.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        print("onMessage: $message");
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print("onLaunch: $message");
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print("onResume: $message");
+      },
+    );
+
+
+  }
 
   Future<TokenFcmJson> retireveRecipientToken(String username) async{
     //get https://fcm-token.herokuapp.com/user/getFcmByUsername?username=username
+
     String link = 'https://fcm-token.herokuapp.com/user/getFcmByUsername?username='+ username;
     final response = await http.get(link);
 
-
     if(response.statusCode == 200){
       return TokenFcmJson.fromJson(json.decode(response.body));
-
     }else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
@@ -43,6 +88,7 @@ class Messenger extends StatelessWidget {
     }
 
   }
+  //final String recipient = peer.userId;//TODO: This is going to be the UID or username
 
   Future<Map<String, dynamic>> sendAndRetrieveMessage(String body, String title) async {
     await _firebaseMessaging.requestNotificationPermissions(
@@ -51,7 +97,7 @@ class Messenger extends StatelessWidget {
     );
 
     if(recipientToken.isEmpty){
-         Future<TokenFcmJson> jayZ = retireveRecipientToken(recipient);
+         Future<TokenFcmJson> jayZ = retireveRecipientToken(peer.username);
 
       // update recipient token.
        jayZ.then((value) => recipientToken = value.fcmToken);
@@ -116,12 +162,16 @@ class Messenger extends StatelessWidget {
         .setData({
       'from': user.username,
       'text': content,
-      'timestamp': DateTime.now().toIso8601String().toString()
+      'timestamp': DateTime.now().toIso8601String().toString(),
+      'senderToken': senderToken
     });
 
     String nameOfSender; //This will be the name of this user
     sendAndRetrieveMessage(content, nameOfSender);
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +200,10 @@ class Messenger extends StatelessWidget {
 
                       List<DocumentSnapshot> docs = snapshot.data.documents;
                       //get the recipient token
+                      //recipientToken = docs.elementAt(docs.length).,
+
+                      docs.map((e) => recipientToken = e.data['senderToken']);
+
                       List<Widget> messages = docs.map((doc) =>
 
 
@@ -157,7 +211,9 @@ class Messenger extends StatelessWidget {
                             message: doc.data['text'],
                             timeStamp: doc.data['timestamp'],
                             nameUser: doc.data['from'],
-                          )).toList();
+                            token: doc.data['senderToken'],
+                          ),
+                      ).toList();
 
                       return ListView(
 
@@ -196,6 +252,13 @@ class Messenger extends StatelessWidget {
           ),
         ));
   }
+
+
+//  @override
+//  State<StatefulWidget> createState() {
+//    // TODO: implement createState
+//    throw UnimplementedError();
+//  }
 }
 
 class Message extends StatelessWidget {
@@ -203,13 +266,17 @@ class Message extends StatelessWidget {
   final String message;
   final String timeStamp;
   final String nameUser;
+  final String token;
   final bool self = true;
 
-  const Message({Key key, this.message, this.timeStamp, this.nameUser})
+  const Message({Key key, this.message, this.timeStamp, this.nameUser, this.token})
       : super(key: key);
+
+
 
   @override
   Widget build(BuildContext context) {
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0),
       child: Column(
@@ -249,10 +316,6 @@ class TokenFcmJson {
       email: json['email'],
       fcmToken: json['fcmToken']
     );
-
-
-
-
 
 }
 
