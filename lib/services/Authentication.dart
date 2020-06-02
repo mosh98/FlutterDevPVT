@@ -27,7 +27,8 @@ class AuthService{
     try{
       String t = await token.then((value) => value.token);
 
-      final response = await http.get('https://dogsonfire.herokuapp.com/users?uid=${await _auth.currentUser().then((value) => value.uid)}',headers:<String, String>{
+      final response = await http.get('https://dogsonfire.herokuapp.com/users?uid=${
+          await _auth.currentUser().then((value) => value.uid)}',headers:<String, String>{
         'Authorization': 'Bearer $t',
         'Content-Type': 'application/json'
       });

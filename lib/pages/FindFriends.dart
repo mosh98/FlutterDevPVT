@@ -101,8 +101,6 @@ class FindFriendsState extends State<FindFriends> {
                             children: <Widget>[
                               FlatButton.icon(
                                 onPressed: (){
-                                  print(currentUser);
-                                  print(otherUser);
                                   Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessengerX(user: currentUser, peer: otherUser)));
                                 },
                                 icon: Icon(
@@ -171,6 +169,7 @@ class FindFriendsState extends State<FindFriends> {
 
       if (response.statusCode == 200) {
         List userData = json.decode(response.body);
+        print(response.body);
         for(var element in userData){
           User user = User.fromJson(element);
           String image = await _getProfileImage(user);

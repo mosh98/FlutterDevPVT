@@ -9,7 +9,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
 import 'package:gender_selector/gender_selector.dart';
 
@@ -342,6 +341,44 @@ class MyCustomFormState extends State<MyCustomForm> {
           'fcmToken': token
         }),
       );
+  }
+
+  Future<http.Response> createAndSaveToken1(String username, String email) async {
+
+    FirebaseMessaging Fcm = new FirebaseMessaging();
+
+    String token = await Fcm.getToken();
+
+    try{
+      final response = await http.post(
+        'https://fcm-token.herokuapp.com/user/saveFcm',
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'username': username,
+          'email':email,
+          'fcmToken': token
+        }),
+      );
+
+      if(response != null){
+        if(response.statusCode==200){
+          print('Creating and saving token succesful');
+          print(response.statusCode);
+          print(response.body);
+        }else{
+          print('Creating and saving token was unsuccesful');
+          print(response.statusCode);
+          print(response.body);
+        }
+      }else{
+        print('Response is null.');
+      }
+    }catch(e){
+      print(e);
+      return null;
+    }
   }
 
 

@@ -38,7 +38,6 @@ class Wrapper extends StatelessWidget{
     builder: (BuildContext context, AsyncSnapshot<FirebaseUser> snapshot) {
       if(snapshot.connectionState == ConnectionState.active){
       final bool isLoggedIn = snapshot.hasData;
-
         return isLoggedIn ?
         Redirect()
          :
