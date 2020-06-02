@@ -9,7 +9,7 @@ class User{
   final String createdDate;
   final List<dynamic> dogs;
   String photoUrl;
-  final String userId;
+  String userId;
   final bucket;
 
   User({this.userId,this.username, this.dateOfBirth, this.gender, this.desc, this.createdDate, this.dogs, this.photoUrl, this.bucket});

@@ -9,6 +9,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
 import 'package:gender_selector/gender_selector.dart';
 
@@ -291,10 +292,10 @@ class MyCustomFormState extends State<MyCustomForm> {
     );
   }
 
-  Future<void>register(String username, String email, String password, String dateOfBirth, String gender)async{
+  Future<void>register(String username, String email, String password, String dateOfBirth, String gender) async {
     try {
       if(gender == "-") {
-        gender = "UNKNOWN"; 
+        gender = "UNKNOWN";
       }
 
       if(dateOfBirth == null){
@@ -322,64 +323,65 @@ class MyCustomFormState extends State<MyCustomForm> {
   }
 
 
-
-  Future<http.Response> createAndSaveToken(String username, String email) async {
-
+//  try {
+//  final http.Response response = await http.post( //register to database
+//  'https://dogsonfire.herokuapp.com/users/register',
+//  headers:<String, String>{
+//  "Accept": "application/json",
+//  'Content-Type' : 'application/json; charset=UTF-8', //ISO-8859-1
+//  },
+//  body: jsonEncode(<String,String>{
+//  "username": username,
+//  "email": email,
+//  "dateOfBirth": dateOfBirth,
+//  "gender": gender,
+//  "password":password
+//  })
+//  );
+//
+//  if(response.statusCode==200){
+//  print(response.statusCode);
+//  await signInWithEmailAndPassword(email, password);
+//  return response.statusCode.toString();
+//  }else{
+//  print(response.statusCode);
+//  print(response.body);
+//  return json.decode(response.body)['message'];
+//  }
+//  } catch (e) {
+//  print("catch: " + e.message);
+//  return null;
+//  }
+  Future<http.Response> createAndSaveToken(
+      String username, String email) async {
     String token;
     FirebaseMessaging Fcm = new FirebaseMessaging();
 
     await Fcm.getToken().then((value) => token = value);
 
-      return http.post(
+    print("FCM TEKEN"+ token);
+    try {
+      final http.Response response = await http.post(
         'https://fcm-token.herokuapp.com/user/saveFcm',
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, String>{
           'username': username,
-          'email':email,
+          'email': email,
           'fcmToken': token
         }),
       );
-  }
-
-  Future<http.Response> createAndSaveToken1(String username, String email) async {
-
-    FirebaseMessaging Fcm = new FirebaseMessaging();
-
-    String token = await Fcm.getToken();
-
-    try{
-      final response = await http.post(
-        'https://fcm-token.herokuapp.com/user/saveFcm',
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'username': username,
-          'email':email,
-          'fcmToken': token
-        }),
-      );
-
-      if(response != null){
-        if(response.statusCode==200){
-          print('Creating and saving token succesful');
-          print(response.statusCode);
-          print(response.body);
-        }else{
-          print('Creating and saving token was unsuccesful');
-          print(response.statusCode);
-          print(response.body);
-        }
-      }else{
-        print('Response is null.');
+      if (response.statusCode == 200) {
+        print(response.statusCode);
+      } else {
+        print(response.statusCode);
+        print(response.body);
+        return json.decode(response.body)['message'];
       }
-    }catch(e){
-      print(e);
+    } catch (e) {
+      print("catch: " + e.message);
       return null;
     }
   }
-
-
 }

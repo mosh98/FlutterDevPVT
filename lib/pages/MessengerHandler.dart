@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,38 +8,24 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_app_badger/flutter_app_badger.dart';
 
 import 'dart:async';
 import 'dart:convert';
 
-class MessengerX extends StatelessWidget {
-  User user;
-  User peer;
 
-  MessengerX({User user, User peer});
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return MessengerHandler(user: user, peer: peer);
-  }
-}
 
 class MessengerHandler extends StatefulWidget{
   User user;
   User peer;
 
 
-  MessengerHandler({User peer, User user});
+  MessengerHandler({ this.user,this.peer,});
+
 
   @override
-  _Messenger createState() => _Messenger(user: user,peer: peer);
+  _Messenger createState() => _Messenger(user: this.user,peer: this.peer);
 
-//
-//  State<StatefulWidget> createState() {
-//    // TODO: implement createState
-//     new Messenger(user: user,peer: peer);
-//  }
 
 
 }
@@ -61,26 +49,75 @@ class _Messenger extends State<MessengerHandler> {
 
 //  _Messenger(User user, User peer);
 
-  _Messenger( {this.user,this.peer});
+  _Messenger({this.user,this.peer});
 
+
+
+  void configLocalNotification() {
+    var initializationSettingsAndroid = new AndroidInitializationSettings('app_icon');
+    var initializationSettingsIOS = IOSInitializationSettings(
+      requestSoundPermission: false,
+      requestBadgePermission: false,
+      requestAlertPermission: false,
+    );
+    var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+//  Future _showNotifications(FlutterLocalNotificationsPlugin notifications,{
+//    String title,
+//    String body,
+//    NotificationDetails type,
+//    int id = 0
+//  }) => notifications.show(id, title, body, type);
+
+  void showNotification(message) async{
+
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'your channel id',
+        'your channel name',
+        'your channel description',
+        importance: Importance.Max,
+        priority: Priority.High,
+        enableVibration: true
+    );
+
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+
+    var platformChannelSpecifics = NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+        0, message['title'].toString(), message['body'].toString(), platformChannelSpecifics,
+        payload: json.encode(message));
+  }
 
   @override
   void initState() {
 
+    configLocalNotification();
+
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
-        print("onMessage: $message");
+        showNotification(message);
+        //print("onMessage: $message");
       },
       onLaunch: (Map<String, dynamic> message) async {
-        print("onLaunch: $message");
+        showNotification(message);
+        //print("onLaunch: $message");
       },
       onResume: (Map<String, dynamic> message) async {
-        print("onResume: $message");
+         showNotification(message);
+       // print("onResume: $message");
       },
     );
 
 
+
+
   }
+
+
 
   Future<TokenFcmJson> retireveRecipientToken(String username) async{
     //get https://fcm-token.herokuapp.com/user/getFcmByUsername?username=username
@@ -89,7 +126,7 @@ class _Messenger extends State<MessengerHandler> {
     final response = await http.get(link);
 
     if(response.statusCode == 200){
-      return TokenFcmJson.fromJson(json.decode(response.body));
+      return  TokenFcmJson.fromJson(json.decode(response.body));
     }else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
@@ -105,20 +142,18 @@ class _Messenger extends State<MessengerHandler> {
           sound: true, badge: true, alert: true, provisional: false),
     );
 
-    if(recipientToken.isEmpty){
-         Future<TokenFcmJson> jayZ = retireveRecipientToken(peer.username);
+
+         Future<TokenFcmJson> jayZ =  retireveRecipientToken(peer.username);
 
       // update recipient token.
-       jayZ.then((value) => recipientToken = value.fcmToken);
-    }
-
-    //String recipientToken = 'dSlNvWn9-FQ:APA91bHU3vCNpLz6tHMW8GSFJzqGDl_2B2j7uoDYeMSjMg_ac9lmdtDCKIFiElTUZDezNUvBCHm0wOA4nf-23ADkbTUvmJJvN02eRBCMMec9DMqhXH8K9qrJJff609c9Rnu6GNOP3XMe';
+       await jayZ.then((value) => recipientToken = value.fcmToken);
+        print(recipientToken);
 
     await http.post(
       'https://fcm.googleapis.com/fcm/send',
       headers: <String, String>{
         'Content-Type': 'application/json',
-        'Authorization': 'key=AAAApxhRlHQ:APA91bHl1eBjWN0jTAwguFZKAWPES8DnTa5A7Akw-DSrQiG4mE2lDo-12kzWLke1Kj1rAZ00yguG9FOsLZCODNHLq1-wZOLa_Ny1hKBz-7pRt3mgc8F4FgYk5nykcX7yBstZIQ4-8uuk',
+        'Authorization': 'key=AAAAfhwE_ps:APA91bGAiaPQ__s8EAcSqyX2oM4kAGsxuE3WXTm_FFQiHE6BbeIcKs2SGQwR4jOr6gCN9CCHwjRoFkcVuEj5aTEGPdllAKxQOfyb5AdQX7OV1TUGFEfxr-FHAgtcUqSuSpMDtEmuS6AX',
         //authrization is the firebase CloudStore server key
       },
 
@@ -157,7 +192,7 @@ class _Messenger extends State<MessengerHandler> {
       'from': peer.username,
       'text': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
-      'senderToken': senderToken
+      //'senderToken': senderToken
     });
 
     //The other user or the recipient
@@ -175,7 +210,7 @@ class _Messenger extends State<MessengerHandler> {
       'senderToken': senderToken
     });
 
-    String nameOfSender; //This will be the name of this user
+    String nameOfSender = peer.getName(); //This will be the name of this user
     sendAndRetrieveMessage(content, nameOfSender);
   }
 
@@ -211,7 +246,7 @@ class _Messenger extends State<MessengerHandler> {
                       //get the recipient token
                       //recipientToken = docs.elementAt(docs.length).,
 
-                      docs.map((e) => recipientToken = e.data['senderToken']);
+                     // docs.map((e) => recipientToken = e.data['senderToken']);
 
                       List<Widget> messages = docs.map((doc) =>
 
