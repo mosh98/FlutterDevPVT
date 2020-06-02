@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_app_badger/flutter_app_badger.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -14,12 +17,9 @@ class MessengerHandler extends StatefulWidget {
   User user;
   User peer;
 
-  MessengerHandler({
-    this.user,
-    this.peer,
-  });
 
-//  print("user: "+ user.toString()+" peer: "+ peer.toString());
+  MessengerHandler({ this.user,this.peer,});
+
 
   @override
   _Messenger createState() => _Messenger(user: this.user, peer: this.peer);
@@ -38,72 +38,126 @@ class _Messenger extends State<MessengerHandler> {
   final textController = TextEditingController();
   ScrollController scrollController = ScrollController();
 
+
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 //  _Messenger(User user, User peer);
 
-  _Messenger({this.user, this.peer});
+  _Messenger({this.user,this.peer});
+
+
+
+  void configLocalNotification() {
+    var initializationSettingsAndroid = new AndroidInitializationSettings('app_icon');
+    var initializationSettingsIOS = IOSInitializationSettings(
+      requestSoundPermission: false,
+      requestBadgePermission: false,
+      requestAlertPermission: false,
+    );
+    var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+//  Future _showNotifications(FlutterLocalNotificationsPlugin notifications,{
+//    String title,
+//    String body,
+//    NotificationDetails type,
+//    int id = 0
+//  }) => notifications.show(id, title, body, type);
+
+  void showNotification(message) async{
+
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'your channel id',
+        'your channel name',
+        'your channel description',
+        importance: Importance.Max,
+        priority: Priority.High,
+        enableVibration: true
+    );
+
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+
+    var platformChannelSpecifics = NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+        0, message['title'].toString(), message['body'].toString(), platformChannelSpecifics,
+        payload: json.encode(message));
+  }
 
   @override
   void initState() {
+
+    configLocalNotification();
+
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
-        print("onMessage: $message");
+        showNotification(message);
+        //print("onMessage: $message");
       },
       onLaunch: (Map<String, dynamic> message) async {
-        print("onLaunch: $message");
+        showNotification(message);
+        //print("onLaunch: $message");
       },
       onResume: (Map<String, dynamic> message) async {
-        print("onResume: $message");
+         showNotification(message);
+       // print("onResume: $message");
       },
     );
+
+
+
+
   }
 
-  Future<TokenFcmJson> retireveRecipientToken(String username) async {
+
+
+  Future<TokenFcmJson> retireveRecipientToken(String username) async{
     //get https://fcm-token.herokuapp.com/user/getFcmByUsername?username=username
 
-    String link =
-        'https://fcm-token.herokuapp.com/user/getFcmByUsername?username=' +
-            username;
+    String link = 'https://fcm-token.herokuapp.com/user/getFcmByUsername?username='+ username;
     final response = await http.get(link);
 
-    if (response.statusCode == 200) {
-      return TokenFcmJson.fromJson(json.decode(response.body));
-    } else {
+    if(response.statusCode == 200){
+      return  TokenFcmJson.fromJson(json.decode(response.body));
+    }else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
       throw Exception('Failed to load User');
     }
-  }
 
+  }
   //final String recipient = peer.userId;//TODO: This is going to be the UID or username
 
-  Future<Map<String, dynamic>> sendAndRetrieveMessage(
-      String body, String title) async {
+  Future<Map<String, dynamic>> sendAndRetrieveMessage(String body, String title) async {
     await _firebaseMessaging.requestNotificationPermissions(
       const IosNotificationSettings(
           sound: true, badge: true, alert: true, provisional: false),
     );
 
-    Future<TokenFcmJson> jayZ = retireveRecipientToken(peer.username);
 
-    // update recipient token.
-    await jayZ.then((value) => recipientToken = value.fcmToken);
-    print(recipientToken);
+         Future<TokenFcmJson> jayZ =  retireveRecipientToken(peer.username);
+
+      // update recipient token.
+       await jayZ.then((value) => recipientToken = value.fcmToken);
+        print(recipientToken);
 
     await http.post(
       'https://fcm.googleapis.com/fcm/send',
       headers: <String, String>{
         'Content-Type': 'application/json',
-        'Authorization':
-            'key=AAAAfhwE_ps:APA91bGAiaPQ__s8EAcSqyX2oM4kAGsxuE3WXTm_FFQiHE6BbeIcKs2SGQwR4jOr6gCN9CCHwjRoFkcVuEj5aTEGPdllAKxQOfyb5AdQX7OV1TUGFEfxr-FHAgtcUqSuSpMDtEmuS6AX',
+        'Authorization': 'key=AAAAfhwE_ps:APA91bGAiaPQ__s8EAcSqyX2oM4kAGsxuE3WXTm_FFQiHE6BbeIcKs2SGQwR4jOr6gCN9CCHwjRoFkcVuEj5aTEGPdllAKxQOfyb5AdQX7OV1TUGFEfxr-FHAgtcUqSuSpMDtEmuS6AX',
         //authrization is the firebase CloudStore server key
       },
+
       body: jsonEncode(
         <String, dynamic>{
-          'notification': <String, dynamic>{'body': '$body', 'title': '$title'},
+          'notification': <String, dynamic>{
+            'body': '$body',
+            'title': '$title'
+          },
           'priority': 'high',
           'data': <String, dynamic>{
             'click_action': 'FLUTTER_NOTIFICATION_CLICK',
@@ -178,6 +232,9 @@ class _Messenger extends State<MessengerHandler> {
     sendAndRetrieveMessage(content, nameOfSender);
   }
 
+
+
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -188,6 +245,7 @@ class _Messenger extends State<MessengerHandler> {
             title: Text('Chat window'),
           ),
           body: SafeArea(
+
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -203,6 +261,7 @@ class _Messenger extends State<MessengerHandler> {
                         .orderBy('timestamp')
                         // .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
                         .snapshots(),
+
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) return Text('Data is coming');
 
@@ -224,11 +283,13 @@ class _Messenger extends State<MessengerHandler> {
                           .toList();
 
                       return ListView(
+
                         controller: scrollController,
                         children: <Widget>[
                           ...messages,
                         ],
                       );
+
                     },
                   ),
                 ),
@@ -307,10 +368,12 @@ class Message extends StatelessWidget {
 }
 
 class TokenFcmJson {
+
   int id;
   String username;
   String email;
   String fcmToken;
+
 
   TokenFcmJson({this.id, this.username, this.email, this.fcmToken});
 
@@ -318,7 +381,9 @@ class TokenFcmJson {
       id: json['id'],
       username: json['username'],
       email: json['email'],
-      fcmToken: json['fcmToken']);
+      fcmToken: json['fcmToken']
+    );
+
 }
 
 //  @override
