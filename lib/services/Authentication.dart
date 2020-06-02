@@ -77,12 +77,10 @@ class AuthService{
   Future signInWithEmailAndPassword(String email, String password) async{
     try{
       AuthResult result = await _auth.signInWithEmailAndPassword(email: email, password: password);
-
-      if(result == null){
-        return null;
+      if(result != null){
+        return true;
       }
-
-      return User();//TODO
+      return false;
     }catch(e){
       print(e);
       return null;
@@ -236,7 +234,8 @@ class AuthService{
   Future signOut() async{
     try{
       _auth.signOut();
-      return Future.delayed(Duration.zero);
+      Future.delayed(Duration.zero);
+      return true;
     }catch(e){
       print(e.toString());
       return null;
