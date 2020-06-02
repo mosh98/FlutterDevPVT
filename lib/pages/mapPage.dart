@@ -91,6 +91,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
 
+    bool _buttonRemoveMarkerActive= false;
 
     // Huvudknapparnas sida ska vara 15% av skärmens bredd
     double _buttonSideFactor = 0.15;
@@ -165,8 +166,10 @@ class _MainScreenState extends State<MainScreen> {
                                     padding: EdgeInsets.all(10),
                                     child: _buttonFindMyLocation(),
                                 ),
-
-
+                                Container(
+                                    padding: EdgeInsets.all(10),
+                                    child: _buttonRemoveMarker(),
+                                ),
                             ],
                         ),
                     ),
@@ -226,6 +229,7 @@ class _MainScreenState extends State<MainScreen> {
                                                     SEARCH_LOCATION_MARKER);
                                                 SEARCH_LOCATION_MARKER = null;
                                                 SEARCH_LOCATION_LATLNG = null;
+
                                             });
                                             Navigator.of(context).pop();
                                         },
@@ -360,6 +364,35 @@ class _MainScreenState extends State<MainScreen> {
         });
     }
 
+    Widget _buttonRemoveMarker() {
+        double iconSize = _buttonSideLength * 0.7;
+
+        return Container(
+            width: _buttonSideLength,
+            height: _buttonSideLength,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: (_buttonRemoveMarkerActive == false) ? _buttonBackgroundColor : Colors.redAccent,
+                border: Border.all(color: Colors.black),
+            ),
+            child: IconButton(
+                iconSize: iconSize,
+                icon: Icon(Icons.clear),
+                onPressed: _buttonRemoveMarkerPressed,
+            ));
+    }
+
+    void _buttonRemoveMarkerPressed() {
+        setState(()  {
+            _buttonRemoveMarkerActive = !_buttonRemoveMarkerActive;
+        });
+    }
+
+
+
+
+
+
     @override
     void initState() {
         PRINT_DEBUG("_MainScreenState initState");
@@ -479,6 +512,15 @@ class _MainScreenState extends State<MainScreen> {
                     if (tempBins[i].distance <= WASTEBINS_SEARCH_DISTANCE) {
                         tempBins[i].marker = Marker(
                             markerId: MarkerId('wastebin_id_$i'),
+                            onTap: () {
+                                if (_buttonRemoveMarkerActive == true) {
+                                    setState(() {
+                                        WASTEBINS.remove(tempBins[i]);
+                                        _allMapMarkers.remove(tempBins[i].marker );
+                                    });
+                                    setCameraPosition(SELECTED_SEARCH_LOCATION, 15);
+                                }
+                            },
                             infoWindow: InfoWindow(
                                 title: 'Papperskorg',
                                 snippet: tempBins[i].distance.toInt()
@@ -511,9 +553,9 @@ class _MainScreenState extends State<MainScreen> {
     }
 
 
-    void _dogparkMarkerTapped(int index) async {
+    void _dogparkMarkerTapped(DogPark dogPark) async {
         Navigator.push(context, MaterialPageRoute(builder: (context) =>
-            ReviewPage(selectedDogPark: DOGPARKS[index])));
+            ReviewPage(selectedDogPark: dogPark)));
     }
 
 
@@ -614,12 +656,23 @@ class _MainScreenState extends State<MainScreen> {
                                     allDogsParks[i].distance.toInt()
                                         .toString() +
                                     " m",
-                                snippet: allDogsParks[i].description),
+                               ),
                             position: LatLng(allDogsParks[i].latitude,
                                 allDogsParks[i].longitude),
                             icon: DOGPARK_MARKER_ICON,
+                     
                             onTap: () {
-                                _dogparkMarkerTapped(i);
+                                if (_buttonRemoveMarkerActive == true) {
+                                    setState(() {
+                                        DOGPARKS.remove(allDogsParks[i]);
+
+                                        _allMapMarkers.remove(allDogsParks[i].marker );
+
+                                        setCameraPosition(SELECTED_SEARCH_LOCATION, 15);
+                                    });
+                                } else {
+                                    _dogparkMarkerTapped(allDogsParks[i]);
+                                }
                             },
 
                         );
@@ -913,102 +966,6 @@ class SearchWasteBinsSettingsDialogState
 }
 
 
-class Review {
-
-
-    int id;
-    int rating;
-    String comment;
-
-    Review({this.id, this.rating, this.comment});
-
-    factory Review.fromJson(Map<String, dynamic> json) {
-        return Review(
-            id: json['id'],
-            rating: json['rating'],
-            comment: json['comment'],
-        );
-    }
-
-    @override
-    String toString() {
-        return "$id\t$rating\t$comment";
-    }
-}
-
-class DogPark {
-    int id;
-    double latitude;
-    double longitude;
-    String name;
-    String description;
-    double distance;
-
-    Marker marker;
-
-    Marker getMarker() {
-        return marker;
-    }
-
-    void setMarker(Marker m) {
-        marker = m;
-    }
-
-    void setDistance(double value) {
-        this.distance = value;
-    }
-
-    DogPark(
-        {this.id, this.latitude, this.longitude, this.name, this.description});
-
-    factory DogPark.fromJson(Map<String, dynamic> json) {
-        return DogPark(
-            id: json['id'],
-            latitude: json['latitude'],
-            longitude: json['longitude'],
-            name: json['name'],
-            description: json['description'],
-        );
-    }
-
-    @override
-    String toString() {
-        return "id: $id, latitude: $latitude, longitude: $longitude, name: $name, description: $description";
-    }
-}
-
-class WasteBin {
-    double latitude;
-    double longitude;
-    double distance;
-
-    Marker marker;
-
-    Marker getMarker() {
-        return marker;
-    }
-
-    void setMarker(Marker m) {
-        marker = m;
-    }
-
-    void setDistance(double value) {
-        this.distance = value;
-    }
-
-    WasteBin({this.latitude, this.longitude});
-
-    factory WasteBin.fromJson(Map<String, dynamic> json) {
-        return WasteBin(
-            latitude: json['latitude'], longitude: json['longitude']);
-    }
-
-    @override
-    String toString() {
-        return "WasteBin: $distance\t$latitude\t$longitude";
-    }
-}
-
 
 class ReviewPage extends StatefulWidget {
     final DogPark selectedDogPark;
@@ -1022,53 +979,93 @@ class ReviewPage extends StatefulWidget {
 
 class ReviewPageState extends State<ReviewPage> {
     final double _paddingSize = 12;
-    List<Review> _reviews = new List<Review>();
+
+
     List<String> _imageURLs = new List<String>();
     double _listSideLength;
 
-    double _rating = 0;
+
     bool _isLoading = false;
 
     @override
     void initState() {
         PRINT_DEBUG("ReviewPageState initState");
 
+
+
         super.initState();
-        _getImageURLs();
-        _getReviews();
+
+        _onEnter();
+
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+
+        });
+
+
+
     }
 
-    void _getReviews() async {
-        _reviews.clear();
-        _rating = 0;
+    void _onEnter() async {
         setState(() {
-            _isLoading = true;
+_isLoading = true;
         });
-        try {
-            final int id = widget.selectedDogPark.id;
-            final http.Response response = await http.get(
-                'https://dog-park-micro.herokuapp.com/api/v1/review/id/$id',
+        PRINT_DEBUG("ReviewPageState _onEnter enter");
+        PRINT_DEBUG("ReviewPageState _getImageURLs start");
 
-            );
+        await _getImageURLs();
+        PRINT_DEBUG("ReviewPageState _getImageURLs done");
+        PRINT_DEBUG("_getReviews _getImageURLs start");
+
+        await _getReviews();
+        PRINT_DEBUG("ReviewPageState _getReviews done");
+
+        PRINT_DEBUG("ReviewPageState _onEnter return");
+
+        setState(() {
+            _isLoading = false;
+        });
+    }
+
+
+    Future<void> _getReviews() async {
+        PRINT_DEBUG("_getReviews Enter");
+
+
+
+        try {
+
+
+            final int id = widget.selectedDogPark.id;
+            final String url = "https://dog-park-micro.herokuapp.com/api/v1/review/id/$id";
+
+            PRINT_DEBUG("_getReviews Laddar ned review: $url");
+
+            widget.selectedDogPark.reviews.clear();
+
+            final http.Response response = await http.get(url);
 
             if (response.statusCode == 200) {
                 String jsonData = utf8.decode(response.bodyBytes);
                 List decodedJson = jsonDecode(jsonData);
                 for (int i = 0; i < decodedJson.length; i++) {
                     Review tempReview = Review.fromJson(decodedJson[i]);
-                    _reviews.add(tempReview);
-                    _rating += tempReview.rating;
+                    widget.selectedDogPark.reviews.add(tempReview);
                 }
-                if (_reviews.length > 0)
-                    _rating /= _reviews.length;
+
             }
+            PRINT_DEBUG("_getReviews klar med nedladdning: $url");
+
         } catch (error) {
+            PRINT_DEBUG("_getReviews error: " + error.toString());
 
         }
+        PRINT_DEBUG("_getReviews uppdaterar rating för id: " + widget.selectedDogPark.id.toString());
 
-        setState(() {
-            _isLoading = false;
-        });
+        widget.selectedDogPark.updateRating();
+
+
+
+        PRINT_DEBUG("_getReviews Return");
     }
 
 
@@ -1104,12 +1101,8 @@ class ReviewPageState extends State<ReviewPage> {
         PRINT_DEBUG("_getImageURLs Return");
     }
 
-    void _uploadImage() async {
+    Future<void> _uploadImage() async {
 		PRINT_DEBUG("_uploadImage Enter");
-
-		setState(() {
-            _isLoading = true;
-        });
 
         int _dogParkID = widget.selectedDogPark.id;
 
@@ -1143,9 +1136,7 @@ class ReviewPageState extends State<ReviewPage> {
         await _getImageURLs();
 
 
-        setState(() {
-            _isLoading = false;
-        });
+
 
 		PRINT_DEBUG("_uploadImage Return");
 
@@ -1214,41 +1205,41 @@ class ReviewPageState extends State<ReviewPage> {
                                     mainAxisAlignment: MainAxisAlignment.center,
 
                                     children: <Widget>[
-                                        (_rating >= 1)
+                                        (widget.selectedDogPark.rating >= 1)
                                             ? Icon(
                                             Icons.star, color: Colors.orange)
                                             : Icon(
                                             Icons.star_border,
                                             color: Colors.orange),
-                                        (_rating >= 2)
+                                        (widget.selectedDogPark.rating >= 2)
                                             ? Icon(
                                             Icons.star, color: Colors.orange)
                                             : Icon(
                                             Icons.star_border,
                                             color: Colors.orange),
-                                        (_rating >= 3)
+                                        (widget.selectedDogPark.rating >= 3)
                                             ? Icon(
                                             Icons.star, color: Colors.orange)
                                             : Icon(
                                             Icons.star_border,
                                             color: Colors.orange),
-                                        (_rating >= 4)
+                                        (widget.selectedDogPark.rating >= 4)
                                             ? Icon(
                                             Icons.star, color: Colors.orange)
                                             : Icon(
                                             Icons.star_border,
                                             color: Colors.orange),
-                                        (_rating >= 5)
+                                        (widget.selectedDogPark.rating >= 5)
                                             ? Icon(
                                             Icons.star, color: Colors.orange)
                                             : Icon(
                                             Icons.star_border,
                                             color: Colors.orange),
-                                        Text(_rating.toStringAsFixed(1)
+                                        Text(widget.selectedDogPark.rating.toStringAsFixed(1)
                                             .toString()),
                                         Text(
-                                            "(" + _reviews.length.toString() +
-                                                ")"),
+                                            "(" + widget.selectedDogPark.reviews.length.toString() +
+                                                " st)"),
                                     ],
 
                                 ),
@@ -1270,8 +1261,15 @@ class ReviewPageState extends State<ReviewPage> {
                                     child: FlatButton(
                                         textColor: Colors.white,
                                         child: Text('Ladda upp en bild!'),
-                                        onPressed: () {
-                                            _uploadImage();
+                                        onPressed: () async {
+                                            setState(() {
+                                              _isLoading = true;
+                                            });
+
+                                            await _uploadImage();
+                                            setState(() {
+                                                _isLoading = false;
+                                            });
                                         }
                                     ),
                                 ),
@@ -1292,7 +1290,14 @@ class ReviewPageState extends State<ReviewPage> {
                                                         selectedDogPark: widget
                                                             .selectedDogPark)))
                                                 .then((_) {
-                                                _getReviews();
+
+                                                    _getReviews().then((_) {
+                                                       setState(() {
+
+                                                       });
+                                                    });
+
+
                                             });
                                         },
                                     ),
@@ -1322,6 +1327,7 @@ class ReviewPageState extends State<ReviewPage> {
 
                     Container(
 
+
                         decoration: BoxDecoration(
 
                             borderRadius: BorderRadius.circular(10),
@@ -1329,7 +1335,6 @@ class ReviewPageState extends State<ReviewPage> {
 
                         ),
                         child: GestureDetector(
-
                             onTap: () {
                                 showDialog<void>(
                                     context: context,
@@ -1364,57 +1369,11 @@ class ReviewPageState extends State<ReviewPage> {
         );
     }
 
-    Widget _imageList2(BuildContext context) {
-        return ListView.builder(
-
-            scrollDirection: Axis.horizontal,
-            itemCount: _imageURLs.length,
-            itemBuilder: (BuildContext context,
-                int index) =>
-                Card(
-                    child: GestureDetector(
-                        onTap: () {
-                            showDialog<void>(
-                                context: context,
-                                barrierDismissible: true,
-                                builder: (BuildContext context) {
-                                    return AlertDialog(
-
-                                        content: GestureDetector(
-                                            onTap: () {
-                                                Navigator.pop(context);
-                                            },
-                                            child: Image.network(
-                                                _imageURLs[index]),
-                                        ),
-                                        actions: <Widget>[
-                                        ],
-                                    );
-                                },
-                            );
-                        },
-                        child: Container(
-                            width: _listSideLength,
-                            height: _listSideLength,
-
-                            decoration: BoxDecoration(
-
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.blueAccent),
-
-                            ),
-                            child: Image.network(
-                                _imageURLs[index]),
-                        ),
-                    )
-                ),
-        );
-    }
 
     Widget _reviewList(BuildContext context) {
         return ListView.builder(
             padding: EdgeInsets.all(_paddingSize),
-            itemCount: _reviews.length,
+            itemCount: widget.selectedDogPark.reviews.length,
             itemBuilder: (context, index) {
                 return Card(
 
@@ -1424,44 +1383,44 @@ class ReviewPageState extends State<ReviewPage> {
                     Row(
                         children: <Widget>[
                             Row(children: <Widget>[
-                                (_reviews[index].rating >= 1)
+                                (widget.selectedDogPark.reviews[index].rating >= 1)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                (_reviews[index].rating >= 2)
+                                (widget.selectedDogPark.reviews[index].rating >= 2)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                (_reviews[index].rating >= 3)
+                                (widget.selectedDogPark.reviews[index].rating >= 3)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                (_reviews[index].rating >= 4)
+                                (widget.selectedDogPark.reviews[index].rating >= 4)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                (_reviews[index].rating >= 5)
+                                (widget.selectedDogPark.reviews[index].rating >= 5)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                Text(_reviews[index].rating.toString()),
+                                Text(widget.selectedDogPark.reviews[index].rating.toString()),
                             ]),
                             Expanded(
                                 child:
 
                                 ListTile(
 
-                                    title: Text(_reviews[index].comment),
+                                    title: Text(widget.selectedDogPark.reviews[index].comment),
                                 ),
                             )
                         ],
@@ -1660,9 +1619,12 @@ class RatingPageState extends State<RatingPage> {
     }
 
     void _saveComment(String str, int rating) async {
+
+        PRINT_DEBUG("_saveComment Enter");
         setState(() {
             _isSaving = true;
         });
+
 
         final http.Response response = await http.post(
             'https://dog-park-micro.herokuapp.com/api/v1/review',
@@ -1677,10 +1639,17 @@ class RatingPageState extends State<RatingPage> {
 
         );
 
+        if (response.statusCode == 200) {
+            PRINT_DEBUG("_saveComment POST ok");
+
+        } else {
+            PRINT_DEBUG("_saveComment: Något gick fel med post: " + response.statusCode.toString());
+        }
+
+        PRINT_DEBUG("_saveComment Return");
 
         Navigator.pop(context, true);
     }
-
 
 }
 
@@ -1799,3 +1768,108 @@ Future<BitmapDescriptor> createTextIcon(String textStr,
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
 }
+
+
+
+
+
+class WasteBin {
+    double latitude;
+    double longitude;
+    double distance;
+
+    Marker marker;
+
+
+    void setDistance(double value) {
+        this.distance = value;
+    }
+
+    WasteBin({this.latitude, this.longitude});
+
+    factory WasteBin.fromJson(Map<String, dynamic> json) {
+        return WasteBin(
+            latitude: json['latitude'], longitude: json['longitude']);
+    }
+
+    @override
+    String toString() {
+        return "WasteBin: $distance\t$latitude\t$longitude";
+    }
+}
+
+
+
+
+class Review {
+
+    int id;
+    int rating;
+    String comment;
+
+    Review({this.id, this.rating, this.comment});
+
+    factory Review.fromJson(Map<String, dynamic> json) {
+        return Review(
+            id: json['id'],
+            rating: json['rating'],
+            comment: json['comment'],
+        );
+    }
+
+    @override
+    String toString() {
+        return "$id\t$rating\t$comment";
+    }
+}
+
+class DogPark {
+    int id;
+    double latitude;
+    double longitude;
+    String name;
+    String description;
+    double distance = 0;
+
+
+    List<Review> reviews = new List<Review>();
+    double rating = 0;
+
+    double getRating() { return rating; }
+
+    double updateRating() {
+        rating = 0;
+        for (int i = 0; i < reviews.length; i++) {
+            rating += reviews[i].rating;
+        }
+        if (reviews.length > 0)
+            rating /= reviews.length;
+        return rating;
+    }
+
+    Marker marker;
+
+
+    void setDistance(double value) {
+        this.distance = value;
+    }
+
+    DogPark(
+        {this.id, this.latitude, this.longitude, this.name, this.description});
+
+    factory DogPark.fromJson(Map<String, dynamic> json) {
+        return DogPark(
+            id: json['id'],
+            latitude: json['latitude'],
+            longitude: json['longitude'],
+            name: json['name'],
+            description: json['description'],
+        );
+    }
+
+    @override
+    String toString() {
+        return "id: $id, latitude: $latitude, longitude: $longitude, name: $name, description: $description";
+    }
+}
+
