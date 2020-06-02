@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_app_badger/flutter_app_badger.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -19,7 +22,6 @@ class MessengerHandler extends StatefulWidget{
 
   MessengerHandler({ this.user,this.peer,});
 
-//  print("user: "+ user.toString()+" peer: "+ peer.toString());
 
   @override
   _Messenger createState() => _Messenger(user: this.user,peer: this.peer);
@@ -50,23 +52,72 @@ class _Messenger extends State<MessengerHandler> {
   _Messenger({this.user,this.peer});
 
 
+
+  void configLocalNotification() {
+    var initializationSettingsAndroid = new AndroidInitializationSettings('app_icon');
+    var initializationSettingsIOS = IOSInitializationSettings(
+      requestSoundPermission: false,
+      requestBadgePermission: false,
+      requestAlertPermission: false,
+    );
+    var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  }
+
+//  Future _showNotifications(FlutterLocalNotificationsPlugin notifications,{
+//    String title,
+//    String body,
+//    NotificationDetails type,
+//    int id = 0
+//  }) => notifications.show(id, title, body, type);
+
+  void showNotification(message) async{
+
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'your channel id',
+        'your channel name',
+        'your channel description',
+        importance: Importance.Max,
+        priority: Priority.High,
+        enableVibration: true
+    );
+
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+
+    var platformChannelSpecifics = NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+        0, message['title'].toString(), message['body'].toString(), platformChannelSpecifics,
+        payload: json.encode(message));
+  }
+
   @override
   void initState() {
 
+    configLocalNotification();
+
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
-        print("onMessage: $message");
+        showNotification(message);
+        //print("onMessage: $message");
       },
       onLaunch: (Map<String, dynamic> message) async {
-        print("onLaunch: $message");
+        showNotification(message);
+        //print("onLaunch: $message");
       },
       onResume: (Map<String, dynamic> message) async {
-        print("onResume: $message");
+         showNotification(message);
+       // print("onResume: $message");
       },
     );
 
 
+
+
   }
+
+
 
   Future<TokenFcmJson> retireveRecipientToken(String username) async{
     //get https://fcm-token.herokuapp.com/user/getFcmByUsername?username=username
