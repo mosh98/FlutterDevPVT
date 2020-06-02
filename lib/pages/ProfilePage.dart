@@ -32,16 +32,7 @@ class ProfileState extends State<ProfilePage>{
 
   bool _loadingImage = false;
   bool _loadingProfile = false;
-  Widget _loading = DefaultLoader();
-
-  List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-  ];
+  Widget loading = Center(child:CircularProgressIndicator());
 
   @override
   void initState() {
@@ -69,7 +60,7 @@ class ProfileState extends State<ProfilePage>{
   @override
   Widget build(BuildContext context) {
     if(user == null || profileImage == null){
-      return _loading;
+      return loading;
     }else{
       return profile();
     }
@@ -77,7 +68,7 @@ class ProfileState extends State<ProfilePage>{
 
   Widget profile(){
     return _loadingProfile == true ?
-    _loading
+    loading
         :
     Scaffold(
       appBar: AppBar(
@@ -104,10 +95,8 @@ class ProfileState extends State<ProfilePage>{
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           _headerSection(),
-
+          Divider(thickness: 1.0,),
           _infoSection(),
-
-          _pictureSection(),
         ],
       ),
     );
@@ -115,7 +104,7 @@ class ProfileState extends State<ProfilePage>{
 
   Widget _headerSection(){
     return Expanded(
-      flex: 2,
+      flex: 3,
       child: Container(
         padding: EdgeInsets.all(10.0),
         child: Row(
@@ -148,7 +137,7 @@ class ProfileState extends State<ProfilePage>{
 
   Widget _infoSection(){
     return Expanded(
-        flex: 6,
+        flex: 7,
         child: Container(
           padding: EdgeInsets.all(15),
           child: Column(
@@ -192,7 +181,7 @@ class ProfileState extends State<ProfilePage>{
 
   Widget _dogSection(){
     return Expanded(
-      flex: 12,
+      flex: 7,
       child: ListView.builder(
         itemCount: user.dogs.length,
         itemBuilder: (context, index) {
@@ -211,35 +200,6 @@ class ProfileState extends State<ProfilePage>{
                 Dog dog = Dog.fromJson(user.dogs[index]);
                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog)));
               });
-        },
-      ),
-    );
-  }
-
-  Widget _pictureSection(){
-    return Expanded(
-      flex: 2,
-      child: GridView.builder(
-        scrollDirection: Axis.vertical,
-        itemCount: images.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-        ),
-        itemBuilder: (context, index) {
-          return (
-              GestureDetector(
-                onTap: ()
-                async {
-                  await showDialog(
-                      context: context,
-                      builder: (_) => ImageDialog()
-                  );
-                },
-                child: Image(
-                  image: AssetImage(images[index]),
-                ),
-              )
-          );
         },
       ),
     );

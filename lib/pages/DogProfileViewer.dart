@@ -1,10 +1,13 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
+import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:http/http.dart' as http;
 
 class DogProfileViewer extends StatefulWidget {
 
@@ -16,16 +19,16 @@ class DogProfileViewer extends StatefulWidget {
 }
 
 class _DogProfileViewerState extends State<DogProfileViewer> {
-
-  ProfileState _state = ProfileState.About;
-  File _image;
   Dog dog;
+  String profileImage;
+  bool _loadingImage = false;
 
   @override
   void initState() {
     if(dog == null){
       dog = widget.dog;
     }
+    _getProfileImage();
     super.initState();
   }
 
@@ -33,6 +36,9 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
 
   @override
   Widget build(BuildContext context) {
+    if(profileImage == null){
+      return DefaultLoader();
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
@@ -57,71 +63,35 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
   }
 
   Widget _pictureSection(){
-    //TODO, WHEN PICTURES IS FINISHED
     return Expanded(
       flex: 2,
       child: Center(
         child: Column(
             children: [
-              GestureDetector(
-                  //onTap: getImage,
-                  child: _image == null
-                      ? CircleAvatar(radius: 40, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
-                      : CircleAvatar(radius: 40, backgroundImage: FileImage(_image))
-              ),
+              _loadingImage == true ?
+                  DefaultLoader()
+              :
+              CachedNetworkImage(
+                  imageUrl: profileImage,
+                  placeholder: (context, url) => DefaultLoader(),
+                  errorWidget: (context, url, error) => CircleAvatar(radius: 40, child: Icon(Icons.image, color: Colors.white), backgroundColor:Colors.grey)),
               Padding(padding: EdgeInsets.only(top:25.0)),
-              _stateSection()
             ],
         ),
       )
     );
   }
 
-  Widget _stateSection(){
-    return DefaultTabController(
-        length: 2,
-        child: TabBar(
-            labelColor: Colors.black,
-            onTap: (value){
-              if(value==0){
-                setState(() {
-                  _state = ProfileState.About;
-                });
-              }else{
-                setState(() {
-                  _state = ProfileState.Awards;
-                });
-              }
-            },
-            indicatorWeight: 0.1,
-            unselectedLabelColor: Colors.grey,
-            tabs: <Widget>[
-              Tab(
-                  icon: Icon(Icons.person),
-                  child:Text('About')
-              ),
-              Tab(
-                  icon: Icon(Icons.star),
-                  child:Text('Awards')
-              )
-            ]
-        )
-    );
-  }
-
   Widget _informationSection() {
     return Expanded(
-     flex: 4,
+     flex: 8,
      child: Column(
        children: [
          Expanded(
            flex: 7,
-           child: _state == ProfileState.About ?
-           aboutSection()
-               :
-           awardsSection(),
+           child: aboutSection()
          ),
-         Expanded( //TODO
+         Expanded(
            flex: 3,
              child: _descriptionSection()
          ),
@@ -187,14 +157,6 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
   }
   }
 
-  Widget awardsSection(){
-    return Column(
-      children: [
-        Text('IF WE HAVE TIME TO IMPLEMENT THIS')
-      ],
-    );
-  }
-
   Widget _descriptionSection(){
     return ListView(
       children: [
@@ -206,5 +168,24 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
     );
   }
 
+  _getProfileImage() async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+    try{
+      final url = await http.get('https://dogsonfire.herokuapp.com/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
+      if(url.statusCode==200){
+        setState(() {
+          profileImage = url.body;
+        });
+      }
+      setState(() {
+        _loadingImage = false;
+      });
+    }catch(e){
+      print(e);
+      setState(() {
+        _loadingImage = false;
+      });
+    }
+  }
+
 }
-  enum ProfileState{About, Awards}

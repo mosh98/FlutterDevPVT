@@ -279,7 +279,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _accountInformationBuilder() {
     return Expanded(
-        flex: 2,
+        flex: 4,
         child: ListView(
           children: ListTile.divideTiles(
             context: context,
