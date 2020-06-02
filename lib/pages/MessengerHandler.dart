@@ -13,9 +13,7 @@ import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'dart:async';
 import 'dart:convert';
 
-
-
-class MessengerHandler extends StatefulWidget{
+class MessengerHandler extends StatefulWidget {
   User user;
   User peer;
 
@@ -24,20 +22,17 @@ class MessengerHandler extends StatefulWidget{
 
 
   @override
-  _Messenger createState() => _Messenger(user: this.user,peer: this.peer);
-
-
-
+  _Messenger createState() => _Messenger(user: this.user, peer: this.peer);
 }
 
 class _Messenger extends State<MessengerHandler> {
-
   final databaseReference = Firestore.instance;
 
   FirebaseAuth auth = FirebaseAuth.instance;
   User user;
   User peer;
   String recipientToken;
+
   //String recipientUsername;
 
   final textController = TextEditingController();
@@ -175,8 +170,7 @@ class _Messenger extends State<MessengerHandler> {
     );
   }
 
-  void _onSendMessage(String content, String uid, String peerUid) {
-
+  void _onSendMessage(String content) {
     String senderToken;
     _firebaseMessaging.getToken().then((value) => senderToken = value);
 
@@ -189,9 +183,22 @@ class _Messenger extends State<MessengerHandler> {
         .collection('messages')
         .document()
         .setData({
-      'from': peer.username,
+      'from': user.username,
       'text': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
+      //'senderToken': senderToken
+    });
+
+    Firestore.instance
+        .collection('users')
+        .document(user.userId)
+        .collection('chats')
+        .document(peer.userId)
+        .setData({
+      'latestMessage': content,
+      'timestamp': DateTime.now().toIso8601String().toString(),
+      'username':peer.username,
+      'uid': peer.userId,
       //'senderToken': senderToken
     });
 
@@ -206,8 +213,19 @@ class _Messenger extends State<MessengerHandler> {
         .setData({
       'from': user.username,
       'text': content,
+      'timestamp': DateTime.now().toIso8601String().toString()
+    });
+
+    Firestore.instance
+        .collection('users')
+        .document(peer.userId)
+        .collection('chats')
+        .document(user.userId)
+        .setData({
+      'latestMessage': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
-      'senderToken': senderToken
+      'username':peer.username,
+      'uid': peer.userId,
     });
 
     String nameOfSender = peer.getName(); //This will be the name of this user
@@ -235,8 +253,13 @@ class _Messenger extends State<MessengerHandler> {
                   flex: 10,
                   child: StreamBuilder(
                     stream: Firestore.instance
-                        .collection('users').document(user.userId).collection('chats').document(peer.userId).collection('messages').orderBy('timestamp')
-                       // .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
+                        .collection('users')
+                        .document(user.userId)
+                        .collection('chats')
+                        .document(peer.userId)
+                        .collection('messages')
+                        .orderBy('timestamp')
+                        // .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
                         .snapshots(),
 
                     builder: (context, snapshot) {
@@ -246,18 +269,18 @@ class _Messenger extends State<MessengerHandler> {
                       //get the recipient token
                       //recipientToken = docs.elementAt(docs.length).,
 
-                     // docs.map((e) => recipientToken = e.data['senderToken']);
+                      // docs.map((e) => recipientToken = e.data['senderToken']);
 
-                      List<Widget> messages = docs.map((doc) =>
-
-
-                          Message(
-                            message: doc.data['text'],
-                            timeStamp: doc.data['timestamp'],
-                            nameUser: doc.data['from'],
-                            token: doc.data['senderToken'],
-                          ),
-                      ).toList();
+                      List<Widget> messages = docs
+                          .map(
+                            (doc) => Message(
+                              message: doc.data['text'],
+                              timeStamp: doc.data['timestamp'],
+                              nameUser: doc.data['from'],
+                              token: doc.data['senderToken'],
+                            ),
+                          )
+                          .toList();
 
                       return ListView(
 
@@ -278,9 +301,13 @@ class _Messenger extends State<MessengerHandler> {
                         hintText: "Skicka ett meddelande",
                         suffixIcon: IconButton(
                           onPressed: () {
-                            _onSendMessage(textController.text, "b2YxBTdWCTTbxSb6lSvJyskuyN22","ZPdRVUxgUzeMozR6Z6WAhqV13ZZ2");
+                            _onSendMessage(
+                                textController.text,);
                             textController.clear();
-                            scrollController.animateTo(scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
+                            scrollController.animateTo(
+                                scrollController.position.maxScrollExtent,
+                                duration: const Duration(milliseconds: 100),
+                                curve: Curves.easeOut);
                           },
                           icon: Icon(
                             Icons.send,
@@ -297,7 +324,6 @@ class _Messenger extends State<MessengerHandler> {
         ));
   }
 
-
 //  @override
 //  State<StatefulWidget> createState() {
 //    // TODO: implement createState
@@ -306,21 +332,18 @@ class _Messenger extends State<MessengerHandler> {
 }
 
 class Message extends StatelessWidget {
-
   final String message;
   final String timeStamp;
   final String nameUser;
   final String token;
   final bool self = true;
 
-  const Message({Key key, this.message, this.timeStamp, this.nameUser, this.token})
+  const Message(
+      {Key key, this.message, this.timeStamp, this.nameUser, this.token})
       : super(key: key);
-
-
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0),
       child: Column(
