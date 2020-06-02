@@ -227,7 +227,6 @@ class FindFriendsState extends State<FindFriends> {
         centerTitle: true,
         title: Text('Find friends'),
       ),
-      backgroundColor: Colors.brown[100],
       body: Column(
         children: <Widget>[
           Container(
@@ -255,7 +254,6 @@ class FindFriendsState extends State<FindFriends> {
                   return GestureDetector(
                     onTap: (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));},
                     child: Card(
-                      color: Colors.brown[100],
                       key: ValueKey(index),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

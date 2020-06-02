@@ -53,24 +53,6 @@ class MockAuthService extends Mock implements AuthService{
     }
   }
 
-  Future reauthenticateUser(String password)async{
-    final user = auth.currentUser();
-    if(user != null){
-      FirebaseUser firebaseUser = await user;
-      AuthCredential credential = EmailAuthProvider.getCredential(
-          email:firebaseUser.email,
-          password:password
-      );
-
-      AuthResult result = await firebaseUser.reauthenticateWithCredential(credential).catchError((error){print(error); return null;});
-      if(result != null){
-        return result;
-      }
-      return null;
-    }else{
-      return null;
-    }
-  }
 }
 
 void main(){
