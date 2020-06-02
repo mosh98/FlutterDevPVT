@@ -1,13 +1,9 @@
-import 'package:dog_prototype/pages/placeHolderHome.dart';
+import 'package:dog_prototype/main.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/Validator.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:gender_selector/gender_selector.dart';
 import 'package:intl/intl.dart';
-
-import '../firebasemain.dart';
-import 'RegisterPage.dart';
 
 class FacebookForm extends StatefulWidget {
   @override

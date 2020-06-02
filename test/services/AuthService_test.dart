@@ -1,4 +1,3 @@
-import 'package:dog_prototype/firebasemain.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';

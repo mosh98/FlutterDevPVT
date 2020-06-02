@@ -1,9 +1,6 @@
 
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
-import 'package:dog_prototype/pages/ProfilePage.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 
 class MockUser extends Mock implements User{
