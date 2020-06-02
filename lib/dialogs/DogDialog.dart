@@ -69,7 +69,7 @@ class _DialogState extends State<DogDialog>{
     hintText: 'Breed*',
     border: new OutlineInputBorder(
     borderSide: new BorderSide(),
-    borderRadius: new BorderRadius.circular(20.0)
+    borderRadius: new BorderRadius.circular(20.0),
     )
     ),
     onChanged: (String value){breed = value;},

@@ -27,7 +27,6 @@ class _CustomLoaderState extends State<CustomLoader> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-          color: Colors.brown[100],
           child: Center(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,

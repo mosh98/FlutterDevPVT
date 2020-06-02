@@ -2,7 +2,6 @@ import 'Dog.dart';
 
 class User{
   final String username;
-  //String email;
   String dateOfBirth;
   String gender;
   String desc;

@@ -17,59 +17,52 @@ class ProfileViewer extends StatefulWidget{
     final User otherUser;
 }
 
-class ProfileState extends State<ProfileViewer>{
+class ProfileState extends State<ProfileViewer> {
 
-List<String> images = [ //TODO: DELETE AFTER FIXED PICTURES.
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-    'assets/pernilla.jpg',
-  ];
-
-Widget _loading = DefaultLoader();
-String profileImage;
-bool _loadingImage = false;
+  Widget _loading = DefaultLoader();
+  String profileImage;
+  bool _loadingImage = false;
 
 
   @override
-  void initState(){
+  void initState() {
     _getProfileImage();
     super.initState();
   }
 
-_getProfileImage() async{
-  String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
-  try{
-    final url = await http.get('https://dogsonfire.herokuapp.com/images/profiles/${widget.otherUser.userId}', headers:{'Authorization': 'Bearer $token'});
-    if(url.statusCode==200){
+  _getProfileImage() async {
+    String token = await AuthService().getCurrentFirebaseUser().then((value) =>
+        value.getIdToken().then((value) => value.token));
+    try {
+      final url = await http.get(
+          'https://dogsonfire.herokuapp.com/images/profiles/${widget.otherUser
+              .userId}', headers: {'Authorization': 'Bearer $token'});
+      if (url.statusCode == 200) {
+        setState(() {
+          profileImage = url.body;
+        });
+      }
       setState(() {
-        profileImage = url.body;
+        _loadingImage = false;
+      });
+    } catch (e) {
+      print(e);
+      setState(() {
+        _loadingImage = false;
       });
     }
-    setState(() {
-      _loadingImage = false;
-    });
-  }catch(e){
-    print(e);
-    setState(() {
-      _loadingImage = false;
-    });
   }
-}
 
-@override
-Widget build(BuildContext context) {
-  if(widget.otherUser == null || profileImage == null){
-    return _loading;
-  }else{
-    return _profile();
+  @override
+  Widget build(BuildContext context) {
+    if (widget.otherUser == null || profileImage == null) {
+      return _loading;
+    } else {
+      return _profile();
+    }
   }
-}
 
-  Widget _profile(){
-
+  Widget _profile() {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
@@ -77,15 +70,14 @@ Widget build(BuildContext context) {
         centerTitle: true,
         actions: <Widget>[
           FlatButton.icon(
-            onPressed: (){
-            },
+            onPressed: () {},
             icon: Icon(
               Icons.person_add,
               color: Colors.white,
             ),
             label: Text(
               'Add Friend',
-              style: TextStyle(color:Colors.white),
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -96,23 +88,21 @@ Widget build(BuildContext context) {
           _headerSection(),
 
           _infoSection(),
-
-          _pictureSection(),
         ],
       ),
     );
   }
 
-  Widget _headerSection(){
+  Widget _headerSection() {
     return Expanded(
-      flex: 2,
+      flex: 3,
       child: Container(
         padding: EdgeInsets.all(10.0),
         child: Row(
           children: <Widget>[
             Container(
-                height:100,
-                width:100,
+                height: 100,
+                width: 100,
                 child:
                 ClipRRect(
                     borderRadius: BorderRadius.circular(10000.0),
@@ -122,7 +112,11 @@ Widget build(BuildContext context) {
                     CachedNetworkImage(
                         imageUrl: profileImage,
                         placeholder: (context, url) => DefaultLoader(),
-                        errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.person, color: Colors.white, size: 60,), backgroundColor:Colors.grey))
+                        errorWidget: (context, url, error) =>
+                            CircleAvatar(radius: 60,
+                                child: Icon(
+                                  Icons.person, color: Colors.white, size: 60,),
+                                backgroundColor: Colors.grey))
                 )
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
@@ -133,73 +127,47 @@ Widget build(BuildContext context) {
     );
   }
 
-Widget _infoSection(){
-  return Expanded(
-      flex: 6,
-      child: Container(
-        padding: EdgeInsets.all(15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text('About', style: TextStyle(fontSize: 16)),
-            Padding(padding: EdgeInsets.only(top:10),),
-            Text(widget.otherUser.desc ?? ''),
-            Padding(padding: EdgeInsets.only(top:10),),
-            Row(
-              children: <Widget>[
-                Text(widget.otherUser.username + 's dogs:', style: TextStyle(fontSize: 17)),
-              ],
-            ),
-            _dogSection()
-          ],
-        ),
-      )
-  );
-}
-
-Widget _dogSection(){
-  return Expanded(
-    flex: 12,
-    child: ListView.builder(
-      itemCount: widget.otherUser.dogs.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-            leading: Icon(Icons.pets),
-            title: Text(widget.otherUser.dogs[index]['name']),
-            //TODO: IMAGE URL
-            onTap: (){
-              Dog dog = Dog.fromJson(widget.otherUser.dogs[index]);
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfileViewer(dog:dog))); //TODO: NEED TO CHANGE
-            });
-      },
-    ),
-  );
-}
-
-  Widget _pictureSection(){
+  Widget _infoSection() {
     return Expanded(
-      flex: 2,
-      child: GridView.builder(
-        scrollDirection: Axis.vertical,
-        itemCount: images.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-        ),
-        itemBuilder: (context, index) {
-          return (
-              GestureDetector(
-              onTap: () 
-                async {
-              await showDialog(
-                context: context,
-                builder: (_) => ImageDialog()
-              );
-              },
-              child: Image(
-              image: AssetImage(images[index]),
+        flex: 7,
+        child: Container(
+          padding: EdgeInsets.all(15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('About', style: TextStyle(fontSize: 16)),
+              Padding(padding: EdgeInsets.only(top: 10),),
+              Text(widget.otherUser.desc ?? ''),
+              Padding(padding: EdgeInsets.only(top: 10),),
+              Row(
+                children: <Widget>[
+                  Text(widget.otherUser.username + 's dogs:',
+                      style: TextStyle(fontSize: 17)),
+                ],
+              ),
+              _dogSection()
+            ],
           ),
-          )
-          );
+        )
+    );
+  }
+
+  Widget _dogSection() {
+    return Expanded(
+      flex: 7,
+      child: ListView.builder(
+        itemCount: widget.otherUser.dogs.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+              leading: Icon(Icons.pets),
+              title: Text(widget.otherUser.dogs[index]['name']),
+              //TODO: IMAGE URL
+              onTap: () {
+                Dog dog = Dog.fromJson(widget.otherUser.dogs[index]);
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) =>
+                        DogProfileViewer(dog: dog))); //TODO: NEED TO CHANGE
+              });
         },
       ),
     );
