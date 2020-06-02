@@ -7,19 +7,13 @@ class MessageTile extends StatelessWidget {
   String latestMessage;
   String time;
 
-  MessageTile(
-      String profileImage, String name, String latestMessage, String time) {
-    this.profileImage = profileImage;
-    this.name = name;
-    this.latestMessage = latestMessage;
-    this.time = time;
-  }
+  MessageTile({
+      String profileImage, String name, String latestMessage, String time});
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      onTap: (){ //Navigator.push(context, MaterialPageRoute(builder: (context) => NewMessage()));
-
+      onTap: (){
         Navigator.push(context, MaterialPageRoute(builder: (context) => MessengerHandler() ));
      },
         leading: CircleAvatar(
@@ -37,19 +31,4 @@ class MessageTile extends StatelessWidget {
         ),
         trailing: Text(time));
   }
-}
-
-class MessageTileData {
-  MessageTileData(
-      String profileImage, String name, String latestMessage, String time) {
-    this.profileImage = profileImage;
-    this.name = name;
-    this.latestMessage = latestMessage;
-    this.time = time;
-  }
-
-  String profileImage;
-  String name;
-  String latestMessage;
-  String time;
 }

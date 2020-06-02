@@ -10,49 +10,44 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 
-
-
-class MessengerHandler extends StatefulWidget{
+class MessengerHandler extends StatefulWidget {
   User user;
   User peer;
 
-
-  MessengerHandler({ this.user,this.peer,});
+  MessengerHandler({
+    this.user,
+    this.peer,
+  });
 
 //  print("user: "+ user.toString()+" peer: "+ peer.toString());
 
   @override
-  _Messenger createState() => _Messenger(user: this.user,peer: this.peer);
-
-
-
+  _Messenger createState() => _Messenger(user: this.user, peer: this.peer);
 }
 
 class _Messenger extends State<MessengerHandler> {
-
   final databaseReference = Firestore.instance;
 
   FirebaseAuth auth = FirebaseAuth.instance;
   User user;
   User peer;
   String recipientToken;
+
   //String recipientUsername;
 
   final textController = TextEditingController();
   ScrollController scrollController = ScrollController();
 
-
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
 //  _Messenger(User user, User peer);
 
-  _Messenger({this.user,this.peer});
-
+  _Messenger({this.user, this.peer});
 
   @override
   void initState() {
-
     _firebaseMessaging.configure(
       onMessage: (Map<String, dynamic> message) async {
         print("onMessage: $message");
@@ -64,54 +59,51 @@ class _Messenger extends State<MessengerHandler> {
         print("onResume: $message");
       },
     );
-
-
   }
 
-  Future<TokenFcmJson> retireveRecipientToken(String username) async{
+  Future<TokenFcmJson> retireveRecipientToken(String username) async {
     //get https://fcm-token.herokuapp.com/user/getFcmByUsername?username=username
 
-    String link = 'https://fcm-token.herokuapp.com/user/getFcmByUsername?username='+ username;
+    String link =
+        'https://fcm-token.herokuapp.com/user/getFcmByUsername?username=' +
+            username;
     final response = await http.get(link);
 
-    if(response.statusCode == 200){
-      return  TokenFcmJson.fromJson(json.decode(response.body));
-    }else {
+    if (response.statusCode == 200) {
+      return TokenFcmJson.fromJson(json.decode(response.body));
+    } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
       throw Exception('Failed to load User');
     }
-
   }
+
   //final String recipient = peer.userId;//TODO: This is going to be the UID or username
 
-  Future<Map<String, dynamic>> sendAndRetrieveMessage(String body, String title) async {
+  Future<Map<String, dynamic>> sendAndRetrieveMessage(
+      String body, String title) async {
     await _firebaseMessaging.requestNotificationPermissions(
       const IosNotificationSettings(
           sound: true, badge: true, alert: true, provisional: false),
     );
 
+    Future<TokenFcmJson> jayZ = retireveRecipientToken(peer.username);
 
-         Future<TokenFcmJson> jayZ =  retireveRecipientToken(peer.username);
-
-      // update recipient token.
-       await jayZ.then((value) => recipientToken = value.fcmToken);
-        print(recipientToken);
+    // update recipient token.
+    await jayZ.then((value) => recipientToken = value.fcmToken);
+    print(recipientToken);
 
     await http.post(
       'https://fcm.googleapis.com/fcm/send',
       headers: <String, String>{
         'Content-Type': 'application/json',
-        'Authorization': 'key=AAAAfhwE_ps:APA91bGAiaPQ__s8EAcSqyX2oM4kAGsxuE3WXTm_FFQiHE6BbeIcKs2SGQwR4jOr6gCN9CCHwjRoFkcVuEj5aTEGPdllAKxQOfyb5AdQX7OV1TUGFEfxr-FHAgtcUqSuSpMDtEmuS6AX',
+        'Authorization':
+            'key=AAAAfhwE_ps:APA91bGAiaPQ__s8EAcSqyX2oM4kAGsxuE3WXTm_FFQiHE6BbeIcKs2SGQwR4jOr6gCN9CCHwjRoFkcVuEj5aTEGPdllAKxQOfyb5AdQX7OV1TUGFEfxr-FHAgtcUqSuSpMDtEmuS6AX',
         //authrization is the firebase CloudStore server key
       },
-
       body: jsonEncode(
         <String, dynamic>{
-          'notification': <String, dynamic>{
-            'body': '$body',
-            'title': '$title'
-          },
+          'notification': <String, dynamic>{'body': '$body', 'title': '$title'},
           'priority': 'high',
           'data': <String, dynamic>{
             'click_action': 'FLUTTER_NOTIFICATION_CLICK',
@@ -124,8 +116,7 @@ class _Messenger extends State<MessengerHandler> {
     );
   }
 
-  void _onSendMessage(String content, String uid, String peerUid) {
-
+  void _onSendMessage(String content) {
     String senderToken;
     _firebaseMessaging.getToken().then((value) => senderToken = value);
 
@@ -138,9 +129,22 @@ class _Messenger extends State<MessengerHandler> {
         .collection('messages')
         .document()
         .setData({
-      'from': peer.username,
+      'from': user.username,
       'text': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
+      //'senderToken': senderToken
+    });
+
+    Firestore.instance
+        .collection('users')
+        .document(user.userId)
+        .collection('chats')
+        .document(peer.userId)
+        .setData({
+      'latestMessage': content,
+      'timestamp': DateTime.now().toIso8601String().toString(),
+      'username':peer.username,
+      'uid': peer.userId,
       //'senderToken': senderToken
     });
 
@@ -155,16 +159,24 @@ class _Messenger extends State<MessengerHandler> {
         .setData({
       'from': user.username,
       'text': content,
+      'timestamp': DateTime.now().toIso8601String().toString()
+    });
+
+    Firestore.instance
+        .collection('users')
+        .document(peer.userId)
+        .collection('chats')
+        .document(user.userId)
+        .setData({
+      'latestMessage': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
-      'senderToken': senderToken
+      'username':peer.username,
+      'uid': peer.userId,
     });
 
     String nameOfSender = peer.getName(); //This will be the name of this user
     sendAndRetrieveMessage(content, nameOfSender);
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +188,6 @@ class _Messenger extends State<MessengerHandler> {
             title: Text('Chat window'),
           ),
           body: SafeArea(
-
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -184,10 +195,14 @@ class _Messenger extends State<MessengerHandler> {
                   flex: 10,
                   child: StreamBuilder(
                     stream: Firestore.instance
-                        .collection('users').document(user.userId).collection('chats').document(peer.userId).collection('messages').orderBy('timestamp')
-                       // .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
+                        .collection('users')
+                        .document(user.userId)
+                        .collection('chats')
+                        .document(peer.userId)
+                        .collection('messages')
+                        .orderBy('timestamp')
+                        // .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
                         .snapshots(),
-
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) return Text('Data is coming');
 
@@ -195,27 +210,25 @@ class _Messenger extends State<MessengerHandler> {
                       //get the recipient token
                       //recipientToken = docs.elementAt(docs.length).,
 
-                     // docs.map((e) => recipientToken = e.data['senderToken']);
+                      // docs.map((e) => recipientToken = e.data['senderToken']);
 
-                      List<Widget> messages = docs.map((doc) =>
-
-
-                          Message(
-                            message: doc.data['text'],
-                            timeStamp: doc.data['timestamp'],
-                            nameUser: doc.data['from'],
-                            token: doc.data['senderToken'],
-                          ),
-                      ).toList();
+                      List<Widget> messages = docs
+                          .map(
+                            (doc) => Message(
+                              message: doc.data['text'],
+                              timeStamp: doc.data['timestamp'],
+                              nameUser: doc.data['from'],
+                              token: doc.data['senderToken'],
+                            ),
+                          )
+                          .toList();
 
                       return ListView(
-
                         controller: scrollController,
                         children: <Widget>[
                           ...messages,
                         ],
                       );
-
                     },
                   ),
                 ),
@@ -227,9 +240,13 @@ class _Messenger extends State<MessengerHandler> {
                         hintText: "Skicka ett meddelande",
                         suffixIcon: IconButton(
                           onPressed: () {
-                            _onSendMessage(textController.text, "b2YxBTdWCTTbxSb6lSvJyskuyN22","ZPdRVUxgUzeMozR6Z6WAhqV13ZZ2");
+                            _onSendMessage(
+                                textController.text,);
                             textController.clear();
-                            scrollController.animateTo(scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 100), curve: Curves.easeOut);
+                            scrollController.animateTo(
+                                scrollController.position.maxScrollExtent,
+                                duration: const Duration(milliseconds: 100),
+                                curve: Curves.easeOut);
                           },
                           icon: Icon(
                             Icons.send,
@@ -246,7 +263,6 @@ class _Messenger extends State<MessengerHandler> {
         ));
   }
 
-
 //  @override
 //  State<StatefulWidget> createState() {
 //    // TODO: implement createState
@@ -255,21 +271,18 @@ class _Messenger extends State<MessengerHandler> {
 }
 
 class Message extends StatelessWidget {
-
   final String message;
   final String timeStamp;
   final String nameUser;
   final String token;
   final bool self = true;
 
-  const Message({Key key, this.message, this.timeStamp, this.nameUser, this.token})
+  const Message(
+      {Key key, this.message, this.timeStamp, this.nameUser, this.token})
       : super(key: key);
-
-
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0),
       child: Column(
@@ -294,12 +307,10 @@ class Message extends StatelessWidget {
 }
 
 class TokenFcmJson {
-
   int id;
   String username;
   String email;
   String fcmToken;
-
 
   TokenFcmJson({this.id, this.username, this.email, this.fcmToken});
 
@@ -307,9 +318,7 @@ class TokenFcmJson {
       id: json['id'],
       username: json['username'],
       email: json['email'],
-      fcmToken: json['fcmToken']
-    );
-
+      fcmToken: json['fcmToken']);
 }
 
 //  @override
