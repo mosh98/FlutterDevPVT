@@ -91,7 +91,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
 
-    bool _buttonRemoveMarkerActive= false;
+
 
     // Huvudknapparnas sida ska vara 15% av skärmens bredd
     double _buttonSideFactor = 0.15;
@@ -166,10 +166,7 @@ class _MainScreenState extends State<MainScreen> {
                                     padding: EdgeInsets.all(10),
                                     child: _buttonFindMyLocation(),
                                 ),
-                                Container(
-                                    padding: EdgeInsets.all(10),
-                                    child: _buttonRemoveMarker(),
-                                ),
+
                             ],
                         ),
                     ),
@@ -255,6 +252,10 @@ class _MainScreenState extends State<MainScreen> {
         }
     }
 
+
+
+
+
     Widget _buttonSearchDogParks() {
         return Container(
             width: _buttonSideLength,
@@ -297,15 +298,28 @@ class _MainScreenState extends State<MainScreen> {
 
 
     Widget _buttonSetSearchMarker() {
+
+
+        Color buttonColor = _buttonBackgroundColor;
+        if (SEARCH_LOCATION_LATLNG != null) {
+            buttonColor = Colors.redAccent;
+        } else {
+            if (_buttonSetSearchMarkerPressed == true) {
+                buttonColor = Colors.green;
+            }
+        }
+
+
+
+
+
         double iconSize = _buttonSideLength * 0.7;
         return Container(
             width: _buttonSideLength,
             height: _buttonSideLength,
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                color: (_buttonSetSearchMarkerPressed == false)
-                    ? _buttonBackgroundColor
-                    : Colors.green,
+                color: buttonColor,
                 border: Border.all(color: Colors.black),
             ),
             child: IconButton(
@@ -317,7 +331,20 @@ class _MainScreenState extends State<MainScreen> {
 
     void _onPressedButtonSetSearchMarker() {
         setState(() {
-            _buttonSetSearchMarkerPressed = !_buttonSetSearchMarkerPressed;
+            if (SEARCH_LOCATION_LATLNG != null) {
+                _buttonSetSearchMarkerPressed = false;
+                _allMapMarkers.remove(
+                    SEARCH_LOCATION_MARKER);
+                SEARCH_LOCATION_MARKER = null;
+                SEARCH_LOCATION_LATLNG = null;
+                if (CURRENT_LOCATION_LATLNG != null) {
+                    setCameraPosition(CURRENT_LOCATION_LATLNG, 15);
+                }
+
+
+            } else {
+                _buttonSetSearchMarkerPressed = !_buttonSetSearchMarkerPressed;
+            }
         });
     }
 
@@ -364,29 +391,6 @@ class _MainScreenState extends State<MainScreen> {
         });
     }
 
-    Widget _buttonRemoveMarker() {
-        double iconSize = _buttonSideLength * 0.7;
-
-        return Container(
-            width: _buttonSideLength,
-            height: _buttonSideLength,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: (_buttonRemoveMarkerActive == false) ? _buttonBackgroundColor : Colors.redAccent,
-                border: Border.all(color: Colors.black),
-            ),
-            child: IconButton(
-                iconSize: iconSize,
-                icon: Icon(Icons.clear),
-                onPressed: _buttonRemoveMarkerPressed,
-            ));
-    }
-
-    void _buttonRemoveMarkerPressed() {
-        setState(()  {
-            _buttonRemoveMarkerActive = !_buttonRemoveMarkerActive;
-        });
-    }
 
 
 
@@ -512,15 +516,7 @@ class _MainScreenState extends State<MainScreen> {
                     if (tempBins[i].distance <= WASTEBINS_SEARCH_DISTANCE) {
                         tempBins[i].marker = Marker(
                             markerId: MarkerId('wastebin_id_$i'),
-                            onTap: () {
-                                if (_buttonRemoveMarkerActive == true) {
-                                    setState(() {
-                                        WASTEBINS.remove(tempBins[i]);
-                                        _allMapMarkers.remove(tempBins[i].marker );
-                                    });
-                                    setCameraPosition(SELECTED_SEARCH_LOCATION, 15);
-                                }
-                            },
+
                             infoWindow: InfoWindow(
                                 title: 'Papperskorg',
                                 snippet: tempBins[i].distance.toInt()
@@ -662,17 +658,9 @@ class _MainScreenState extends State<MainScreen> {
                             icon: DOGPARK_MARKER_ICON,
                      
                             onTap: () {
-                                if (_buttonRemoveMarkerActive == true) {
-                                    setState(() {
-                                        DOGPARKS.remove(allDogsParks[i]);
 
-                                        _allMapMarkers.remove(allDogsParks[i].marker );
-
-                                        setCameraPosition(SELECTED_SEARCH_LOCATION, 15);
-                                    });
-                                } else {
                                     _dogparkMarkerTapped(allDogsParks[i]);
-                                }
+
                             },
 
                         );
