@@ -136,8 +136,6 @@ class _Messenger extends State<MessengerHandler> {
       const IosNotificationSettings(
           sound: true, badge: true, alert: true, provisional: false),
     );
-
-
          Future<TokenFcmJson> jayZ =  retireveRecipientToken(peer.username);
 
       // update recipient token.
@@ -228,8 +226,8 @@ class _Messenger extends State<MessengerHandler> {
       'uid': user.userId,
     });
 
-    String nameOfSender = peer.getName(); //This will be the name of this user
-    sendAndRetrieveMessage(content, nameOfSender);
+    String nameOfSender = user.getName(); //This will be the name of this user
+    sendAndRetrieveMessage( content, nameOfSender);
   }
 
 
