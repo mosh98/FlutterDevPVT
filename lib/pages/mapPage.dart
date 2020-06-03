@@ -91,6 +91,8 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
 
+    final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<
+        ScaffoldState>();
 
 
     // Huvudknapparnas sida ska vara 15% av skärmens bredd
@@ -132,6 +134,7 @@ class _MainScreenState extends State<MainScreen> {
             .width * _buttonSideFactor;
 
         return Scaffold(
+            key: _scaffoldKey,
             appBar: AppBar(
                 title: Text('Map'),
                 centerTitle: true,
@@ -226,7 +229,6 @@ class _MainScreenState extends State<MainScreen> {
                                                     SEARCH_LOCATION_MARKER);
                                                 SEARCH_LOCATION_MARKER = null;
                                                 SEARCH_LOCATION_LATLNG = null;
-
                                             });
                                             Navigator.of(context).pop();
                                         },
@@ -251,9 +253,6 @@ class _MainScreenState extends State<MainScreen> {
             showMarkerInfo(SEARCH_LOCATION_MARKER);
         }
     }
-
-
-
 
 
     Widget _buttonSearchDogParks() {
@@ -298,8 +297,6 @@ class _MainScreenState extends State<MainScreen> {
 
 
     Widget _buttonSetSearchMarker() {
-
-
         Color buttonColor = _buttonBackgroundColor;
         if (SEARCH_LOCATION_LATLNG != null) {
             buttonColor = Colors.redAccent;
@@ -308,9 +305,6 @@ class _MainScreenState extends State<MainScreen> {
                 buttonColor = Colors.green;
             }
         }
-
-
-
 
 
         double iconSize = _buttonSideLength * 0.7;
@@ -340,8 +334,6 @@ class _MainScreenState extends State<MainScreen> {
                 if (CURRENT_LOCATION_LATLNG != null) {
                     setCameraPosition(CURRENT_LOCATION_LATLNG, 15);
                 }
-
-
             } else {
                 _buttonSetSearchMarkerPressed = !_buttonSetSearchMarkerPressed;
             }
@@ -392,11 +384,6 @@ class _MainScreenState extends State<MainScreen> {
     }
 
 
-
-
-
-
-
     @override
     void initState() {
         PRINT_DEBUG("_MainScreenState initState");
@@ -442,6 +429,26 @@ class _MainScreenState extends State<MainScreen> {
 
 
     void _searchForWasteBins() async {
+        String token;
+        await AuthService().getCurrentFirebaseUser().then(
+                (firebaseUser) {
+                if (firebaseUser != null) {
+                    firebaseUser.getIdToken().then((value) =>
+                    token = value.token);
+                } else {
+
+                        _scaffoldKey.currentState
+                            .showSnackBar(
+                            SnackBar(content: Text(
+                                "Logga in för att söka efter papperskorgar!")));
+                        return;
+
+                }
+            });
+
+
+
+
         bool search = await showDialog<bool>(
             context: context,
             builder: (context) => SearchWasteBinsSettingsDialog(),
@@ -470,11 +477,6 @@ class _MainScreenState extends State<MainScreen> {
             });
 
 
-            String token;
-            await AuthService().getCurrentFirebaseUser().then(
-                    (value) =>
-                    value.getIdToken().then((value) => token = value.token));
-
             String lat = SELECTED_SEARCH_LOCATION.latitude.toString();
             String lon = SELECTED_SEARCH_LOCATION.longitude.toString();
 
@@ -496,8 +498,10 @@ class _MainScreenState extends State<MainScreen> {
                 for (int i = 0; i < allBins.length; i++) {
                     WasteBin temp = WasteBin.fromJson(allBins[i]);
                     temp.distance =
-                        getDistanceBetween(SELECTED_SEARCH_LOCATION.latitude,
-                            SELECTED_SEARCH_LOCATION.longitude, temp.latitude,
+                        getDistanceBetween(
+                            SELECTED_SEARCH_LOCATION.latitude,
+                            SELECTED_SEARCH_LOCATION.longitude,
+                            temp.latitude,
                             temp.longitude);
                     tempBins.add(temp);
                 }
@@ -524,25 +528,26 @@ class _MainScreenState extends State<MainScreen> {
                                     " m"),
                             icon: WASTEBIN_MARKER_ICON,
                             position: LatLng(
-                                tempBins[i].latitude, tempBins[i].longitude),
+                                tempBins[i].latitude,
+                                tempBins[i].longitude),
                         );
                         WASTEBINS.add(tempBins[i]);
                         _allMapMarkers.add(tempBins[i].marker);
                     }
                 }
             } else {
-                Scaffold.of(context).showSnackBar(
+                _scaffoldKey.currentState.showSnackBar(
                     SnackBar(content: Text("Oops! Något gick fel")));
             }
 
 
-            Scaffold.of(context)
+            _scaffoldKey.currentState
                 .showSnackBar(
                 SnackBar(content: Text(
                     "Hittade " + WASTEBINS.length.toString() + " st.")));
 
             setCameraPosition(SELECTED_SEARCH_LOCATION, 15);
-        } else {}
+        }
         setState(() {
             _isSearching = false;
         });
@@ -652,15 +657,13 @@ class _MainScreenState extends State<MainScreen> {
                                     allDogsParks[i].distance.toInt()
                                         .toString() +
                                     " m",
-                               ),
+                            ),
                             position: LatLng(allDogsParks[i].latitude,
                                 allDogsParks[i].longitude),
                             icon: DOGPARK_MARKER_ICON,
-                     
+
                             onTap: () {
-
-                                    _dogparkMarkerTapped(allDogsParks[i]);
-
+                                _dogparkMarkerTapped(allDogsParks[i]);
                             },
 
                         );
@@ -670,18 +673,21 @@ class _MainScreenState extends State<MainScreen> {
                     }
                 }
             } else {
-                Scaffold.of(context).showSnackBar(
+                _scaffoldKey.currentState
+                    .showSnackBar(
                     SnackBar(content: Text("Oops! Något gick fel")));
             }
 
 
-            Scaffold.of(context)
+            _scaffoldKey.currentState
                 .showSnackBar(
                 SnackBar(content: Text(
                     "Hittade " + DOGPARKS.length.toString() + " st.")));
 
             setCameraPosition(SELECTED_SEARCH_LOCATION, 15);
-        } else {}
+        } else {
+
+        }
 
         setState(() {
             _isSearching = false;
@@ -954,7 +960,6 @@ class SearchWasteBinsSettingsDialogState
 }
 
 
-
 class ReviewPage extends StatefulWidget {
     final DogPark selectedDogPark;
 
@@ -980,7 +985,6 @@ class ReviewPageState extends State<ReviewPage> {
         PRINT_DEBUG("ReviewPageState initState");
 
 
-
         super.initState();
 
         _onEnter();
@@ -988,14 +992,11 @@ class ReviewPageState extends State<ReviewPage> {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
 
         });
-
-
-
     }
 
     void _onEnter() async {
         setState(() {
-_isLoading = true;
+            _isLoading = true;
         });
         PRINT_DEBUG("ReviewPageState _onEnter enter");
         PRINT_DEBUG("ReviewPageState _getImageURLs start");
@@ -1019,10 +1020,7 @@ _isLoading = true;
         PRINT_DEBUG("_getReviews Enter");
 
 
-
         try {
-
-
             final int id = widget.selectedDogPark.id;
             final String url = "https://dog-park-micro.herokuapp.com/api/v1/review/id/$id";
 
@@ -1039,18 +1037,15 @@ _isLoading = true;
                     Review tempReview = Review.fromJson(decodedJson[i]);
                     widget.selectedDogPark.reviews.add(tempReview);
                 }
-
             }
             PRINT_DEBUG("_getReviews klar med nedladdning: $url");
-
         } catch (error) {
             PRINT_DEBUG("_getReviews error: " + error.toString());
-
         }
-        PRINT_DEBUG("_getReviews uppdaterar rating för id: " + widget.selectedDogPark.id.toString());
+        PRINT_DEBUG("_getReviews uppdaterar rating för id: " +
+            widget.selectedDogPark.id.toString());
 
         widget.selectedDogPark.updateRating();
-
 
 
         PRINT_DEBUG("_getReviews Return");
@@ -1090,13 +1085,13 @@ _isLoading = true;
     }
 
     Future<void> _uploadImage() async {
-		PRINT_DEBUG("_uploadImage Enter");
+        PRINT_DEBUG("_uploadImage Enter");
 
         int _dogParkID = widget.selectedDogPark.id;
 
         final String url = 'https://dog-park-micro.herokuapp.com/image/addImage?id=$_dogParkID';
 
-		PRINT_DEBUG("_uploadImage Backend URL: $url");
+        PRINT_DEBUG("_uploadImage Backend URL: $url");
 
         var tempImage = await ImagePicker.pickImage(
             source: ImageSource.gallery);
@@ -1109,26 +1104,21 @@ _isLoading = true;
 
         request.files.add(multipartFile);
 
-		PRINT_DEBUG("_uploadImage startar uppladdning av bild");
+        PRINT_DEBUG("_uploadImage startar uppladdning av bild");
 
         await request.send().then((response) async {
             response.stream.transform(utf8.decoder).listen((value) {
-				PRINT_DEBUG("_uploadImage klar med uppladdning av bild");
-
+                PRINT_DEBUG("_uploadImage klar med uppladdning av bild");
             });
         }).catchError((e) {
-			PRINT_DEBUG("ERROR _uploadImage: " + e.toString());
-
-		});
+            PRINT_DEBUG("ERROR _uploadImage: " + e.toString());
+        });
 
         await _getImageURLs();
 
 
-
-
-		PRINT_DEBUG("_uploadImage Return");
-
-	}
+        PRINT_DEBUG("_uploadImage Return");
+    }
 
 
     @override
@@ -1223,10 +1213,12 @@ _isLoading = true;
                                             : Icon(
                                             Icons.star_border,
                                             color: Colors.orange),
-                                        Text(widget.selectedDogPark.rating.toStringAsFixed(1)
+                                        Text(widget.selectedDogPark.rating
+                                            .toStringAsFixed(1)
                                             .toString()),
                                         Text(
-                                            "(" + widget.selectedDogPark.reviews.length.toString() +
+                                            "(" + widget.selectedDogPark.reviews
+                                                .length.toString() +
                                                 " st)"),
                                     ],
 
@@ -1251,7 +1243,7 @@ _isLoading = true;
                                         child: Text('Ladda upp en bild!'),
                                         onPressed: () async {
                                             setState(() {
-                                              _isLoading = true;
+                                                _isLoading = true;
                                             });
 
                                             await _uploadImage();
@@ -1278,14 +1270,11 @@ _isLoading = true;
                                                         selectedDogPark: widget
                                                             .selectedDogPark)))
                                                 .then((_) {
+                                                _getReviews().then((_) {
+                                                    setState(() {
 
-                                                    _getReviews().then((_) {
-                                                       setState(() {
-
-                                                       });
                                                     });
-
-
+                                                });
                                             });
                                         },
                                     ),
@@ -1371,44 +1360,53 @@ _isLoading = true;
                     Row(
                         children: <Widget>[
                             Row(children: <Widget>[
-                                (widget.selectedDogPark.reviews[index].rating >= 1)
+                                (widget.selectedDogPark.reviews[index].rating >=
+                                    1)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                (widget.selectedDogPark.reviews[index].rating >= 2)
+                                (widget.selectedDogPark.reviews[index].rating >=
+                                    2)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                (widget.selectedDogPark.reviews[index].rating >= 3)
+                                (widget.selectedDogPark.reviews[index].rating >=
+                                    3)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                (widget.selectedDogPark.reviews[index].rating >= 4)
+                                (widget.selectedDogPark.reviews[index].rating >=
+                                    4)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                (widget.selectedDogPark.reviews[index].rating >= 5)
+                                (widget.selectedDogPark.reviews[index].rating >=
+                                    5)
                                     ? Icon(
                                     Icons.star, color: Colors.orange)
                                     : Icon(
                                     Icons.star_border,
                                     color: Colors.orange),
-                                Text(widget.selectedDogPark.reviews[index].rating.toString()),
+                                Text(
+                                    widget.selectedDogPark.reviews[index].rating
+                                        .toString()),
                             ]),
                             Expanded(
                                 child:
 
                                 ListTile(
 
-                                    title: Text(widget.selectedDogPark.reviews[index].comment),
+                                    title: Text(
+                                        widget.selectedDogPark.reviews[index]
+                                            .comment),
                                 ),
                             )
                         ],
@@ -1607,7 +1605,6 @@ class RatingPageState extends State<RatingPage> {
     }
 
     void _saveComment(String str, int rating) async {
-
         PRINT_DEBUG("_saveComment Enter");
         setState(() {
             _isSaving = true;
@@ -1629,9 +1626,9 @@ class RatingPageState extends State<RatingPage> {
 
         if (response.statusCode == 200) {
             PRINT_DEBUG("_saveComment POST ok");
-
         } else {
-            PRINT_DEBUG("_saveComment: Något gick fel med post: " + response.statusCode.toString());
+            PRINT_DEBUG("_saveComment: Något gick fel med post: " +
+                response.statusCode.toString());
         }
 
         PRINT_DEBUG("_saveComment Return");
@@ -1758,9 +1755,6 @@ Future<BitmapDescriptor> createTextIcon(String textStr,
 }
 
 
-
-
-
 class WasteBin {
     double latitude;
     double longitude;
@@ -1785,8 +1779,6 @@ class WasteBin {
         return "WasteBin: $distance\t$latitude\t$longitude";
     }
 }
-
-
 
 
 class Review {
@@ -1823,7 +1815,9 @@ class DogPark {
     List<Review> reviews = new List<Review>();
     double rating = 0;
 
-    double getRating() { return rating; }
+    double getRating() {
+        return rating;
+    }
 
     double updateRating() {
         rating = 0;
