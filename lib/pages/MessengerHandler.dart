@@ -224,8 +224,8 @@ class _Messenger extends State<MessengerHandler> {
         .setData({
       'latestMessage': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
-      'username':peer.username,
-      'uid': peer.userId,
+      'username':user.username,
+      'uid': user.userId,
     });
 
     String nameOfSender = peer.getName(); //This will be the name of this user

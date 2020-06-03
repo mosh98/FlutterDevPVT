@@ -92,9 +92,7 @@ class Messages extends StatelessWidget {
                                   leading: CircleAvatar(
                                     radius: 30,
                                     backgroundColor: Colors.red[700],
-                                    child: CircleAvatar(
-                                        radius: 25,
-                                        backgroundImage: AssetImage('assets/pernilla.jpg')),
+                                    child: Icon(Icons.person),
                                   ),
                                 title: Text(doc.data['username']),
                                 subtitle: Text(doc.data['latestMessage']),
