@@ -71,10 +71,17 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
               _loadingImage == true ?
                   DefaultLoader()
               :
-              CachedNetworkImage(
-                  imageUrl: profileImage,
-                  placeholder: (context, url) => DefaultLoader(),
-                  errorWidget: (context, url, error) => CircleAvatar(radius: 40, child: Icon(Icons.image, color: Colors.white), backgroundColor:Colors.grey)),
+              Container(
+                height: 80,
+                width: 80,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10000.0),
+                  child: CachedNetworkImage(
+                      imageUrl: profileImage,
+                      placeholder: (context, url) => DefaultLoader(),
+                      errorWidget: (context, url, error) => CircleAvatar(radius: 40, child: Icon(Icons.image, color: Colors.white), backgroundColor:Colors.grey)),
+                ),
+              ),
               Padding(padding: EdgeInsets.only(top:25.0)),
             ],
         ),
