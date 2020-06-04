@@ -275,7 +275,6 @@ class _Messenger extends State<MessengerHandler> {
                               message: doc.data['text'],
                               timeStamp: doc.data['timestamp'],
                               nameUser: doc.data['from'],
-                              token: doc.data['senderToken'],
                             ),
                           )
                           .toList();
