@@ -76,6 +76,8 @@ class _RedirectState extends State<Redirect> {
   }
 
   _isRegisteredToDatabase() async{
-    return _registeredToDatabase = await AuthService().isRegisteredToDatabase();
+    _registeredToDatabase = await AuthService().isRegisteredToDatabase();
+    print(_registeredToDatabase);
+    return _registeredToDatabase;
   }
 }

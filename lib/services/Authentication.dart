@@ -158,7 +158,7 @@ class AuthService{
     bool isRegistered = false;
     String token = await _auth.currentUser().then((value) => value.getIdToken().then((value) => value.token));
     try{
-      final http.Response response = await http.post( //register to database
+      final http.Response response = await http.post(
           'https://dogsonfire.herokuapp.com/users/authenticate',
           headers:<String, String>{
             "Accept": "application/json",
@@ -168,6 +168,7 @@ class AuthService{
       );
 
       if(response.statusCode==200){
+        print('here');
         isRegistered = true;
       }else{
         isRegistered = false;

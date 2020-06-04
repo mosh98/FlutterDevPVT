@@ -10,33 +10,31 @@ class User{
   String photoUrl;
   String userId;
   final bucket;
+  final List<User> friends;
 
-  User({this.userId,this.username, this.dateOfBirth, this.gender, this.desc, this.createdDate, this.dogs, this.photoUrl, this.bucket});
+  User({this.userId,this.username, this.dateOfBirth, this.gender, this.desc, this.createdDate, this.dogs, this.photoUrl, this.bucket, this.friends});
 
   factory User.fromJson(Map<String, dynamic> json){
     return User(
       userId: json['userId'],
       username: json['username'],
-      //email: json['email'],
       gender: json['gender'],
       dateOfBirth: json['dateOfBirth'],
       desc: json['description'],
       createdDate: json['createdAt'],
       dogs: json['dogs'],
       photoUrl: json['photoUrl'],
-      bucket: json['bucket']
+      bucket: json['bucket'],
+      friends: _getFriends(json['friends']),
     );
   }
 
   String getName(){return username;}
-  //String getEmail(){return email;}
   String getDateOfBirth(){return dateOfBirth;}
   String getGender(){return gender;}
   String getDesc(){return desc;}
   String getCreatedDate(){return createdDate;}
-  List getDogs(){return dogs;}
-
-  //void setEmail(String email){this.email = email;}
+  List getDogs(List<dynamic> dogs){return dogs;}
 
   void setPhotoUrl(String photoUrl){this.photoUrl = photoUrl;}
 
@@ -47,6 +45,36 @@ class User{
   void setDateOfBirth(String dateOfBirth){this.dateOfBirth = dateOfBirth;}
 
   void addDog(Dog dog){dogs.add(dog);}
+
+  static List<User> _getFriends(List<dynamic> friends){
+    List<User> convertedFriends = List<User>();
+
+    if(friends == null || friends.isEmpty)
+      return convertedFriends;
+
+    friends.forEach((element) {
+      User friend = User.fromJson(element);
+      convertedFriends.add(friend);
+    });
+
+    return convertedFriends;
+  }
+
+  @override
+  bool operator ==(other) {
+    if(other is! User)
+      return false;
+    return userId == (other as User).userId;
+  }
+
+  int _hash;
+  @override
+  int get hashCode{
+    if(_hash == null){
+      _hash = userId.hashCode;
+    }
+    return _hash;
+  }
 
   @override
   String toString() {
