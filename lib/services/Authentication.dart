@@ -130,9 +130,49 @@ class AuthService{
     }
   }
 
+  Future<http.Response> createAndSaveToken(
+      String username, String email) async {
+    String token;
+    FirebaseMessaging Fcm = new FirebaseMessaging();
+
+    await Fcm.getToken().then((value) => token = value);
+
+    print("FCM TEKEN" + token);
+    try {
+      final http.Response response = await http.post(
+        'https://fcm-token.herokuapp.com/user/saveFcm',
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'username': username,
+          'email': email,
+          'fcmToken': token
+        }),
+      );
+      if (response.statusCode == 200) {
+        print(response.statusCode);
+      } else {
+        print(response.statusCode);
+        print(response.body);
+        return json.decode(response.body)['message'];
+      }
+    } catch (e) {
+      print("catch: " + e.message);
+      return null;
+    }
+  }
+
   addInformationToDatabase(String username, String dateOfBirth, String gender) async{
     try{
-      final http.Response response = await http.post( //register to database
+
+      String melj = await _auth.currentUser().then((value) => value.email);
+      print(melj);
+
+      //firebase cloud messaging token
+      dynamic zz = await createAndSaveToken(username, melj );
+
+        final http.Response response = await http.post( //register to database
           'https://dogsonfire.herokuapp.com/users/register',
           headers:<String, String>{
             "Accept": "application/json",
@@ -155,6 +195,12 @@ class AuthService{
         print(response.body);
         return null;
       }
+
+
+
+
+
+
     }catch(e){
       print(e);
       return null;
