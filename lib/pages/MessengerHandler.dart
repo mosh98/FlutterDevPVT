@@ -17,9 +17,10 @@ class MessengerHandler extends StatefulWidget {
   User user;
   User peer;
 
-
-  MessengerHandler({ this.user,this.peer,});
-
+  MessengerHandler({
+    this.user,
+    this.peer,
+  });
 
   @override
   _Messenger createState() => _Messenger(user: this.user, peer: this.peer);
@@ -38,24 +39,24 @@ class _Messenger extends State<MessengerHandler> {
   final textController = TextEditingController();
   ScrollController scrollController = ScrollController();
 
-
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
 
 //  _Messenger(User user, User peer);
 
-  _Messenger({this.user,this.peer});
-
-
+  _Messenger({this.user, this.peer});
 
   void configLocalNotification() {
-    var initializationSettingsAndroid = new AndroidInitializationSettings('app_icon');
+    var initializationSettingsAndroid =
+    new AndroidInitializationSettings('app_icon');
     var initializationSettingsIOS = IOSInitializationSettings(
       requestSoundPermission: false,
       requestBadgePermission: false,
       requestAlertPermission: false,
     );
-    var initializationSettings = new InitializationSettings(initializationSettingsAndroid, initializationSettingsIOS);
+    var initializationSettings = new InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
@@ -66,30 +67,25 @@ class _Messenger extends State<MessengerHandler> {
 //    int id = 0
 //  }) => notifications.show(id, title, body, type);
 
-  void showNotification(message) async{
-
+  void showNotification(message) async {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'your channel id',
-        'your channel name',
-        'your channel description',
+        'your channel id', 'your channel name', 'your channel description',
         importance: Importance.Max,
         priority: Priority.High,
-        enableVibration: true
-    );
+        enableVibration: true);
 
     var iOSPlatformChannelSpecifics = IOSNotificationDetails();
 
     var platformChannelSpecifics = NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
 
-    await flutterLocalNotificationsPlugin.show(
-        0, message['title'].toString(), message['body'].toString(), platformChannelSpecifics,
+    await flutterLocalNotificationsPlugin.show(0, message['title'].toString(),
+        message['body'].toString(), platformChannelSpecifics,
         payload: json.encode(message));
   }
 
   @override
   void initState() {
-
     configLocalNotification();
 
     _firebaseMessaging.configure(
@@ -102,60 +98,54 @@ class _Messenger extends State<MessengerHandler> {
         //print("onLaunch: $message");
       },
       onResume: (Map<String, dynamic> message) async {
-         showNotification(message);
-       // print("onResume: $message");
+        showNotification(message);
+        // print("onResume: $message");
       },
     );
-
-
-
-
   }
 
-
-
-  Future<TokenFcmJson> retireveRecipientToken(String username) async{
+  Future<TokenFcmJson> retireveRecipientToken(String username) async {
     //get https://fcm-token.herokuapp.com/user/getFcmByUsername?username=username
 
-    String link = 'https://fcm-token.herokuapp.com/user/getFcmByUsername?username='+ username;
+    String link =
+        'https://fcm-token.herokuapp.com/user/getFcmByUsername?username=' +
+            username;
     final response = await http.get(link);
 
-    if(response.statusCode == 200){
-      return  TokenFcmJson.fromJson(json.decode(response.body));
-    }else {
+    if (response.statusCode == 200) {
+      return TokenFcmJson.fromJson(json.decode(response.body));
+    } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
       throw Exception('Failed to load User');
     }
-
   }
+
   //final String recipient = peer.userId;//TODO: This is going to be the UID or username
 
-  Future<Map<String, dynamic>> sendAndRetrieveMessage(String body, String title) async {
+  Future<Map<String, dynamic>> sendAndRetrieveMessage(String body,
+      String title) async {
     await _firebaseMessaging.requestNotificationPermissions(
       const IosNotificationSettings(
           sound: true, badge: true, alert: true, provisional: false),
     );
-         Future<TokenFcmJson> jayZ =  retireveRecipientToken(peer.username);
+    Future<TokenFcmJson> jayZ = retireveRecipientToken(peer.username);
 
-      // update recipient token.
-       await jayZ.then((value) => recipientToken = value.fcmToken);
-        print(recipientToken);
+    // update recipient token.
+    await jayZ.then((value) => recipientToken = value.fcmToken);
+    print(recipientToken);
 
     await http.post(
       'https://fcm.googleapis.com/fcm/send',
       headers: <String, String>{
         'Content-Type': 'application/json',
-        'Authorization': 'key=AAAAfhwE_ps:APA91bGAiaPQ__s8EAcSqyX2oM4kAGsxuE3WXTm_FFQiHE6BbeIcKs2SGQwR4jOr6gCN9CCHwjRoFkcVuEj5aTEGPdllAKxQOfyb5AdQX7OV1TUGFEfxr-FHAgtcUqSuSpMDtEmuS6AX',
+        'Authorization':
+        'key=AAAAfhwE_ps:APA91bGAiaPQ__s8EAcSqyX2oM4kAGsxuE3WXTm_FFQiHE6BbeIcKs2SGQwR4jOr6gCN9CCHwjRoFkcVuEj5aTEGPdllAKxQOfyb5AdQX7OV1TUGFEfxr-FHAgtcUqSuSpMDtEmuS6AX',
         //authrization is the firebase CloudStore server key
       },
-
       body: jsonEncode(
         <String, dynamic>{
-          'notification': <String, dynamic>{
-            'body': '$body',
-            'title': '$title'
-          },
+          'notification': <String, dynamic>{'body': '$body', 'title': '$title'},
           'priority': 'high',
           'data': <String, dynamic>{
             'click_action': 'FLUTTER_NOTIFICATION_CLICK',
@@ -195,7 +185,7 @@ class _Messenger extends State<MessengerHandler> {
         .setData({
       'latestMessage': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
-      'username':peer.username,
+      'username': peer.username,
       'uid': peer.userId,
       //'senderToken': senderToken
     });
@@ -222,16 +212,13 @@ class _Messenger extends State<MessengerHandler> {
         .setData({
       'latestMessage': content,
       'timestamp': DateTime.now().toIso8601String().toString(),
-      'username':user.username,
+      'username': user.username,
       'uid': user.userId,
     });
 
     String nameOfSender = user.getName(); //This will be the name of this user
-    sendAndRetrieveMessage( content, nameOfSender);
+    sendAndRetrieveMessage(content, nameOfSender);
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -240,10 +227,10 @@ class _Messenger extends State<MessengerHandler> {
         child: Scaffold(
           //resizeToAvoidBottomInset: true,
           appBar: AppBar(
-            title: Text('Chat window'),
+            title: Text('Chatting with ' + peer.username.substring(0,1).toUpperCase()+peer.username.substring(1)),
+            backgroundColor: Colors.grey[900],
           ),
           body: SafeArea(
-
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
@@ -257,9 +244,8 @@ class _Messenger extends State<MessengerHandler> {
                         .document(peer.userId)
                         .collection('messages')
                         .orderBy('timestamp')
-                        // .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
+                    // .collection('users').document('florp@norp.com').collection('chats').document(recipient).collection('messages').orderBy('timestamp')
                         .snapshots(),
-
                     builder: (context, snapshot) {
                       if (!snapshot.hasData) return Text('Data is coming');
 
@@ -271,23 +257,25 @@ class _Messenger extends State<MessengerHandler> {
 
                       List<Widget> messages = docs
                           .map(
-                            (doc) => Message(
+                            (doc) =>
+                            Message(
                               message: doc.data['text'],
                               timeStamp: doc.data['timestamp'],
                               nameUser: doc.data['from'],
                               token: doc.data['senderToken'],
+                              self: (doc.data['from'] == user.username)
+                                  ? true
+                                  : false,
                             ),
-                          )
+                      )
                           .toList();
 
                       return ListView(
-
                         controller: scrollController,
                         children: <Widget>[
                           ...messages,
                         ],
                       );
-
                     },
                   ),
                 ),
@@ -300,7 +288,8 @@ class _Messenger extends State<MessengerHandler> {
                         suffixIcon: IconButton(
                           onPressed: () {
                             _onSendMessage(
-                                textController.text,);
+                              textController.text,
+                            );
                             textController.clear();
                             scrollController.animateTo(
                                 scrollController.position.maxScrollExtent,
@@ -334,54 +323,76 @@ class Message extends StatelessWidget {
   final String timeStamp;
   final String nameUser;
   final String token;
-  final bool self = true;
+  final bool self;
 
-  const Message(
-      {Key key, this.message, this.timeStamp, this.nameUser, this.token})
+  const Message({Key key,
+    this.message,
+    this.timeStamp,
+    this.nameUser,
+    this.token,
+    this.self})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 15.0),
+      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
       child: Column(
-        crossAxisAlignment:
-            self ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(nameUser),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: <Widget>[
-              Text(timeStamp),
-              SizedBox(
-                height: 8.0,
-              ),
-              Text(message)
-            ],
-          )
-        ],
-      ),
+          crossAxisAlignment:
+          self ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          children: <Widget>[
+
+      Material(
+          color: self ? Colors.grey[800] : Colors.blue[700],
+          borderRadius: BorderRadius.circular(20.0),
+          child: Container(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 15.0),
+                child: Column(
+              crossAxisAlignment:
+              self ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                children: <Widget>[
+                  Text(nameUser.substring(0,1).toUpperCase()+nameUser.substring(1),style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w600)),
+                  Text(timeStamp.substring(0, 10) +
+                      " | " +
+                      timeStamp.substring(12, 16),style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w600)),
+
+                  SizedBox(
+                    height: 8.0,
+                  ),
+                  Text(message,style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w600))
+                ],
+              ))),
+    )],
+    )
+    ,
     );
   }
 }
 
 class TokenFcmJson {
-
   int id;
   String username;
   String email;
   String fcmToken;
 
-
   TokenFcmJson({this.id, this.username, this.email, this.fcmToken});
 
-  factory TokenFcmJson.fromJson(Map<String, dynamic> json) => TokenFcmJson(
-      id: json['id'],
-      username: json['username'],
-      email: json['email'],
-      fcmToken: json['fcmToken']
-    );
-
+  factory TokenFcmJson.fromJson(Map<String, dynamic> json) =>
+      TokenFcmJson(
+          id: json['id'],
+          username: json['username'],
+          email: json['email'],
+          fcmToken: json['fcmToken']);
 }
 
 //  @override

@@ -91,7 +91,6 @@ class Messages extends StatelessWidget {
                               (doc) => ListTile(
                                   leading: CircleAvatar(
                                     radius: 30,
-                                    backgroundColor: Colors.red[700],
                                     child: Icon(Icons.person),
                                   ),
                                 title: Text(doc.data['username']),
