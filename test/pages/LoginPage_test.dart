@@ -1,40 +1,56 @@
 import 'package:dog_prototype/pages/LoginPage.dart';
-import 'package:dog_prototype/pages/ProfilePage.dart';
-import 'package:dog_prototype/services/Authentication.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:rxdart/rxdart.dart';
 
 class MockNavigatorObserver extends Mock implements NavigatorObserver{}
 
-class MockAuthService extends Mock implements AuthService{}
+class MockFirebaseAuth extends Mock implements FirebaseAuth{}
+class MockFirebaseUser extends Mock implements FirebaseUser{}
+class MockAuthResult extends Mock implements AuthResult{}
+class MockAuthCredentials extends Mock implements AuthCredential{}
+class MockEmailAuthProvider extends Mock implements EmailAuthProvider{}
 
 void main(){
 
   group(
       "Tests of routing on login-page",
           (){
-        final mockObserver = MockNavigatorObserver();
+            MockFirebaseAuth _auth = MockFirebaseAuth();
+            BehaviorSubject<MockFirebaseUser> _user = BehaviorSubject<MockFirebaseUser>();
+            when(_auth.onAuthStateChanged).thenAnswer((_){
+              return _user;
+            });
 
-        testWidgets('Route: Sign-in -> ProfilePage', (WidgetTester tester) async{
-          await tester.pumpWidget(
-              MaterialApp(
-                home: LoginPage(),
-                navigatorObservers: [mockObserver],
-              )
-          );
+            when(_auth.signInWithEmailAndPassword(email: "email", password: "password")).
+            thenAnswer((_)async{
+              _user.add(MockFirebaseUser());
+              return MockAuthResult();
+            });
 
-          await tester.pumpAndSettle();
+            final mockObserver = MockNavigatorObserver();
 
-          Finder signInButton = find.byKey(Key('signIn'));
-          expect(signInButton, findsOneWidget);
+            testWidgets('Route: Sign-in -> ProfilePage', (WidgetTester tester) async{
+              await tester.pumpWidget(
+                  MaterialApp(
+                    home: LoginPage(),
+                    navigatorObservers: [mockObserver],
+                  )
+              );
 
-          await tester.tap(signInButton);
-          await tester.pumpAndSettle();
+              await tester.pumpAndSettle();
 
-          verify(mockObserver.didPush(any, any));
+              Finder signInButton = find.byKey(Key('signIn'));
+              expect(signInButton, findsOneWidget);
 
-          expect(find.byType(ProfilePage), findsOneWidget);
+              Finder emailField = find.byKey(Key('Email'));
+              expect(emailField, findsOneWidget);
+
+              Finder passwordField = find.byKey(Key('password'));
+              expect(passwordField, findsOneWidget);
+
         });
       }
   );
