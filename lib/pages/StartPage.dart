@@ -37,6 +37,7 @@ class StartPageState extends State<StatefulStartPage>{
   @override
   Widget build(BuildContext context) {
 
+
     if(fact == null){
       return DefaultLoader();
     }else{
@@ -82,6 +83,7 @@ class StartPageState extends State<StatefulStartPage>{
         child: Column(
           children: <Widget>[
             MaterialButton(
+              key: Key('login'),
               height: 40.0,
               minWidth: 250.0,
               color: Colors.black54,
@@ -97,6 +99,7 @@ class StartPageState extends State<StatefulStartPage>{
             ),
             Text('OR'),
             MaterialButton(
+                key: Key('viewmap'),
                 height: 40.0,
                 minWidth: 250.0,
                 color: Colors.black54,
@@ -114,6 +117,7 @@ class StartPageState extends State<StatefulStartPage>{
             Padding(
               padding: EdgeInsets.only(top:15),
               child: GestureDetector(
+                key: Key('register'),
                 child: Text(
                   "Don't have an account? Register here."
                 ),
@@ -135,6 +139,10 @@ class StartPageState extends State<StatefulStartPage>{
       Map<String,dynamic> f = json.decode(response.body);
       setState(() {
         fact = f['fact'];
+      });
+    }else{
+      setState(() {
+        fact = 'It seems like there are no random facts about dogs in this particular moment.';
       });
     }
   }

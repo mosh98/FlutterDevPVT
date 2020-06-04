@@ -1,4 +1,8 @@
+import 'package:dog_prototype/services/Authentication.dart';
+
 import 'Dog.dart';
+
+enum ProviderState{FacebookUser, EmailUser}
 
 class User{
   final String username;
@@ -12,7 +16,26 @@ class User{
   final bucket;
   final List<User> friends;
 
-  User({this.userId,this.username, this.dateOfBirth, this.gender, this.desc, this.createdDate, this.dogs, this.photoUrl, this.bucket, this.friends});
+  getProvider() async{
+    bool facebookUser = await AuthService().getProvider();
+    if(facebookUser)
+      return ProviderState.FacebookUser;
+    return ProviderState.EmailUser;
+  }
+
+  User({
+    this.userId,
+    this.username,
+    this.dateOfBirth,
+    this.gender,
+    this.desc,
+    this.createdDate,
+    this.dogs,
+    this.photoUrl,
+    this.bucket,
+    this.friends,
+  }
+    );
 
   factory User.fromJson(Map<String, dynamic> json){
     return User(

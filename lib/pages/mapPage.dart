@@ -154,19 +154,19 @@ class _MainScreenState extends State<MainScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: <Widget>[
                                 Container(
-                                    padding: EdgeInsets.all(10),
+                                    padding: EdgeInsets.all(5),
                                     child: _buttonSearchDogParks(),
                                 ),
                                 Container(
-                                    padding: EdgeInsets.all(10),
+                                    padding: EdgeInsets.all(5),
                                     child: _buttonSearchWasteBins(),
                                 ),
                                 Container(
-                                    padding: EdgeInsets.all(10),
+                                    padding: EdgeInsets.all(5),
                                     child: _buttonSetSearchMarker(),
                                 ),
                                 Container(
-                                    padding: EdgeInsets.all(10),
+                                    padding: EdgeInsets.all(5),
                                     child: _buttonFindMyLocation(),
                                 ),
 

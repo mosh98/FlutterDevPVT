@@ -24,6 +24,7 @@ class AuthService{
 
   //create user model
   Future<User> createUserModel(Future<IdTokenResult> token) async{
+    print('Inside AuthService method: createUserModel');
     try{
       String t = await token.then((value) => value.token);
 
@@ -34,8 +35,10 @@ class AuthService{
       });
 
       if(response.statusCode == 200){
+        print('Response: 200 statuscode');
         return User.fromJson(json.decode(utf8.decode(response.bodyBytes)));
       }else{
+        print('Response: ${response.statusCode.toString()} statuscode');
         print(response.statusCode);
         print(response.body);
         return null;
@@ -101,6 +104,7 @@ class AuthService{
       );
 
       if(result != null){
+        print('Correct credentials with facebook, signing in wiht firebase..');
         _signInToFBWithFirebase(result);
       }
     }catch(e){
@@ -112,7 +116,9 @@ class AuthService{
     try{
       final facebookAuthCred = FacebookAuthProvider.getCredential(accessToken:result);
       if(facebookAuthCred != null){
+        print('Succesfully got facebook credentials, signing in..');
         final res = await _auth.signInWithCredential(facebookAuthCred);
+        print('Succesfully signed in to firebase with facebook credentials, returning user..');
         return res.user;
       }else{
         print('something went wrong with facebook log in');
@@ -137,6 +143,7 @@ class AuthService{
             "username": username,
             "dateOfBirth": dateOfBirth,
             "gender": gender,
+            'email': await _auth.currentUser().then((value) => value.email)
           })
       );
 
@@ -168,13 +175,14 @@ class AuthService{
       );
 
       if(response.statusCode==200){
-        print('here');
         isRegistered = true;
+        print('Inside Authservice method: isRegisteredToDatabase, return from http was: $isRegistered');
       }else{
         isRegistered = false;
         print(response.statusCode);
         print(response.body);
       }
+      print('returning $isRegistered');
       return isRegistered;
     }catch(e){
       print(e);
@@ -205,7 +213,7 @@ class AuthService{
           'https://dogsonfire.herokuapp.com/users/register',
           headers:<String, String>{
             "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8', //ISO-8859-1
+            'Content-Type' : 'application/json; charset=UTF-8',
           },
           body: jsonEncode(<String,String>{
             "username": username,
@@ -273,7 +281,6 @@ class AuthService{
     }
   }
 
-  //get token
   Future<String> getToken() async{
     if(_auth.currentUser() != null){
       FirebaseUser user = await _auth.currentUser();
@@ -286,6 +293,20 @@ class AuthService{
   //GET CURRENT USER
   Future<FirebaseUser> getCurrentFirebaseUser() async{
     return await _auth.currentUser();
+  }
+
+  //check if current user is facebook user
+  Future<bool> isFacebookUser()async{
+    FirebaseUser user = await _auth.currentUser();
+    for (UserInfo uinfo in user.providerData) {
+      if(uinfo.providerId.toString().contains("facebook.com"))
+        return true;
+    }
+    return false;
+  }
+
+  getProvider()async{
+    return await isFacebookUser();
   }
 
 }

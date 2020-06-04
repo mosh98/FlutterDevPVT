@@ -39,8 +39,8 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _loadingProfile= true;
     });
-    _getProfileImage();
     _getFirebaseUser();
+    _getProfileImage();
 
     if (widget.user.gender == "UNKNOWN") {
       gender = "-";
@@ -300,7 +300,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     await showDialog(context: context,
                         barrierDismissible: false,
                         child: DeleteAccountDialog(
-                          context: context, scaffoldKey: _scaffoldKey,));
+                          context: context, scaffoldKey: _scaffoldKey, provider: await widget.user.getProvider(),
+                        )
+                    );
                   }
               ),
               ListTile(
@@ -468,7 +470,8 @@ class DeleteAccountDialog extends StatefulWidget {
 
   final BuildContext context;
   final scaffoldKey;
-  DeleteAccountDialog({this.context, this.scaffoldKey});
+  final ProviderState provider;
+  DeleteAccountDialog({this.context, this.scaffoldKey, this.provider});
 
   @override
   _DeleteAccountDialogState createState() => _DeleteAccountDialogState();
@@ -502,10 +505,10 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
                   style: TextStyle(fontSize: 17),
                 )
                     :
-                Text(
-                  'Enter your password to confirm account deletion:',
-                  style: TextStyle(fontSize: 17),
-                ),
+    Text(
+    'Enter your password to confirm account deletion:',
+    style: TextStyle(fontSize: 17),
+    ),
               ),
               if(state==DeleteAccountState.AuthenticatedConfirm)
                 TextField(
@@ -525,6 +528,10 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
                     trailing: RaisedButton(
                         child: Text('Yes'),
                         onPressed: (){
+                          if(widget.provider == ProviderState.FacebookUser){
+                            _deleteAccount();
+                            Navigator.pop(context);
+                          }
                           setState(() {
                             state = DeleteAccountState.AuthenticatedConfirm;
                           });
@@ -682,4 +689,3 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
     }
   }
 }
-

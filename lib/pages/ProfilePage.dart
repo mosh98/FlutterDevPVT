@@ -17,7 +17,8 @@ import 'package:http/http.dart' as http;
 class ProfilePage extends StatefulWidget{
 
   final User user;
-  ProfilePage({this.user});
+  final bool newState;
+  ProfilePage({this.user,this.newState});
 
 
   @override
