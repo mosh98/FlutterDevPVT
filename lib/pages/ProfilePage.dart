@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/dialogs/DogDialog.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
+import 'package:dog_prototype/pages/FriendPage.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,7 +17,8 @@ import 'package:http/http.dart' as http;
 class ProfilePage extends StatefulWidget{
 
   final User user;
-  ProfilePage({this.user});
+  final bool newState;
+  ProfilePage({this.user,this.newState});
 
 
   @override
@@ -129,6 +131,20 @@ class ProfileState extends State<ProfilePage>{
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
             Text(user.username, style: TextStyle(fontSize: 16),),
+            Spacer(),
+            FlatButton(
+                onPressed: (){
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user)));
+                },
+                child: Text(
+                  'Friends',
+                  style: TextStyle(
+                      fontSize: 18,
+                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.bold
+                  ),
+                )
+            ),
           ],
       ),
       ),

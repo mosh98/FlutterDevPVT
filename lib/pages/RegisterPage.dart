@@ -318,11 +318,6 @@ class MyCustomFormState extends State<MyCustomForm> {
     }
   }
 
-  void _signInWithFacebook() {
-    AuthService().signInWithFacebook(context);
-  }
-
-
 //  try {
 //  final http.Response response = await http.post( //register to database
 //  'https://dogsonfire.herokuapp.com/users/register',

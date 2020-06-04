@@ -69,7 +69,9 @@ class _Messenger extends State<MessengerHandler> {
 
   void showNotification(message) async {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'your channel id', 'your channel name', 'your channel description',
+        'your channel id',
+        'your channel name',
+        'your channel description',
         importance: Importance.Max,
         priority: Priority.High,
         enableVibration: true);

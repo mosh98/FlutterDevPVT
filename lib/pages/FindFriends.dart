@@ -363,7 +363,7 @@ class FindFriendsState extends State<FindFriends> {
           users[user] = image;
         }
       } else {
-        print('Failed to fetch username' + response.statusCode.toString());
+        print('Failed to fetch username. Response:' + response.statusCode.toString());
         print(response.body);
       }
 

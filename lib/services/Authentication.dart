@@ -24,6 +24,7 @@ class AuthService{
 
   //create user model
   Future<User> createUserModel(Future<IdTokenResult> token) async{
+    print('Inside AuthService method: createUserModel');
     try{
       String t = await token.then((value) => value.token);
 
@@ -34,8 +35,10 @@ class AuthService{
       });
 
       if(response.statusCode == 200){
+        print('Response: 200 statuscode');
         return User.fromJson(json.decode(utf8.decode(response.bodyBytes)));
       }else{
+        print('Response: ${response.statusCode.toString()} statuscode');
         print(response.statusCode);
         print(response.body);
         return null;
@@ -101,6 +104,7 @@ class AuthService{
       );
 
       if(result != null){
+        print('Correct credentials with facebook, signing in wiht firebase..');
         _signInToFBWithFirebase(result);
       }
     }catch(e){
@@ -112,7 +116,9 @@ class AuthService{
     try{
       final facebookAuthCred = FacebookAuthProvider.getCredential(accessToken:result);
       if(facebookAuthCred != null){
+        print('Succesfully got facebook credentials, signing in..');
         final res = await _auth.signInWithCredential(facebookAuthCred);
+        print('Succesfully signed in to firebase with facebook credentials, returning user..');
         return res.user;
       }else{
         print('something went wrong with facebook log in');
@@ -124,9 +130,49 @@ class AuthService{
     }
   }
 
+  Future<http.Response> createAndSaveToken(
+      String username, String email) async {
+    String token;
+    FirebaseMessaging Fcm = new FirebaseMessaging();
+
+    await Fcm.getToken().then((value) => token = value);
+
+    print("FCM TEKEN" + token);
+    try {
+      final http.Response response = await http.post(
+        'https://fcm-token.herokuapp.com/user/saveFcm',
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'username': username,
+          'email': email,
+          'fcmToken': token
+        }),
+      );
+      if (response.statusCode == 200) {
+        print(response.statusCode);
+      } else {
+        print(response.statusCode);
+        print(response.body);
+        return json.decode(response.body)['message'];
+      }
+    } catch (e) {
+      print("catch: " + e.message);
+      return null;
+    }
+  }
+
   addInformationToDatabase(String username, String dateOfBirth, String gender) async{
     try{
-      final http.Response response = await http.post( //register to database
+
+      String melj = await _auth.currentUser().then((value) => value.email);
+      print(melj);
+
+      //firebase cloud messaging token
+      dynamic zz = await createAndSaveToken(username, melj );
+
+        final http.Response response = await http.post( //register to database
           'https://dogsonfire.herokuapp.com/users/register',
           headers:<String, String>{
             "Accept": "application/json",
@@ -137,6 +183,7 @@ class AuthService{
             "username": username,
             "dateOfBirth": dateOfBirth,
             "gender": gender,
+            'email': await _auth.currentUser().then((value) => value.email)
           })
       );
 
@@ -148,6 +195,12 @@ class AuthService{
         print(response.body);
         return null;
       }
+
+
+
+
+
+
     }catch(e){
       print(e);
       return null;
@@ -158,7 +211,7 @@ class AuthService{
     bool isRegistered = false;
     String token = await _auth.currentUser().then((value) => value.getIdToken().then((value) => value.token));
     try{
-      final http.Response response = await http.post( //register to database
+      final http.Response response = await http.post(
           'https://dogsonfire.herokuapp.com/users/authenticate',
           headers:<String, String>{
             "Accept": "application/json",
@@ -169,11 +222,13 @@ class AuthService{
 
       if(response.statusCode==200){
         isRegistered = true;
+        print('Inside Authservice method: isRegisteredToDatabase, return from http was: $isRegistered');
       }else{
         isRegistered = false;
         print(response.statusCode);
         print(response.body);
       }
+      print('returning $isRegistered');
       return isRegistered;
     }catch(e){
       print(e);
@@ -204,7 +259,7 @@ class AuthService{
           'https://dogsonfire.herokuapp.com/users/register',
           headers:<String, String>{
             "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8', //ISO-8859-1
+            'Content-Type' : 'application/json; charset=UTF-8',
           },
           body: jsonEncode(<String,String>{
             "username": username,
@@ -272,7 +327,6 @@ class AuthService{
     }
   }
 
-  //get token
   Future<String> getToken() async{
     if(_auth.currentUser() != null){
       FirebaseUser user = await _auth.currentUser();
@@ -285,6 +339,20 @@ class AuthService{
   //GET CURRENT USER
   Future<FirebaseUser> getCurrentFirebaseUser() async{
     return await _auth.currentUser();
+  }
+
+  //check if current user is facebook user
+  Future<bool> isFacebookUser()async{
+    FirebaseUser user = await _auth.currentUser();
+    for (UserInfo uinfo in user.providerData) {
+      if(uinfo.providerId.toString().contains("facebook.com"))
+        return true;
+    }
+    return false;
+  }
+
+  getProvider()async{
+    return await isFacebookUser();
   }
 
 }

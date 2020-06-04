@@ -12,8 +12,6 @@ class BottomBar extends StatelessWidget {
     MapPage(),
     FindFriends(),
     Messages()
-
-
   ];
   @override
   Widget build(BuildContext context) {
@@ -28,7 +26,7 @@ class BottomBar extends StatelessWidget {
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.search),
-          title: Text('Search'),
+          title: Text('Find friends'),
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.message),

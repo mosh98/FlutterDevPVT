@@ -23,11 +23,27 @@ class ProfileState extends State<ProfileViewer> {
   String profileImage;
   bool _loadingImage = false;
 
+//
+  bool _isFriends;
 
   @override
   void initState() {
     _getProfileImage();
+    _getIsFriends();
     super.initState();
+  }
+
+  _getIsFriends() async{
+    User currentUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+    if(currentUser.friends.contains(widget.otherUser)){
+      setState(() {
+        _isFriends = true;
+      });
+    }else{
+      setState(() {
+        _isFriends = false;
+      });
+    }
   }
 
   _getProfileImage() async {
@@ -55,7 +71,7 @@ class ProfileState extends State<ProfileViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.otherUser == null || profileImage == null) {
+    if (widget.otherUser == null || profileImage == null || _isFriends == null) {
       return _loading;
     } else {
       return _profile();
@@ -69,8 +85,45 @@ class ProfileState extends State<ProfileViewer> {
         title: Text(widget.otherUser.username),
         centerTitle: true,
         actions: <Widget>[
+          _isFriends == true ?
           FlatButton.icon(
-            onPressed: () {},
+            onPressed: () async{
+              setState(() {
+                _isFriends = false;
+              });
+
+              bool notFriends = await _removeFriend();
+
+              if(notFriends==false){
+                setState(() {
+                  _isFriends = true;
+                });
+              }
+              },
+            icon: Icon(
+              Icons.person_outline,
+              color: Colors.white,
+            ),
+            label: Text(
+              'Remove',
+              style: TextStyle(color: Colors.white),
+            ),
+          )
+          :
+          FlatButton.icon(
+            onPressed: () async{
+              setState(() {
+                _isFriends = true;
+              });
+
+              bool friends = await _addFriend();
+
+              if(friends == false){
+                setState(() {
+                  _isFriends = false;
+                });
+              }
+              },
             icon: Icon(
               Icons.person_add,
               color: Colors.white,
@@ -166,11 +219,45 @@ class ProfileState extends State<ProfileViewer> {
                 Dog dog = Dog.fromJson(widget.otherUser.dogs[index]);
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) =>
-                        DogProfileViewer(dog: dog))); //TODO: NEED TO CHANGE
+                        DogProfileViewer(dog: dog)));
               });
         },
       ),
     );
+  }
+
+  Future<bool> _addFriend() async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) =>
+        value.getIdToken().then((value) => value.token));
+    try {
+      final url = await http.post(
+          'https://dogsonfire.herokuapp.com/friends/${widget.otherUser
+              .userId}', headers: {'Authorization': 'Bearer $token'});
+      if (url.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+
+  Future<bool> _removeFriend() async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) =>
+        value.getIdToken().then((value) => value.token));
+    try {
+      final url = await http.delete(
+          'https://dogsonfire.herokuapp.com/friends/${widget.otherUser
+              .userId}', headers: {'Authorization': 'Bearer $token'});
+      if (url.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 }
 
