@@ -21,8 +21,51 @@ class Dog{
     );
   }
 
+  String getName(){
+    return name;
+  }
+
+  String getBreed(){
+    return breed;
+  }
+
+  String getDateOfBirth(){
+    return dateOfBirth;
+  }
+
+  String getGender(){
+    return gender;
+  }
+
+  String getNeutered(){
+    if(neutered == true){
+      return 'Yes';
+    }else{
+      return 'No';
+    }
+  }
+
+  String getDescription(){
+    return description;
+  }
+
+  String getUUID(){
+    return uuid;
+  }
+
+  //TODO: HERE , TEST REMOVE SPACES
   setName(String name){
+    if(name == null || name.trim().isEmpty){
+      return;
+    }
     this.name = name;
+  }
+
+  setGender(String gender){
+    if(gender == null || gender.trim().isEmpty){
+      return;
+    }
+    this.gender = gender;
   }
 
   setBreed(String breed){
@@ -37,19 +80,22 @@ class Dog{
     this.neutered = neutered;
   }
 
-  setGender(String gender){
-    this.gender = gender;
-  }
-
   setDescription(String desc){
     this.description = desc;
   }
 
-  getNeutered(){
-    if(neutered == true){
-      return 'Yes';
-    }else{
-      return 'No';
-    }
+  @override
+  bool operator ==(other) {
+    if(other is! Dog)
+      return false;
+    return uuid == (other as Dog).uuid;
+  }
+
+  int _hash;
+  @override
+  int get hashCode{
+   if(_hash == null)
+     _hash = uuid.hashCode;
+   return _hash;
   }
 }
