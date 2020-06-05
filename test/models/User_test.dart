@@ -7,8 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main(){
 
-  Dog DEFAULT_DOG1 = Dog(name: "dog1");
-  Dog DEFAULT_DOG2 = Dog(name: "dog2");
+  Dog DEFAULT_DOG1 = Dog(name: "dog1", uuid: "1");
+  Dog DEFAULT_DOG2 = Dog(name: "dog2", uuid: "2");
   final int DOGLIST_LENGTH = 2;
 
   const DEFAULT_FRIEND1_USERID = "1010";
