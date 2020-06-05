@@ -71,14 +71,30 @@ class User{
 
   void setDateOfBirth(String dateOfBirth){this.dateOfBirth = dateOfBirth;}
 
-  void addDog(Dog dog){dogs.add(dog);}
+  bool addDog(Dog dog){
+    if(dog == null)
+      return false;
+    dogs.add(dog);
+    return true;
+  }
 
-  void removeDog(Dog dog){dogs.remove(dog);}
+  bool removeDog(Dog dog){
+    if(dog == null)
+      return false;
+    return dogs.remove(dog);
+  }
 
-  void addFriend(User friend){friends.add(friend);}
+  bool addFriend(User friend){
+    if(friend == null || friends.contains(friend))
+      return false;
+    friends.add(friend);
+    return true;
+  }
 
-  void removeFriend(User friend){
-    friends.remove(friend);
+  bool removeFriend(User friend){
+    if(friend == null)
+      return false;
+    return friends.remove(friend);
   }
 
   static List<User> _getFriends(List<dynamic> friends){

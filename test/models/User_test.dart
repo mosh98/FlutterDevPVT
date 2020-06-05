@@ -226,4 +226,55 @@ void main(){
       expect(hasFriend, true);
     });
   });
+
+  group('User - testing inputs of setters', () {
+    test('input null to addFriend should return false and not add', (){
+      User user = createStaticUser();
+      bool addedFriend = user.addFriend(null);
+      expect(addedFriend, false);
+    });
+
+    test('input a friend that already exists does not add and returns false', (){
+      User user = createStaticUser();
+      User friendThatExists = User(userId: DEFAULT_FRIEND1_USERID);
+      bool addedFriend = user.addFriend(friendThatExists);
+      int timesExist = 0;
+      user.getFriends().forEach((element) {
+        if(element.userId == DEFAULT_FRIEND1_USERID)
+          ++timesExist;
+      });
+      expect(timesExist, 1);
+      expect(addedFriend, false);
+    });
+
+    test('input null to removeFriend should return false', (){
+      User user = createStaticUser();
+      bool removedFriend = user.removeFriend(null);
+      expect(removedFriend, false);
+    });
+
+    test('input existing friend to removeFriend should return true', (){
+      User user = createStaticUser();
+      bool removedFriend = user.removeFriend(DEFAULT_FRIEND1);
+      expect(removedFriend, true);
+    });
+
+    test('input null to removeDog should return false', (){
+      User user = createStaticUser();
+      bool removedDog = user.removeDog(null);
+      expect(removedDog, false);
+    });
+
+    test('input existing dog to removeDog should return true', (){
+      User user = createStaticUser();
+      bool removedDog = user.removeDog(DEFAULT_DOG1);
+      expect(removedDog, true);
+    });
+
+    test('input null to addDog should return false', (){
+      User user = createStaticUser();
+      bool removedDog = user.addDog(null);
+      expect(removedDog, false);
+    });
+  });
 }
