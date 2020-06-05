@@ -12,7 +12,7 @@ class User{
   final String createdDate;
   final List<dynamic> dogs;
   String photoUrl;
-  String userId;
+  final String userId;
   final bucket;
   final List<User> friends;
 
@@ -72,6 +72,14 @@ class User{
   void setDateOfBirth(String dateOfBirth){this.dateOfBirth = dateOfBirth;}
 
   void addDog(Dog dog){dogs.add(dog);}
+
+  void removeDog(Dog dog){dogs.remove(dog);}
+
+  void addFriend(User friend){friends.add(friend);}
+
+  void removeFriend(User friend){
+    friends.remove(friend);
+  }
 
   static List<User> _getFriends(List<dynamic> friends){
     List<User> convertedFriends = List<User>();

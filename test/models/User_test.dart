@@ -7,19 +7,41 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main(){
 
-  Dog dog1 = Dog(name: "dog1");
-  Dog dog2 = Dog(name: "dog2");
-  final List<dynamic> dogList = [dog1, dog2];
-  final int DOGLIST_LENGTH = dogList.length;
+  Dog DEFAULT_DOG1 = Dog(name: "dog1");
+  Dog DEFAULT_DOG2 = Dog(name: "dog2");
+  final int DOGLIST_LENGTH = 2;
 
-  User friend1 = User(username: 'friend1');
-  User friend2 = User(username: 'friend2');
-  final List<User> friendsList = [friend1, friend2];
-  final int FRIENDLIST_LENGTH = friendsList.length;
+  const DEFAULT_FRIEND1_USERID = "1010";
+  const DEFAULT_FRIEND2_USERID = "2020";
 
+  final User DEFAULT_FRIEND1 = User(username: 'friend1',userId: DEFAULT_FRIEND1_USERID);
+  final User DEFAULT_FRIEND2 = User(username: 'friend2',userId: DEFAULT_FRIEND2_USERID);
+  final int FRIENDLIST_LENGTH = 2;
+
+  const String DEFAULT_USER_ID = '1';
+  const String DEFAULT_USERNAME = 'username';
+  const String DEFAULT_DATE_OF_BIRTH = '2020-01-01';
+  const String DEFAULT_GENDER = 'MALE';
+  const String DEFAULT_DESC = 'desc';
+  const String DEFAULT_CREATED_DATE = '2020-01-01';
+  const String DEFAULT_PHOTO_URL = 'URL';
+  const String DEFAULT_BUCKET = 'BUCKET';
+
+
+  List<User> createStaticFriendsList(){
+    List<User> friendsList = [DEFAULT_FRIEND1, DEFAULT_FRIEND2];
+    return friendsList;
+  }
+
+  List<dynamic> createStaticDogsList(){
+    List<dynamic> dogList = [DEFAULT_DOG1, DEFAULT_DOG2];
+    return dogList;
+  }
 
   User createStaticUser(){
-    return User(userId: "1", username: "username", dateOfBirth: "2020-01-01", gender: "MALE", desc: "desc", createdDate: "2020-01-01", dogs: dogList, photoUrl: "URL", bucket: "BUCKET", friends: [User(), User()]);
+    List<User> friendsList = createStaticFriendsList();
+    List<dynamic> dogList = createStaticDogsList();
+    return User(userId: DEFAULT_USER_ID, username: DEFAULT_USERNAME, dateOfBirth: DEFAULT_DATE_OF_BIRTH, gender: DEFAULT_GENDER, desc: DEFAULT_DESC, createdDate: DEFAULT_CREATED_DATE, dogs: dogList, photoUrl: DEFAULT_PHOTO_URL, bucket: DEFAULT_BUCKET, friends: friendsList);
   }
 
   group('User - testing default functionality', () {
@@ -75,65 +97,133 @@ void main(){
     test('getId returns actual id', (){
       User user = createStaticUser();
       var id = user.getId();
-      expect(id, "1");
+      expect(id, DEFAULT_USER_ID);
     });
 
     test('getName returns actual name', (){
       User user = createStaticUser();
       var username = user.getName();
-      expect(username, "username");
+      expect(username, DEFAULT_USERNAME);
     });
 
     test('getDateOfBirth returns actual date of birth', (){
       User user = createStaticUser();
       var dateOfBirth = user.getDateOfBirth();
-      expect(dateOfBirth, "2020-01-01");
+      expect(dateOfBirth, DEFAULT_DATE_OF_BIRTH);
     });
 
     test('getGender returns actual gender', (){
       User user = createStaticUser();
       var gender = user.getGender();
-      expect(gender, "MALE");
+      expect(gender, DEFAULT_GENDER);
     });
 
     test('getDesc returns actual desc', (){
       User user = createStaticUser();
       var desc = user.getDesc();
-      expect(desc, "desc");
+      expect(desc, DEFAULT_DESC);
     });
 
     test('getCreatedAt returns actual created at', (){
       User user = createStaticUser();
       var createdAt = user.getCreatedDate();
-      expect(createdAt, "2020-01-01");
+      expect(createdAt, DEFAULT_CREATED_DATE);
     });
 
     test('getDogs returns actual dog list', (){
       User user = createStaticUser();
       List<dynamic> dogs = user.getDogs();
       expect(dogs.length, DOGLIST_LENGTH);
-      Matcher matcher = unorderedEquals(dogList);
-      expect(dogs, matcher);
+      bool containsDogs = dogs.contains(DEFAULT_DOG1) && dogs.contains(DEFAULT_DOG2);
+      expect(containsDogs, true);
     });
 
     test('getPhotoUrl returns actual photourl', (){
       User user = createStaticUser();
       var photoUrl = user.getPhotoUrl();
-      expect(photoUrl, 'URL');
+      expect(photoUrl, DEFAULT_PHOTO_URL);
     });
 
     test('getBucket returns actual bucket', (){
       User user = createStaticUser();
       var bucket = user.getBucket();
-      expect(bucket, 'BUCKET');
+      expect(bucket, DEFAULT_BUCKET);
     });
 
     test('getFriends returns actual friends', (){
       User user = createStaticUser();
       List<User> friends = user.getFriends();
       expect(friends.length, FRIENDLIST_LENGTH);
-      Matcher matcher = unorderedEquals(friends);
-      expect(friends, matcher);
+      bool containsFriends = friends.contains(DEFAULT_FRIEND1) && friends.contains(DEFAULT_FRIEND2);
+      expect(containsFriends, true);
+    });
+  });
+
+  group('User - set methods', () {
+    test('setDateOfBirth sets new birth', (){
+      User user = createStaticUser();
+      expect(user.getDateOfBirth(), DEFAULT_DATE_OF_BIRTH);
+      user.setDateOfBirth('2020-02-02');
+      expect(user.getDateOfBirth(), '2020-02-02');
+    });
+
+    test('setGender sets new gender', (){
+      User user = createStaticUser();
+      expect(user.getGender(), DEFAULT_GENDER);
+      user.setGender('FEMALE');
+      expect(user.getGender(), 'FEMALE');
+    });
+
+    test('setDesc sets new desc', (){
+      User user = createStaticUser();
+      expect(user.getDesc(), DEFAULT_DESC);
+      user.setDescription('new_desc');
+      expect(user.getDesc(), 'new_desc');
+    });
+
+    test('setURL sets new url', (){
+      User user = createStaticUser();
+      expect(user.getPhotoUrl(), DEFAULT_PHOTO_URL);
+      user.setPhotoUrl('new_url');
+      expect(user.getPhotoUrl(), 'new_url');
+    });
+
+    test('add dog adds new dog', (){
+      User user = createStaticUser();
+      expect(user.getDogs().length, DOGLIST_LENGTH);
+      Dog dog = new Dog();
+      user.addDog(dog);
+      expect(user.getDogs().length, 3);
+      bool hasDog = user.getDogs().contains(dog);
+      expect(hasDog, true);
+    });
+
+    test('remove dog removes dog', (){
+      User user = createStaticUser();
+      expect(user.getDogs().length, DOGLIST_LENGTH);
+      user.removeDog(DEFAULT_DOG1);
+      expect(user.getDogs().length, 1);
+      bool hasDog = !user.getDogs().contains(DEFAULT_DOG1);
+      expect(hasDog, true);
+    });
+
+    test('add friend adds new friend', (){
+      User user = createStaticUser();
+      expect(user.getFriends().length, FRIENDLIST_LENGTH);
+      User newFriend = User();
+      user.addFriend(newFriend);
+      expect(user.getFriends().length, 3);
+      bool hasFriend = user.getFriends().contains(newFriend);
+      expect(hasFriend, true);
+    });
+
+    test('remove friend removes friend', (){
+      User user = createStaticUser();
+      expect(user.getFriends().length, FRIENDLIST_LENGTH);
+      user.removeFriend(DEFAULT_FRIEND1);
+      expect(user.getFriends().length, 1);
+      bool hasFriend = !user.getFriends().contains(DEFAULT_FRIEND1);
+      expect(hasFriend, true);
     });
   });
 }
