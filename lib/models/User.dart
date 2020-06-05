@@ -52,12 +52,16 @@ class User{
     );
   }
 
+  String getId(){return userId;}
   String getName(){return username;}
   String getDateOfBirth(){return dateOfBirth;}
   String getGender(){return gender;}
   String getDesc(){return desc;}
   String getCreatedDate(){return createdDate;}
-  List getDogs(List<dynamic> dogs){return dogs;}
+  String getPhotoUrl(){return photoUrl;}
+  List getDogs(){return dogs;}
+  String getBucket(){return bucket;}
+  List<User> getFriends(){return friends;}
 
   void setPhotoUrl(String photoUrl){this.photoUrl = photoUrl;}
 
