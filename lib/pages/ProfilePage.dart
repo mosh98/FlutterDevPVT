@@ -133,7 +133,8 @@ class ProfileState extends State<ProfilePage>{
             Text(user.username, style: TextStyle(fontSize: 16),),
             Spacer(),
             FlatButton(
-                onPressed: (){
+                onPressed: () async{
+                  print(await AuthService().getToken());
                   Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user)));
                 },
                 child: Text(

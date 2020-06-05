@@ -7,6 +7,7 @@ import 'package:dog_prototype/dialogs/DeleteAccountDialog.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/HttpProvider.dart';
 import 'package:dog_prototype/services/Validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -30,16 +31,17 @@ class _SettingsPageState extends State<SettingsPage> {
   String gender = "";
   String dateOfBirth = "";
   String profileImage;
-  bool _loadingImage = false;
+  bool _loadingImage = true;
   bool _loadingProfile = false;
   String snackText = "";
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   FirebaseUser firebaseUser;
+  HttpProvider client;
 
   @override
   void initState() {
     setState(() {
-      _loadingProfile= true;
+      _loadingProfile = true;
     });
     _getFirebaseUser();
     _getProfileImage();
@@ -65,21 +67,25 @@ class _SettingsPageState extends State<SettingsPage> {
       if (url.statusCode == 200) {
         setState(() {
           profileImage = url.body;
+          _loadingImage = false;
+          _loadingProfile = false;
+        });
+      }else{
+        setState(() {
+          _loadingImage = false;
+          _loadingProfile = false;
         });
       }
-      setState(() {
-        _loadingImage = false;
-      });
     } catch (e) {
       print(e);
-      setState(() {
-        _loadingImage = false;
-      });
+
     }
   }
 
   _getFirebaseUser() async{
     firebaseUser = await AuthService().getCurrentFirebaseUser();
+    String token = await AuthService().getToken();
+    client = HttpProvider.instance(userToken: token);
     setState(() {
       _loadingProfile = false;
     });
@@ -101,7 +107,7 @@ class _SettingsPageState extends State<SettingsPage> {
       );
     }
 
-    return _loadingProfile == true || profileImage == null ?
+    return _loadingProfile == true ?
     Scaffold(
       key: _scaffoldKey,
       body: DefaultLoader(),
@@ -347,7 +353,28 @@ class _SettingsPageState extends State<SettingsPage> {
   double _kPickerSheetHeight = 216.0;
 
   _setDateOfBirth() async {
-    //TODO: FACTOR
+    await dateOfBirthWidgetHelper();
+
+    try {
+      processDataFeedback();
+
+      dynamic result = await client.updateUserDateOfBirth(dateOfBirth);
+      if (result == true) {
+        snackText = "Succesfully updated date of birth.";
+        setState(() {
+          widget.user.setDateOfBirth(dateOfBirth);
+        });
+      }else{
+        snackText = "Something went wrong with updating your date of birth, please try again.";
+      }
+      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
+    } catch (e) {
+      print(e);
+      print('catch on trying to call HttpProvider.dateOfBirth');
+    }
+  }
+
+  dateOfBirthWidgetHelper() async{
     DateTime _dateTime = DateTime.now();
     final f = new DateFormat('yyyy-MM-dd');
     await showCupertinoModalPopup<void>(
@@ -374,37 +401,6 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       dateOfBirth = '${f.format(_dateTime)}';
     });
-
-
-    try {
-      final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/users',
-          headers: <String, String>{
-            "Accept": "application/json",
-            'Content-Type': 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService()
-                .getCurrentFirebaseUser()
-                .then((value) =>
-                value.getIdToken().then((value) => value.token))}'
-          },
-          body: jsonEncode(<String, String>{
-            "dateOfBirth": dateOfBirth,
-          })
-      );
-
-      if (response.statusCode == 200) { // Successfully created database account
-        print(response.statusCode);
-
-        setState(() {
-          widget.user.setDateOfBirth(dateOfBirth);
-        });
-      } else { //Something went wrong
-        print(response.statusCode);
-        print(response.body);
-      }
-    } catch (e) {
-      print(e);
-    }
   }
 
   Widget _buildBottomPicker(Widget picker) {
@@ -430,38 +426,32 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   _setGender(String gender) async {
+
+    processDataFeedback();
+
     if (gender == "-") {
       gender = "UNKNOWN";
     }
 
     try {
-      final http.Response response = await http.put(
-          'https://dogsonfire.herokuapp.com/users',
-          headers: <String, String>{
-            "Accept": "application/json",
-            'Content-Type': 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService()
-                .getCurrentFirebaseUser()
-                .then((value) =>
-                value.getIdToken().then((value) => value.token))}'
-          },
-          body: jsonEncode(<String, String>{
-            "gender": gender,
-          })
-      );
-
-      if (response.statusCode == 200) {
-        print(response.statusCode);
+      dynamic result = await client.updateUserGender(gender);
+      if(result == true){
+        snackText = "Succesfully updated gender.";
         setState(() {
           widget.user.setGender(gender);
         });
-      } else { //Something went wrong
-        print(response.statusCode);
-        print(response.body);
+      }else{
+        snackText = "Something went wrong with updating your gender, please try again.";
       }
+      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
     } catch (e) {
       print(e);
+      print('catch on trying to call HttpProvider.gender');
     }
   }
 
+  processDataFeedback(){
+    snackText = "Processing..";
+    _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText), duration: Duration(seconds:1)));
+  }
 }
