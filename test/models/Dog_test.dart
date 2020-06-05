@@ -107,6 +107,18 @@ void main(){
       expect(neutured, 'No');
     });
 
+    test('getNeutured returns yes on true', () {
+      Dog dog = createStaticDog();
+      dog.setNeutered(true);
+      expect(dog.getNeutered(), 'Yes');
+    });
+
+    test('getNeutured returns no on false', () {
+      Dog dog = createStaticDog();
+      dog.setNeutered(false);
+      expect(dog.getNeutered(), 'No');
+    });
+
     test('getDesc returns actual desc', () {
       Dog dog = createStaticDog();
       var description = dog.getDescription();
@@ -153,6 +165,15 @@ void main(){
       expect(dog.getName(), name);
     });
 
+    test('setName removes spaces on new name', () {
+      Dog dog = createStaticDog();
+      var name = dog.getName();
+      dog.setName('  user    ');
+      bool changed = !(name == dog.getName());
+      expect(changed, true);
+      expect(dog.getName(), 'user');
+    });
+
     test('setGender sets new gender', () {
       Dog dog = createStaticDog();
       var gender = dog.getGender();
@@ -182,6 +203,153 @@ void main(){
       notChanged = gender == dog.getGender();
       expect(notChanged, true);
       expect(dog.getGender(), gender);
+    });
+
+    test('setGender removes spaces on new gender', () {
+      Dog dog = createStaticDog();
+      var gender = dog.getGender();
+      dog.setGender('  gender    ');
+      bool changed = !(gender == dog.getGender());
+      expect(changed, true);
+      expect(dog.getGender(), 'gender');
+    });
+
+    test('setBreed sets new breed', () {
+      Dog dog = createStaticDog();
+      var breed = dog.getBreed();
+      dog.setBreed('newbreed');
+      bool changed = !(breed == dog.getBreed());
+      expect(changed, true);
+      expect(dog.getBreed(), 'newbreed');
+    });
+
+    test('setBreed does not set breed on null', () {
+      Dog dog = createStaticDog();
+      var breed = dog.getBreed();
+      dog.setBreed(null);
+      bool notChanged = breed == dog.getBreed();
+      expect(notChanged, true);
+      expect(dog.getBreed(), breed);
+    });
+
+    test('setBreed does not set breed on empty or only spaces', () {
+      Dog dog = createStaticDog();
+      var breed = dog.getBreed();
+      dog.setBreed("");
+      bool notChanged = breed == dog.getBreed();
+      expect(notChanged, true);
+      expect(dog.getBreed(), breed);
+      dog.setBreed("     ");
+      notChanged = breed == dog.getBreed();
+      expect(notChanged, true);
+      expect(dog.getBreed(), breed);
+    });
+
+    test('setBreed removes spaces on new breed', () {
+      Dog dog = createStaticDog();
+      var breed = dog.getBreed();
+      dog.setBreed("    newbreed  ");
+      bool changed = !(breed == dog.getBreed());
+      expect(changed, true);
+      expect(dog.getBreed(), 'newbreed');
+    });
+
+    test('setDateOfBirth sets new date of birth', () {
+      Dog dog = createStaticDog();
+      var dateofbirth = dog.getDateOfBirth();
+      dog.setDateOfBirth('2020-01-02');
+      bool changed = !(dateofbirth == dog.getDateOfBirth());
+      expect(changed, true);
+      expect(dog.getDateOfBirth(), '2020-01-02');
+    });
+
+    test('setDateOfBirth does not set new date of birth on null', () {
+      Dog dog = createStaticDog();
+      var dateofbirth = dog.getDateOfBirth();
+      dog.setDateOfBirth(null);
+      bool notChanged = dateofbirth == dog.getDateOfBirth();
+      expect(notChanged, true);
+      expect(dog.getDateOfBirth(), dateofbirth);
+    });
+
+    test('setDateOfBirth does not set new date of birth on empty or only spaces', () {
+      Dog dog = createStaticDog();
+      var dateofbirth = dog.getDateOfBirth();
+      dog.setDateOfBirth("");
+      bool notChanged = dateofbirth == dog.getDateOfBirth();
+      expect(notChanged, true);
+      dog.setDateOfBirth("    ");
+      notChanged = dateofbirth == dog.getDateOfBirth();
+      expect(notChanged, true);
+      expect(dog.getDateOfBirth(), dateofbirth);
+    });
+
+    test('setDateOfBirth removes spaces', () {
+      Dog dog = createStaticDog();
+      var dateofbirth = dog.getDateOfBirth();
+      dog.setDateOfBirth("   2020-02-02  ");
+      bool changed = !(dateofbirth == dog.getDateOfBirth());
+      expect(changed, true);
+      expect(dog.getDateOfBirth(), '2020-02-02');
+    });
+
+    test('setNeutured sets new neutuered', () {
+      Dog dog = createStaticDog();
+      var neut = dog.getNeutered();
+      dog.setNeutered(true);
+      bool changed = !(neut == dog.getNeutered());
+      expect(changed, true);
+      expect(dog.getNeutered(), 'Yes');
+    });
+
+    test('setNeutured does not set new neutered on null', () {
+      Dog dog = createStaticDog();
+      var neut = dog.getNeutered();
+      dog.setNeutered(null);
+      bool notChanged = neut == dog.getNeutered();
+      expect(notChanged, true);
+      expect(dog.getNeutered(), neut);
+    });
+
+    test('setDescription sets new desc', () {
+      Dog dog = createStaticDog();
+      var desc = dog.getDescription();
+      dog.setDescription("newdesc");
+      bool changed = !(desc == dog.getDescription());
+      expect(changed, true);
+      expect(dog.getDescription(), 'newdesc');
+    });
+
+    test('setDescription does not set new desc on null', () {
+      Dog dog = createStaticDog();
+      var desc = dog.getDescription();
+      dog.setDescription(null);
+      bool notChanged = desc == dog.getDescription();
+      expect(notChanged, true);
+      expect(dog.getDescription(), desc);
+    });
+
+    test('setDescription does not set new desc on empty or only spaces', () {
+      Dog dog = createStaticDog();
+      var desc = dog.getDescription();
+      dog.setDescription("");
+      bool notChanged = desc == dog.getDescription();
+      expect(notChanged, true);
+      expect(dog.getDescription(), desc);
+
+      dog.setDescription("    ");
+      notChanged = desc == dog.getDescription();
+      expect(notChanged, true);
+      expect(dog.getDescription(), desc);
+    });
+
+    test('setDescription removes spaces', () {
+      Dog dog = createStaticDog();
+      var desc = dog.getDescription();
+      dog.setDescription("  newdesc ");
+      bool changed = !(desc == dog.getDescription());
+      expect(changed, true);
+      expect(dog.getDescription(), 'newdesc');
     });
   });
 }

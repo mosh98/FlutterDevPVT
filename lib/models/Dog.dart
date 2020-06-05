@@ -53,35 +53,46 @@ class Dog{
     return uuid;
   }
 
-  //TODO: HERE , TEST REMOVE SPACES
   setName(String name){
     if(name == null || name.trim().isEmpty){
       return;
     }
-    this.name = name;
+    this.name = name.trim();
   }
 
   setGender(String gender){
     if(gender == null || gender.trim().isEmpty){
       return;
     }
-    this.gender = gender;
+    this.gender = gender.trim();
   }
 
   setBreed(String breed){
-    this.breed = breed;
+    if(breed == null || breed.trim().isEmpty){
+      return;
+    }
+    this.breed = breed.trim();
   }
 
   setDateOfBirth(String dateOfBirth){
-    this.dateOfBirth = dateOfBirth;
+    if(dateOfBirth == null || dateOfBirth.trim().isEmpty){
+      return;
+    }
+    this.dateOfBirth = dateOfBirth.trim();
   }
 
   setNeutered(bool neutered){
+    if(neutered == null){
+      return;
+    }
     this.neutered = neutered;
   }
 
   setDescription(String desc){
-    this.description = desc;
+    if(desc == null || desc.trim().isEmpty){
+      return;
+    }
+    this.description = desc.trim();
   }
 
   @override
