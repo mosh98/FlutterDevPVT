@@ -15,41 +15,32 @@ class MockEmailAuthProvider extends Mock implements EmailAuthProvider{}
 
 void main(){
 
+  LoginPage widget = LoginPage();
+
+  Widget page = MaterialApp(
+      home: widget
+  );
+
+  Finder emailField = find.byKey(Key('Email'));
+  Finder passwordField = find.byKey(Key('password'));
+  Finder loginButton = find.byKey(Key('signIn'));
+  Finder facebookButton = find.byKey(Key('facebook'));
+  Finder forgotButton = find.byKey(Key('forgot'));
+
+  testWidgets('Testing finding all widgets on screen', (WidgetTester tester) async{
+
+    await tester.pumpWidget(page);
+    expect(emailField, findsOneWidget);
+    expect(passwordField, findsOneWidget);
+    expect(loginButton, findsOneWidget);
+    expect(facebookButton, findsOneWidget);
+    expect(forgotButton, findsOneWidget);
+  });
+
   group(
-      "Tests of routing on login-page",
+      "Testing error-messages UI LoginPage",
           (){
-            MockFirebaseAuth _auth = MockFirebaseAuth();
-            BehaviorSubject<MockFirebaseUser> _user = BehaviorSubject<MockFirebaseUser>();
-            when(_auth.onAuthStateChanged).thenAnswer((_){
-              return _user;
-            });
-
-            when(_auth.signInWithEmailAndPassword(email: "email", password: "password")).
-            thenAnswer((_)async{
-              _user.add(MockFirebaseUser());
-              return MockAuthResult();
-            });
-
-            final mockObserver = MockNavigatorObserver();
-
             testWidgets('Route: Sign-in -> ProfilePage', (WidgetTester tester) async{
-              await tester.pumpWidget(
-                  MaterialApp(
-                    home: LoginPage(),
-                    navigatorObservers: [mockObserver],
-                  )
-              );
-
-              await tester.pumpAndSettle();
-
-              Finder signInButton = find.byKey(Key('signIn'));
-              expect(signInButton, findsOneWidget);
-
-              Finder emailField = find.byKey(Key('Email'));
-              expect(emailField, findsOneWidget);
-
-              Finder passwordField = find.byKey(Key('password'));
-              expect(passwordField, findsOneWidget);
 
         });
       }

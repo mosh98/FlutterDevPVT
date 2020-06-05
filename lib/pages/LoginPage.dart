@@ -115,6 +115,7 @@ class LoginPageState extends State<LoginPage> {
             "OR",
           ),
           MaterialButton(
+            key: Key('facebook'),
             height: 40.0,
             minWidth: 250.0,
             color: Colors.black54,
@@ -127,6 +128,7 @@ class LoginPageState extends State<LoginPage> {
             shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
           ),
           FlatButton(
+            key: Key('forgot'),
             child: Text("Forgot your password? Retrieve it here."),
             onPressed: ()async{
               await _resetPasswordDialog();
