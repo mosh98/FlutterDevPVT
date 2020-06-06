@@ -122,10 +122,14 @@ class ProfileState extends State<ProfilePage>{
                         child: _loadingImage == true ?
                         DefaultLoader()
                         :
+                        profileImage != null ?
                         CachedNetworkImage(
                             imageUrl: profileImage,
                             placeholder: (context, url) => DefaultLoader(),
-                            errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey))
+                            errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
+                        )
+                         :
+                        CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
                     )
                 )
             ),
@@ -134,7 +138,6 @@ class ProfileState extends State<ProfilePage>{
             Spacer(),
             FlatButton(
                 onPressed: () async{
-                  print(await AuthService().getToken());
                   Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user)));
                 },
                 child: Text(
@@ -217,7 +220,6 @@ class ProfileState extends State<ProfilePage>{
           return ListTile(
               leading: Icon(Icons.pets),
               title: Text(user.dogs[index].getName()),
-              //TODO: IMAGE URL
               trailing: IconButton(
                   icon: Icon(Icons.delete_forever),
                   onPressed: (){
