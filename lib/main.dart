@@ -1,6 +1,11 @@
+import 'package:dog_prototype/models/Dog.dart';
+import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/FacebookForm.dart';
+import 'package:dog_prototype/pages/SettingsPage.dart';
 import 'package:dog_prototype/pages/placeHolderHome.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/HttpProvider.dart';
+import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'loaders/DefaultLoader.dart';
@@ -28,9 +33,7 @@ class Wrapper extends StatelessWidget{
       stream: AuthService().user,
       builder: (BuildContext context, AsyncSnapshot<FirebaseUser> snapshot) {
         if(snapshot.connectionState == ConnectionState.active){
-          print('Stream got new firebase user event!');
           final bool isLoggedIn = snapshot.hasData;
-          print('isLoggedIn is now: $isLoggedIn');
           return isLoggedIn ?
           Redirect()
               :
@@ -50,24 +53,38 @@ class Redirect extends StatefulWidget {
 class _RedirectState extends State<Redirect> {
 
   bool _registeredToDatabase;
+  bool hasInit = false;
+  StorageProvider storageProvider;
+  HttpProvider httpProvider;
+  AuthService authService;
+  User user;
 
   @override
   void initState() {
+    _init();
     super.initState();
+  }
+
+  _init() async{
+    authService = await AuthService();
+    user = await authService.createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+    storageProvider = await StorageProvider(user:user);
+    httpProvider = await HttpProvider.instance(userToken: await authService.getToken());
+    if(authService != null && user != null && storageProvider != null && httpProvider != null){
+      setState(() {
+        hasInit = true;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    print('Inside Redirect, calling method: _isRegisteredToDatabase');
     return FutureBuilder(
       future: _isRegisteredToDatabase(),
       builder: (context, snapshot) {
-        if(snapshot.hasData){
+        if(snapshot.hasData && hasInit){
           if(snapshot.data == true){
-            print('Inside futurebuilder of Redirect class, answer gotten from _isRegToDatabase, answer was: ${snapshot.data}');
-            print('Calling AuthService method: createUserModel');
-            return PlaceHolderApp(futureUser: AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken())));
-            //return FacebookForm();
+            return PlaceHolderApp(user:user,storageProvider: storageProvider, httpProvider: httpProvider, authService: authService,);
           }else{
             return FacebookForm();
           }
@@ -81,9 +98,7 @@ class _RedirectState extends State<Redirect> {
   }
 
   _isRegisteredToDatabase() async{
-    print('Inside: _isRegisteredToDatabase');
     _registeredToDatabase = await AuthService().isRegisteredToDatabase();
-    print('AuthService method: isRegisteredToDatabase returned with: $_registeredToDatabase');
     return _registeredToDatabase;
   }
 }

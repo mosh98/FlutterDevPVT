@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 class FriendPage extends StatefulWidget {
 
   final User user;
-  FriendPage({this.user});
+  final AuthService authService;
+  FriendPage({this.user, this.authService});
 
   @override
   _FriendPageState createState() => _FriendPageState();
@@ -26,7 +27,7 @@ class _FriendPageState extends State<FriendPage> {
   }
 
   _getCurrentUser() async{
-    user = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
+    user = await widget.authService.createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
     friends = user.friends;
     setState(() {});
   }

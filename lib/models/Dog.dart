@@ -21,35 +21,92 @@ class Dog{
     );
   }
 
-  setName(String name){
-    this.name = name;
+  String getName(){
+    return name;
   }
 
-  setBreed(String breed){
-    this.breed = breed;
+  String getBreed(){
+    return breed;
   }
 
-  setDateOfBirth(String dateOfBirth){
-    this.dateOfBirth = dateOfBirth;
+  String getDateOfBirth(){
+    return dateOfBirth;
   }
 
-  setNeutered(bool neutered){
-    this.neutered = neutered;
+  String getGender(){
+    return gender;
   }
 
-  setGender(String gender){
-    this.gender = gender;
-  }
-
-  setDescription(String desc){
-    this.description = desc;
-  }
-
-  getNeutered(){
+  String getNeutered(){
     if(neutered == true){
       return 'Yes';
     }else{
       return 'No';
     }
+  }
+
+  String getDescription(){
+    return description;
+  }
+
+  String getUUID(){
+    return uuid;
+  }
+
+  setName(String name){
+    if(name == null || name.trim().isEmpty){
+      return;
+    }
+    this.name = name.trim();
+  }
+
+  setGender(String gender){
+    if(gender == null || gender.trim().isEmpty){
+      return;
+    }
+    this.gender = gender.trim();
+  }
+
+  setBreed(String breed){
+    if(breed == null || breed.trim().isEmpty){
+      return;
+    }
+    this.breed = breed.trim();
+  }
+
+  setDateOfBirth(String dateOfBirth){
+    if(dateOfBirth == null || dateOfBirth.trim().isEmpty){
+      return;
+    }
+    this.dateOfBirth = dateOfBirth.trim();
+  }
+
+  setNeutered(bool neutered){
+    if(neutered == null){
+      return;
+    }
+    this.neutered = neutered;
+  }
+
+  setDescription(String desc){
+    if(desc == null || desc.trim().isEmpty){
+      return;
+    }
+    this.description = desc.trim();
+  }
+
+  @override
+  bool operator ==(other) {
+    if(other is! Dog)
+      return false;
+    return uuid == (other as Dog).uuid;
+  }
+
+  int _hash;
+  @override
+  int get hashCode{
+   if(_hash == null)
+     _hash = uuid.hashCode;
+   return _hash;
   }
 }

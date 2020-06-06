@@ -10,9 +10,9 @@ class User{
   String gender;
   String desc;
   final String createdDate;
-  final List<dynamic> dogs;
+  final List<Dog> dogs;
   String photoUrl;
-  String userId;
+  final String userId;
   final bucket;
   final List<User> friends;
 
@@ -45,19 +45,23 @@ class User{
       dateOfBirth: json['dateOfBirth'],
       desc: json['description'],
       createdDate: json['createdAt'],
-      dogs: json['dogs'],
+      dogs: _getDogs(json['dogs']),
       photoUrl: json['photoUrl'],
       bucket: json['bucket'],
       friends: _getFriends(json['friends']),
     );
   }
 
+  String getId(){return userId;}
   String getName(){return username;}
   String getDateOfBirth(){return dateOfBirth;}
   String getGender(){return gender;}
   String getDesc(){return desc;}
   String getCreatedDate(){return createdDate;}
-  List getDogs(List<dynamic> dogs){return dogs;}
+  String getPhotoUrl(){return photoUrl;}
+  List<Dog> getDogs(){return dogs;}
+  String getBucket(){return bucket;}
+  List<User> getFriends(){return friends;}
 
   void setPhotoUrl(String photoUrl){this.photoUrl = photoUrl;}
 
@@ -67,7 +71,31 @@ class User{
 
   void setDateOfBirth(String dateOfBirth){this.dateOfBirth = dateOfBirth;}
 
-  void addDog(Dog dog){dogs.add(dog);}
+  bool addDog(dynamic dog){
+    if(dog == null)
+      return false;
+    dogs.add(dog);
+    return true;
+  }
+
+  bool removeDog(Dog dog){
+    if(dog == null)
+      return false;
+    return dogs.remove(dog);
+  }
+
+  bool addFriend(User friend){
+    if(friend == null || friends.contains(friend))
+      return false;
+    friends.add(friend);
+    return true;
+  }
+
+  bool removeFriend(User friend){
+    if(friend == null)
+      return false;
+    return friends.remove(friend);
+  }
 
   static List<User> _getFriends(List<dynamic> friends){
     List<User> convertedFriends = List<User>();
@@ -81,6 +109,20 @@ class User{
     });
 
     return convertedFriends;
+  }
+
+  static List<Dog> _getDogs(List<dynamic> dogs){
+    List<Dog> convertedDogs = List<Dog>();
+
+    if(dogs == null || dogs.isEmpty)
+      return convertedDogs;
+
+    dogs.forEach((element) {
+      Dog dog = Dog.fromJson(element);
+      convertedDogs.add(dog);
+    });
+
+    return convertedDogs;
   }
 
   @override

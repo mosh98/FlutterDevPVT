@@ -1,10 +1,10 @@
-import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/dialogs/DogDialog.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/pages/FriendPage.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/HttpProvider.dart';
 import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dog_prototype/models/User.dart';
@@ -12,13 +12,15 @@ import 'package:dog_prototype/pages/SettingsPage.dart';
 import 'package:dog_prototype/pages/DogProfile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class ProfilePage extends StatefulWidget{
 
   final User user;
   final bool newState;
-  ProfilePage({this.user,this.newState});
+  final StorageProvider storageProvider;
+  final HttpProvider httpProvider;
+  final AuthService authService;
+  ProfilePage({this.user,this.newState, this.storageProvider, this.httpProvider, this.authService});
 
 
   @override
@@ -32,21 +34,21 @@ class ProfileState extends State<ProfilePage>{
   String profileImage;
   String snackText = "";
 
-  bool _loadingImage = false;
+  bool _loadingImage = true;
   bool _loadingProfile = false;
   Widget loading = Center(child:CircularProgressIndicator());
 
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
-    if(user == null){
-      user = widget.user;
-    }
+    user = widget.user;
     _getProfileImage();
     super.initState();
   }
 
   _getProfileImage() async{
-    dynamic result = await StorageProvider(user:user).getProfileImage();
+    dynamic result = await widget.storageProvider.getProfileImage();
 
     if(result != null){
       setState(() {
@@ -61,7 +63,7 @@ class ProfileState extends State<ProfilePage>{
 
   @override
   Widget build(BuildContext context) {
-    if(user == null || profileImage == null){
+    if(user == null || _loadingImage == true){
       return loading;
     }else{
       return profile();
@@ -73,12 +75,15 @@ class ProfileState extends State<ProfilePage>{
     loading
         :
     Scaffold(
+      key: _scaffoldKey,
+      resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
         title: Text('Profile'),
         centerTitle: true,
         actions: <Widget>[
           FlatButton.icon(
+            key: Key('settings'),
             onPressed: (){
               Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage(user: user)));
             },
@@ -118,14 +123,19 @@ class ProfileState extends State<ProfilePage>{
                     width:100,
                     child:
                     ClipRRect(
+                        key: Key('imageholder'),
                         borderRadius: BorderRadius.circular(10000.0),
                         child: _loadingImage == true ?
                         DefaultLoader()
                         :
+                        profileImage != null ?
                         CachedNetworkImage(
                             imageUrl: profileImage,
                             placeholder: (context, url) => DefaultLoader(),
-                            errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey))
+                            errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
+                        )
+                         :
+                        CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
                     )
                 )
             ),
@@ -133,8 +143,9 @@ class ProfileState extends State<ProfilePage>{
             Text(user.username, style: TextStyle(fontSize: 16),),
             Spacer(),
             FlatButton(
-                onPressed: (){
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user)));
+              key:Key('friends'),
+                onPressed: () async{
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user, authService: widget.authService,)));
                 },
                 child: Text(
                   'Friends',
@@ -160,12 +171,18 @@ class ProfileState extends State<ProfilePage>{
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               ListTile(
+                key: Key('about'),
                 title: Text('About', style: TextStyle(fontSize: 16)),
-                trailing: IconButton(icon:Icon(Icons.edit), onPressed: (){_setDescription();}),
+                trailing: IconButton(
+                    key: Key('edit'),
+                    icon:Icon(Icons.edit),
+                    onPressed: (){_setDescription();}
+                    ),
               ),
 
               Padding(padding: EdgeInsets.only(top:10),),
               GestureDetector(
+                key: Key('aboutgesture'),
                 child: ListTile(title: Text(user.desc ?? 'Add a description of yourself')),
                 onTap: (){_setDescription();}
               ),
@@ -173,16 +190,29 @@ class ProfileState extends State<ProfilePage>{
               Padding(padding: EdgeInsets.only(top:10),),
               Row(
                 children: <Widget>[
-                  Text('My dogs:', style: TextStyle(fontSize: 17)),
+                  Text('My dogs:', style: TextStyle(fontSize: 17), key: Key('mydogs'),),
                   IconButton(
+                    key: Key('addog'),
                       icon: Icon(Icons.add),
                       onPressed: () async{
-                        await showDialog(context: context, barrierDismissible: false, child: DogDialog(context));
-                        setState(() {
-                          _loadingProfile = true;
-                        });
-                        User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
-                        setState(() {user = newUser; _loadingProfile = false;});
+                        dynamic result = await showDialog(context: context, barrierDismissible: false, child: DogDialog(context,widget.httpProvider));
+
+                        if(result != null){
+                          setState(() {
+                            _loadingProfile = true;
+                          });
+
+                          Dog dog = result;
+
+                          widget.user.addDog(dog);
+                          setState(() {
+                            user = widget.user;
+                            _loadingProfile = false;
+                          });
+                          snackText = "Your dog was added to your profile!";
+                          _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
+                        }
+
                       },
                       iconSize: 16
                   )
@@ -199,21 +229,22 @@ class ProfileState extends State<ProfilePage>{
     return Expanded(
       flex: 7,
       child: ListView.builder(
+        key: Key('doglistview'),
         itemCount: user.dogs.length,
         itemBuilder: (context, index) {
           return ListTile(
               leading: Icon(Icons.pets),
-              title: Text(user.dogs[index]['name']),
-              //TODO: IMAGE URL
+              title: Text(user.dogs[index].getName()),
               trailing: IconButton(
+                key: Key('removedog${user.dogs[index].getUUID()}'),
                   icon: Icon(Icons.delete_forever),
                   onPressed: (){
-                    Dog dog = Dog.fromJson(user.dogs[index]);
+                    Dog dog = user.dogs[index];
                     _deleteDogConfirmation(dog);
                   }
                   ),
               onTap: (){
-                Dog dog = Dog.fromJson(user.dogs[index]);
+                Dog dog = user.dogs[index];
                 Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog)));
               });
         },
@@ -229,17 +260,16 @@ class ProfileState extends State<ProfilePage>{
       _loadingImage = true;
     });
 
-    bool uploadSuccessful = await StorageProvider(user:user).uploadImage(tempImage);
+    bool uploadSuccessful = await widget.storageProvider.uploadImage(tempImage);
     if(uploadSuccessful){
-      //_getProfileImage();
-      dynamic result = await StorageProvider(user:user).getProfileImage();
+      dynamic result = await widget.storageProvider.getProfileImage();
       if(result != null){
         _getProfileImage();
       }
     }else{
       String snackText = "Something went wrong with uploading picture.";
 
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
+      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
 
       setState(() {_loadingImage = false;});
     }
@@ -261,6 +291,7 @@ class ProfileState extends State<ProfilePage>{
                         shrinkWrap: true,
                         children: [
                           TextField(
+                            key: Key('editdesctextfield'),
                             keyboardType: TextInputType.multiline,
                             maxLines: 7,
                             maxLength: 100,
@@ -270,10 +301,12 @@ class ProfileState extends State<ProfilePage>{
                           ),
                           ListTile(
                             leading: IconButton(
+                              key: Key('dialogeditbuttondone'),
                               icon: Icon(Icons.done),
                               onPressed: (){_updateDescription(desc); setState(() {_loadingProfile = true;}); Navigator.pop(context);},
                             ),
                             trailing: IconButton(
+                              key: Key('dialogeditbuttonback'),
                               icon: Icon(Icons.close),
                               onPressed: (){Navigator.pop(context);},
                             ),
@@ -289,32 +322,13 @@ class ProfileState extends State<ProfilePage>{
   }
 
   void _updateDescription(String desc) async{
-    try{
 
-      final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/users',
-          headers:<String, String>{
-            "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
-          },
-          body: jsonEncode(<String,String>{
-            "name":widget.user.username,
-            "description":desc,
-          })
-      );
+    dynamic result = await widget.httpProvider.updateDescriptionUser(desc);
 
-      if(response.statusCode==200){ // Successfully created database account
-        print("Updated desc, response code: " + response.statusCode.toString());
-        setState(() {widget.user.setDescription(desc); _loadingProfile = false;});
-      }else{ //Something went wrong
-        print("Something went wrong with updating desc, response code: " + response.statusCode.toString());
-        print(response.body);
-        setState(() {_loadingProfile = false;});
-      }
-    }catch(e){
+    if(result == true){
+      setState(() {widget.user.setDescription(desc); _loadingProfile = false;});
+    }else{
       setState(() {_loadingProfile = false;});
-      print(e);
     }
   }
 
@@ -322,6 +336,7 @@ class ProfileState extends State<ProfilePage>{
     await showDialog(
         context: context,
         child: SimpleDialog(
+          key: Key('deletedogdialog'),
           contentPadding: EdgeInsets.all(10.0),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20.0))
@@ -334,27 +349,30 @@ class ProfileState extends State<ProfilePage>{
                   child: Text(
                     'Are you sure that you want to delete ${dog.name} from your profile?',
                     style: TextStyle(fontSize: 17),
+                    key: Key('information'),
                   ),
                 ),
                 Padding(
                   padding: EdgeInsets.only(top:20),
                   child: ListTile(
                       leading: RaisedButton(
+                          key: Key('nobutton'),
                           child: Text('No'),
                           onPressed: (){Navigator.pop(context);},
                           shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
                       ,
                       trailing: RaisedButton(
+                          key: Key('yesbutton'),
                           child: Text('Yes'),
                           onPressed: () async{
                             setState(() {_loadingProfile = true;});
                             Navigator.pop(context);
                             await _deleteDog(dog);
+                            //User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
                             setState(() {
-                              _loadingProfile = true;
+                              _loadingProfile = false;
+                              user = widget.user;
                             });
-                            User newUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
-                            setState(() {user = newUser; _loadingProfile = false;});
                           },
                           shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
                   ),
@@ -367,34 +385,18 @@ class ProfileState extends State<ProfilePage>{
   }
 
   _deleteDog(Dog dog)async{
-    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
-
-    try{
-      final response = await http.delete('https://dogsonfire.herokuapp.com/dogs/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
-      if(response.statusCode == 204){
-        print(response.statusCode);
-
-        setState(() {
-          _loadingProfile = false;
-        });
+    dynamic result = await widget.httpProvider.deleteDog(dog);
+    if(result != null){
+      if(result == true){
+        widget.user.removeDog(dog);
         snackText = 'Successfully deleted ${dog.name} from your profile.';
       }else{
-        print(response.statusCode);
-        print(response.body);
-
-        setState(() {
-          _loadingProfile = false;
-        });
         snackText = 'Something went wrong with deleting ${dog.name} from your profile.';
       }
-    }catch(e){
-      print(e);
-      setState(() {
-        _loadingProfile = false;
-      });
+    }else{
       snackText = 'Something went wrong with deleting ${dog.name} from your profile.';
     }
-
+    print(snackText);
     Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
   }
 }
