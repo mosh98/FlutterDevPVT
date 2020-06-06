@@ -33,8 +33,8 @@ void main(){
     return friendsList;
   }
 
-  List<dynamic> createStaticDogsList(){
-    List<dynamic> dogList = [DEFAULT_DOG1, DEFAULT_DOG2];
+  List<Dog> createStaticDogsList(){
+    List<Dog> dogList = [DEFAULT_DOG1, DEFAULT_DOG2];
     return dogList;
   }
 

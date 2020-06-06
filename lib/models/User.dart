@@ -10,7 +10,7 @@ class User{
   String gender;
   String desc;
   final String createdDate;
-  final List<dynamic> dogs;
+  final List<Dog> dogs;
   String photoUrl;
   final String userId;
   final bucket;
@@ -45,7 +45,7 @@ class User{
       dateOfBirth: json['dateOfBirth'],
       desc: json['description'],
       createdDate: json['createdAt'],
-      dogs: json['dogs'],
+      dogs: _getDogs(json['dogs']),
       photoUrl: json['photoUrl'],
       bucket: json['bucket'],
       friends: _getFriends(json['friends']),
@@ -59,7 +59,7 @@ class User{
   String getDesc(){return desc;}
   String getCreatedDate(){return createdDate;}
   String getPhotoUrl(){return photoUrl;}
-  List getDogs(){return dogs;}
+  List<Dog> getDogs(){return dogs;}
   String getBucket(){return bucket;}
   List<User> getFriends(){return friends;}
 
@@ -71,7 +71,7 @@ class User{
 
   void setDateOfBirth(String dateOfBirth){this.dateOfBirth = dateOfBirth;}
 
-  bool addDog(Dog dog){
+  bool addDog(dynamic dog){
     if(dog == null)
       return false;
     dogs.add(dog);
@@ -109,6 +109,20 @@ class User{
     });
 
     return convertedFriends;
+  }
+
+  static List<Dog> _getDogs(List<dynamic> dogs){
+    List<Dog> convertedDogs = List<Dog>();
+
+    if(dogs == null || dogs.isEmpty)
+      return convertedDogs;
+
+    dogs.forEach((element) {
+      Dog dog = Dog.fromJson(element);
+      convertedDogs.add(dog);
+    });
+
+    return convertedDogs;
   }
 
   @override

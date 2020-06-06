@@ -213,10 +213,10 @@ class ProfileState extends State<ProfileViewer> {
         itemBuilder: (context, index) {
           return ListTile(
               leading: Icon(Icons.pets),
-              title: Text(widget.otherUser.dogs[index]['name']),
+              title: Text(widget.otherUser.dogs[index].getName()),
               //TODO: IMAGE URL
               onTap: () {
-                Dog dog = Dog.fromJson(widget.otherUser.dogs[index]);
+                Dog dog = widget.otherUser.dogs[index];
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) =>
                         DogProfileViewer(dog: dog)));

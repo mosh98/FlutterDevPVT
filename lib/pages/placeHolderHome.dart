@@ -2,7 +2,8 @@ import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/FindFriends.dart';
 import 'package:dog_prototype/services/Authentication.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dog_prototype/services/HttpProvider.dart';
+import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +15,10 @@ class PlaceHolderApp extends StatefulWidget {
 
   final Future<User> futureUser;
   final User user;
-  PlaceHolderApp({this.futureUser, this.user});
+  final StorageProvider storageProvider;
+  final HttpProvider httpProvider;
+  final AuthService authService;
+  PlaceHolderApp({this.futureUser, this.user, this.storageProvider, this.httpProvider, this.authService});
 
   @override
   HomePageState createState() => HomePageState();
@@ -53,7 +57,7 @@ class HomePageState extends State<PlaceHolderApp> {
       return DefaultLoader();
     }else{
       mapPage = MapPage();
-      profilePage = ProfilePage(user:user);
+      profilePage = ProfilePage(user:user,storageProvider: widget.storageProvider, httpProvider: widget.httpProvider);
       messages = Messages(user: user,);
       search = FindFriends(user: user,);
       pages = [profilePage, mapPage, search, messages];

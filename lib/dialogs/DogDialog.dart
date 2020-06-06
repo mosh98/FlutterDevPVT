@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/HttpProvider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -9,7 +10,8 @@ import 'package:http/http.dart' as http;
 class DogDialog extends StatefulWidget{
 
   final BuildContext context;
-  DogDialog(this.context);
+  final HttpProvider httpProvider;
+  DogDialog(this.context, this.httpProvider);
 
   @override
   createState() => new _DialogState();
@@ -44,7 +46,9 @@ class _DialogState extends State<DogDialog>{
     children: [
     Text('Information about your dog', style:TextStyle(fontSize: 20.0)),
     Padding(padding:EdgeInsets.only(left:15.0)),
-    IconButton(icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
+    IconButton(icon: Icon(Icons.close), onPressed: (){
+      Navigator.pop(context, null);
+    })
     ],
     ),
     Form(
@@ -191,7 +195,7 @@ class _DialogState extends State<DogDialog>{
     child: RaisedButton(
     onPressed: ()async{
     await _addDog();
-    Navigator.of(context).pop();
+    //Navigator.of(context).pop();
     },
     child: Text('Add dog'),
     shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
@@ -253,37 +257,8 @@ class _DialogState extends State<DogDialog>{
       }
     }
 
-    try{
-      String token = await AuthService().getCurrentFirebaseUser().then((firebaseUser) => firebaseUser.getIdToken().then((tokenResult) => tokenResult.token));
-
-      final http.Response response = await http.post(
-          'https://dogsonfire.herokuapp.com/dogs',
-          headers:{
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer $token'
-          },
-          body: jsonEncode(<String,String>{
-            'name':dogName,
-            'breed':breed,
-            'dateOfBirth':dateOfBirth,
-            'gender':gender,
-            'neutered':neut.toString(),
-            'description':null,
-          })
-      );
-
-      if(response.statusCode==201){
-        print(response.statusCode);
-        snackText = "$dogName was added to your profile!";
-      }else{
-        print(response.statusCode);
-        print(response.body);
-        snackText = "Failed to upload $dogName to your profile.";
-      }
-    }catch(e){
-      print(e);
-      snackText = "Failed to upload $dogName to your profile.";
-    }
-    Scaffold.of(widget.context).showSnackBar(SnackBar(content: Text(snackText)));
+    dynamic result = await widget.httpProvider.addDog(dogName,breed,dateOfBirth,gender,neut);
+    Navigator.pop(context, result);
   }
+
 }
