@@ -338,7 +338,18 @@ class AuthService{
 
   //GET CURRENT USER
   Future<FirebaseUser> getCurrentFirebaseUser() async{
-    return await _auth.currentUser();
+    try{
+      print('here');
+      dynamic result = await _auth.currentUser();
+      print('here again');
+      if(result != null){
+        return result;
+      }
+      return null;
+    }catch(e){
+      print(e);
+      return null;
+    }
   }
 
   //check if current user is facebook user

@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main(){
-  /**
-   * TESTING WIDGET OF LOGIN_PAGE
-   */
 
   RegisterPage page = RegisterPage();
   Finder emailField = find.byKey(Key('email'));

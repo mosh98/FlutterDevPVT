@@ -1,4 +1,7 @@
+import 'package:dog_prototype/models/Dog.dart';
+import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/FacebookForm.dart';
+import 'package:dog_prototype/pages/SettingsPage.dart';
 import 'package:dog_prototype/pages/placeHolderHome.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';

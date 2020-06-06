@@ -19,7 +19,8 @@ import 'package:http/http.dart' as http;
 class SettingsPage extends StatefulWidget {
 
   final User user;
-  SettingsPage({this.user});
+  final bool isTest;
+  SettingsPage({this.user, this.isTest});
 
   @override
   _SettingsPageState createState() => _SettingsPageState();
@@ -31,7 +32,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String gender = "";
   String dateOfBirth = "";
   String profileImage;
-  bool _loadingImage = true;
+  //bool _loadingImage = true;
   bool _loadingProfile = false;
   String snackText = "";
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -43,47 +44,65 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() {
       _loadingProfile = true;
     });
-    _getFirebaseUser();
-    _getProfileImage();
-
-    if (widget.user.gender == "UNKNOWN") {
-      gender = "-";
+    if(widget.isTest == null || widget.isTest == false){
+      _getFirebaseUser();
+    }else{
+      setState(() {
+        _loadingProfile = false;
+      });
     }
-    else {
-      gender = widget.user.gender;
-    }
+    //_getProfileImage();
 
-    dateOfBirth = widget.user.dateOfBirth;
+    if(widget.user == null){
+      gender = "Something went wrong with getting gender";
+      dateOfBirth = "Something went wrong with getting date of birth";
+    }else{
+      if (widget.user.gender == "UNKNOWN") {
+        gender = "-";
+      }
+      else {
+        gender = widget.user.gender;
+      }
+
+      dateOfBirth = widget.user.dateOfBirth;
+    }
     super.initState();
   }
 
-  _getProfileImage() async {
-    String token = await AuthService().getCurrentFirebaseUser().then((value) =>
-        value.getIdToken().then((value) => value.token));
-    try {
-      final url = await http.get(
-          'https://dogsonfire.herokuapp.com/images/${widget.user.userId}',
-          headers: {'Authorization': 'Bearer $token'});
-      if (url.statusCode == 200) {
-        setState(() {
-          profileImage = url.body;
-          _loadingImage = false;
-          _loadingProfile = false;
-        });
-      }else{
-        setState(() {
-          _loadingImage = false;
-          _loadingProfile = false;
-        });
-      }
-    } catch (e) {
-      print(e);
-
-    }
-  }
+//  _getProfileImage() async {
+//    String token = await AuthService().getCurrentFirebaseUser().then((value) =>
+//        value.getIdToken().then((value) => value.token));
+//    try {
+//      final url = await http.get(
+//          'https://dogsonfire.herokuapp.com/images/${widget.user.userId}',
+//          headers: {'Authorization': 'Bearer $token'});
+//      if (url.statusCode == 200) {
+//        setState(() {
+//          profileImage = url.body;
+//          _loadingImage = false;
+//          _loadingProfile = false;
+//        });
+//      }else{
+//        setState(() {
+//          _loadingImage = false;
+//          _loadingProfile = false;
+//        });
+//      }
+//    } catch (e) {
+//      print(e);
+//
+//    }
+//  }
 
   _getFirebaseUser() async{
     firebaseUser = await AuthService().getCurrentFirebaseUser();
+    if(firebaseUser == null){
+      setState(() {
+        _loadingProfile = false;
+        return;
+      });
+      return;
+    }
     String token = await AuthService().getToken();
     client = HttpProvider.instance(userToken: token);
     setState(() {
@@ -93,7 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.user == null || firebaseUser == null) {
+    if (widget.user == null) {
       return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
@@ -123,114 +142,117 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         body: Container(
           padding: EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _pictureInformationBuilder(),
-              Text('PERSONAL INFORMATION',
-                  style: TextStyle(fontSize: 15.0, color: Colors.grey)),
-              _profileInformationBuilder(),
-              Text('ACCOUNT',
-                  style: TextStyle(fontSize: 15.0, color: Colors.grey)),
-              _accountInformationBuilder(),
-            ],
+          child: Padding(
+            padding: EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                //_pictureInformationBuilder(),
+                Text('PERSONAL INFORMATION',
+                    style: TextStyle(fontSize: 15.0, color: Colors.grey)),
+                _profileInformationBuilder(),
+                Text('ACCOUNT',
+                    style: TextStyle(fontSize: 15.0, color: Colors.grey)),
+                _accountInformationBuilder(),
+              ],
+            ),
           ),
         )
     );
   }
 
-  Widget _pictureInformationBuilder() {
-    return Expanded(
-      flex: 3,
-      child: Center(
-        child: GestureDetector(
-            onTap: getImage,
-            child: Container(
-                height: 100,
-                width: 100,
-                child:
-                ClipRRect(
-                    borderRadius: BorderRadius.circular(10000.0),
-                    child: _loadingImage == true ?
-                    DefaultLoader()
-                        :
-                    CachedNetworkImage(
-                        imageUrl: profileImage,
-                        placeholder: (context, url) => DefaultLoader(),
-                        errorWidget: (context, url, error) => CircleAvatar(
-                            radius: 60,
-                            child: Icon(Icons.add_a_photo, color: Colors.white),
-                            backgroundColor: Colors.grey))
-                )
-            )
-        ),
-      ),
-    );
-  }
+//  Widget _pictureInformationBuilder() {
+//    return Expanded(
+//      flex: 3,
+//      child: Center(
+//        child: GestureDetector(
+//            onTap: getImage,
+//            child: Container(
+//                height: 100,
+//                width: 100,
+//                child:
+//                ClipRRect(
+//                    borderRadius: BorderRadius.circular(10000.0),
+//                    child: _loadingImage == true ?
+//                    DefaultLoader()
+//                        :
+//                    CachedNetworkImage(
+//                        imageUrl: profileImage,
+//                        placeholder: (context, url) => DefaultLoader(),
+//                        errorWidget: (context, url, error) => CircleAvatar(
+//                            radius: 60,
+//                            child: Icon(Icons.add_a_photo, color: Colors.white),
+//                            backgroundColor: Colors.grey))
+//                )
+//            )
+//        ),
+//      ),
+//    );
+//  }
 
-  Future getImage() async {
-    var tempImage = await ImagePicker.pickImage(source: ImageSource.gallery);
-
-    setState(() {
-      _loadingImage = true;
-    });
-
-    bool uploadSuccessful = await _uploadImage(tempImage);
-    if (uploadSuccessful) {
-      _getProfileImage();
-    } else {
-      snackText = "Something went wrong with uploading picture.";
-
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
-
-      setState(() {
-        _loadingImage = false;
-      });
-    }
-  }
-
-  Future<bool> _uploadImage(File image) async {
-    try {
-      String token = await AuthService().getCurrentFirebaseUser().then((
-          value) => value.getIdToken().then((value) => value.token));
-
-      final response = await http.put(
-          'https://dogsonfire.herokuapp.com/images/${widget.user.userId}',
-          headers: {'Authorization': 'Bearer $token'});
-
-      if (response != null) {
-        print('First put of picture-upload went through :' +
-            response.statusCode.toString());
-        print('Response body :' + response.body);
-        try {
-          final nextResponse = await http.put(response.body,
-              body: image.readAsBytesSync());
-          if (nextResponse.statusCode == 200) {
-            print('Second put of picture-upload went through :' +
-                response.statusCode.toString());
-
-            return true;
-          } else {
-            print('Something went wrong with uploading picture, second put: ' +
-                response.statusCode.toString());
-            //TODO: POPUP USER
-            return false;
-          }
-        } catch (e) {
-          print(e);
-          return false;
-        }
-      } else {
-        print('Something went wrong with first put of profilepicture: ' +
-            response.statusCode.toString());
-        print(response.body);
-        return false;
-      }
-    } catch (e) {
-      print(e);
-      return false;
-    }
-  }
+//  Future getImage() async {
+//    var tempImage = await ImagePicker.pickImage(source: ImageSource.gallery);
+//
+//    setState(() {
+//      _loadingImage = true;
+//    });
+//
+//    bool uploadSuccessful = await _uploadImage(tempImage);
+//    if (uploadSuccessful) {
+//      _getProfileImage();
+//    } else {
+//      snackText = "Something went wrong with uploading picture.";
+//
+//      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
+//
+//      setState(() {
+//        _loadingImage = false;
+//      });
+//    }
+//  }
+//
+//  Future<bool> _uploadImage(File image) async {
+//    try {
+//      String token = await AuthService().getCurrentFirebaseUser().then((
+//          value) => value.getIdToken().then((value) => value.token));
+//
+//      final response = await http.put(
+//          'https://dogsonfire.herokuapp.com/images/${widget.user.userId}',
+//          headers: {'Authorization': 'Bearer $token'});
+//
+//      if (response != null) {
+//        print('First put of picture-upload went through :' +
+//            response.statusCode.toString());
+//        print('Response body :' + response.body);
+//        try {
+//          final nextResponse = await http.put(response.body,
+//              body: image.readAsBytesSync());
+//          if (nextResponse.statusCode == 200) {
+//            print('Second put of picture-upload went through :' +
+//                response.statusCode.toString());
+//
+//            return true;
+//          } else {
+//            print('Something went wrong with uploading picture, second put: ' +
+//                response.statusCode.toString());
+//            //TODO: POPUP USER
+//            return false;
+//          }
+//        } catch (e) {
+//          print(e);
+//          return false;
+//        }
+//      } else {
+//        print('Something went wrong with first put of profilepicture: ' +
+//            response.statusCode.toString());
+//        print(response.body);
+//        return false;
+//      }
+//    } catch (e) {
+//      print(e);
+//      return false;
+//    }
+//  }
 
   Widget _profileInformationBuilder() {
     return Expanded(
@@ -240,16 +262,24 @@ class _SettingsPageState extends State<SettingsPage> {
             context: context,
             tiles: [
               ListTile(
+                key: Key('username'),
                   title: Text('Username'),
                   trailing: Text(widget.user.username ?? 'No username.'),
                   leading: Icon(Icons.lock)
               ),
               ListTile(
+                key:Key('email'),
                 title: Text('Email'),
-                trailing: Text(firebaseUser.email ?? 'No email'),
+                trailing: Text(
+                  firebaseUser == null ?
+                  'No email'
+                  :
+                  firebaseUser.email ?? 'No email'
+                ),
                 leading: Icon(Icons.lock),
               ),
               GestureDetector(
+                key: Key('dateofbirth'),
                 child: ListTile(
                   title: Text('Date of birth'),
                   trailing: Text(dateOfBirth ?? 'No date of birth'),
@@ -259,6 +289,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 },
               ),
               ListTile(
+                key: Key('gender'),
                 title: Text('Gender'),
                 trailing: DropdownButton<String>(
                   value: gender,
@@ -287,12 +318,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _accountInformationBuilder() {
     return Expanded(
-        flex: 4,
+        flex: 7,
         child: ListView(
           children: ListTile.divideTiles(
             context: context,
             tiles: [
               ListTile(
+                key: Key('changepassword'),
                 title: Text('Change Password'),
                 onTap: () async {
                   await showDialog(context: context,
@@ -302,18 +334,20 @@ class _SettingsPageState extends State<SettingsPage> {
                 },
               ),
               ListTile(
+                key: Key('deleteaccount'),
                   title: Text('Delete account'),
                   trailing: Icon(Icons.error),
                   onTap: () async {
                     await showDialog(context: context,
                         barrierDismissible: false,
                         child: DeleteAccountDialog(
-                          context: context, scaffoldKey: _scaffoldKey, provider: await widget.user.getProvider(),
+                          context: context, scaffoldKey: _scaffoldKey, provider: widget.isTest ? null : await widget.user.getProvider(),
                         )
                     );
                   }
               ),
               ListTile(
+                key:Key('logout'),
                 title: Text('Log out'),
                 onTap: () {
                   _logout();
@@ -329,15 +363,21 @@ class _SettingsPageState extends State<SettingsPage> {
     await showDialog(context: context,
         barrierDismissible: false,
         child: AlertDialog(
+          contentPadding: EdgeInsets.all(10.0),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0))
+          ),
           title: Text('Are you sure you want to log out?'),
           actions: <Widget>[
             MaterialButton(
+              key: Key('logoutno'),
               child: Text('No'),
               onPressed: () {
                 Navigator.of(context, rootNavigator: true).pop('dialog');
               },
             ),
             MaterialButton(
+              key: Key('logoutyes'),
               child: Text('Yes'),
               onPressed: () async {
                 Navigator.of(context, rootNavigator: true).pop('dialog');

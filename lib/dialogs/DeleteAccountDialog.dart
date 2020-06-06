@@ -59,6 +59,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
     child: state == DeleteAccountState.Decision ?
     ListTile(
     leading: RaisedButton(
+    key: Key('nobutton'),
     child: Text('No'),
     onPressed: (){Navigator.pop(context);},
     shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))

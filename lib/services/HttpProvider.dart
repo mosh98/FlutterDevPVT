@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class HttpProvider{
 
-  static final String _SERVER = "https://dogsonfire.herokuapp.com";
+  static const String _SERVER = "https://dogsonfire.herokuapp.com";
 
   final String userToken;
 
