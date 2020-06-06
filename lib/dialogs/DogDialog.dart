@@ -46,7 +46,10 @@ class _DialogState extends State<DogDialog>{
     children: [
     Text('Information about your dog', style:TextStyle(fontSize: 20.0)),
     Padding(padding:EdgeInsets.only(left:15.0)),
-    IconButton(icon: Icon(Icons.close), onPressed: (){
+    IconButton(
+    key:Key('back'),
+    icon: Icon(Icons.close),
+    onPressed: (){
       Navigator.pop(context, null);
     })
     ],
@@ -58,6 +61,7 @@ class _DialogState extends State<DogDialog>{
     children: [
     Padding(padding:EdgeInsets.only(top:20.0)),
     TextFormField(
+    key:Key('namefield'),
     decoration: InputDecoration(
     hintText: 'Name*',
     border: new OutlineInputBorder(
@@ -69,6 +73,7 @@ class _DialogState extends State<DogDialog>{
     ),
     Padding(padding: EdgeInsets.only(top:10.0)),
     TextFormField(
+    key:Key('breedfield'),
     decoration: InputDecoration(
     hintText: 'Breed*',
     border: new OutlineInputBorder(
@@ -95,6 +100,7 @@ class _DialogState extends State<DogDialog>{
     style: TextStyle(fontSize: 16)),
     ),
     trailing: DropdownButton<String>(
+    key:Key('gender'),
     value: gender,
 
     onChanged: (String newValue) {setState(() {
@@ -126,6 +132,7 @@ class _DialogState extends State<DogDialog>{
     child: ListTile(
     title: Text('Neutered:'),
     trailing: DropdownButton<String>(
+    key:Key('neutered'),
     value: neutered,
     onChanged: (String newValue){setState(() {
     neutered = newValue;
@@ -145,6 +152,7 @@ class _DialogState extends State<DogDialog>{
     Padding(padding:EdgeInsets.only(top:10)),
 
     MaterialButton(
+    key:Key('dateofbirth'),
     minWidth: 375,
     height: 50,
     shape: new OutlineInputBorder(
@@ -193,6 +201,7 @@ class _DialogState extends State<DogDialog>{
     SizedBox(
     width: double.infinity,
     child: RaisedButton(
+    key:Key('add'),
     onPressed: ()async{
     await _addDog();
     //Navigator.of(context).pop();

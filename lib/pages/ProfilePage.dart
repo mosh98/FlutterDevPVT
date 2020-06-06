@@ -33,9 +33,11 @@ class ProfileState extends State<ProfilePage>{
   String profileImage;
   String snackText = "";
 
-  bool _loadingImage = false;
+  bool _loadingImage = true;
   bool _loadingProfile = false;
   Widget loading = Center(child:CircularProgressIndicator());
+
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -60,7 +62,7 @@ class ProfileState extends State<ProfilePage>{
 
   @override
   Widget build(BuildContext context) {
-    if(user == null || profileImage == null){
+    if(user == null || _loadingImage == true){
       return loading;
     }else{
       return profile();
@@ -72,6 +74,7 @@ class ProfileState extends State<ProfilePage>{
     loading
         :
     Scaffold(
+      key: _scaffoldKey,
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
@@ -79,6 +82,7 @@ class ProfileState extends State<ProfilePage>{
         centerTitle: true,
         actions: <Widget>[
           FlatButton.icon(
+            key: Key('settings'),
             onPressed: (){
               Navigator.of(context).push(MaterialPageRoute(builder: (context) => SettingsPage(user: user)));
             },
@@ -118,6 +122,7 @@ class ProfileState extends State<ProfilePage>{
                     width:100,
                     child:
                     ClipRRect(
+                        key: Key('imageholder'),
                         borderRadius: BorderRadius.circular(10000.0),
                         child: _loadingImage == true ?
                         DefaultLoader()
@@ -137,6 +142,7 @@ class ProfileState extends State<ProfilePage>{
             Text(user.username, style: TextStyle(fontSize: 16),),
             Spacer(),
             FlatButton(
+              key:Key('friends'),
                 onPressed: () async{
                   Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user)));
                 },
@@ -164,12 +170,18 @@ class ProfileState extends State<ProfilePage>{
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               ListTile(
+                key: Key('about'),
                 title: Text('About', style: TextStyle(fontSize: 16)),
-                trailing: IconButton(icon:Icon(Icons.edit), onPressed: (){_setDescription();}),
+                trailing: IconButton(
+                    key: Key('edit'),
+                    icon:Icon(Icons.edit),
+                    onPressed: (){_setDescription();}
+                    ),
               ),
 
               Padding(padding: EdgeInsets.only(top:10),),
               GestureDetector(
+                key: Key('aboutgesture'),
                 child: ListTile(title: Text(user.desc ?? 'Add a description of yourself')),
                 onTap: (){_setDescription();}
               ),
@@ -177,8 +189,9 @@ class ProfileState extends State<ProfilePage>{
               Padding(padding: EdgeInsets.only(top:10),),
               Row(
                 children: <Widget>[
-                  Text('My dogs:', style: TextStyle(fontSize: 17)),
+                  Text('My dogs:', style: TextStyle(fontSize: 17), key: Key('mydogs'),),
                   IconButton(
+                    key: Key('addog'),
                       icon: Icon(Icons.add),
                       onPressed: () async{
                         dynamic result = await showDialog(context: context, barrierDismissible: false, child: DogDialog(context,widget.httpProvider));
@@ -196,7 +209,7 @@ class ProfileState extends State<ProfilePage>{
                             _loadingProfile = false;
                           });
                           snackText = "Your dog was added to your profile!";
-                          Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
+                          _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
                         }
 
                       },
@@ -215,12 +228,14 @@ class ProfileState extends State<ProfilePage>{
     return Expanded(
       flex: 7,
       child: ListView.builder(
+        key: Key('doglistview'),
         itemCount: user.dogs.length,
         itemBuilder: (context, index) {
           return ListTile(
               leading: Icon(Icons.pets),
               title: Text(user.dogs[index].getName()),
               trailing: IconButton(
+                key: Key('removedog${user.dogs[index].getUUID()}'),
                   icon: Icon(Icons.delete_forever),
                   onPressed: (){
                     Dog dog = user.dogs[index];
@@ -253,7 +268,7 @@ class ProfileState extends State<ProfilePage>{
     }else{
       String snackText = "Something went wrong with uploading picture.";
 
-      Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
+      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
 
       setState(() {_loadingImage = false;});
     }
@@ -275,6 +290,7 @@ class ProfileState extends State<ProfilePage>{
                         shrinkWrap: true,
                         children: [
                           TextField(
+                            key: Key('editdesctextfield'),
                             keyboardType: TextInputType.multiline,
                             maxLines: 7,
                             maxLength: 100,
@@ -284,10 +300,12 @@ class ProfileState extends State<ProfilePage>{
                           ),
                           ListTile(
                             leading: IconButton(
+                              key: Key('dialogeditbuttondone'),
                               icon: Icon(Icons.done),
                               onPressed: (){_updateDescription(desc); setState(() {_loadingProfile = true;}); Navigator.pop(context);},
                             ),
                             trailing: IconButton(
+                              key: Key('dialogeditbuttonback'),
                               icon: Icon(Icons.close),
                               onPressed: (){Navigator.pop(context);},
                             ),
@@ -317,6 +335,7 @@ class ProfileState extends State<ProfilePage>{
     await showDialog(
         context: context,
         child: SimpleDialog(
+          key: Key('deletedogdialog'),
           contentPadding: EdgeInsets.all(10.0),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(20.0))
@@ -329,17 +348,20 @@ class ProfileState extends State<ProfilePage>{
                   child: Text(
                     'Are you sure that you want to delete ${dog.name} from your profile?',
                     style: TextStyle(fontSize: 17),
+                    key: Key('information'),
                   ),
                 ),
                 Padding(
                   padding: EdgeInsets.only(top:20),
                   child: ListTile(
                       leading: RaisedButton(
+                          key: Key('nobutton'),
                           child: Text('No'),
                           onPressed: (){Navigator.pop(context);},
                           shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)))
                       ,
                       trailing: RaisedButton(
+                          key: Key('yesbutton'),
                           child: Text('Yes'),
                           onPressed: () async{
                             setState(() {_loadingProfile = true;});
@@ -373,6 +395,7 @@ class ProfileState extends State<ProfilePage>{
     }else{
       snackText = 'Something went wrong with deleting ${dog.name} from your profile.';
     }
+    print(snackText);
     Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
   }
 }
