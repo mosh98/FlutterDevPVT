@@ -19,7 +19,8 @@ class ProfilePage extends StatefulWidget{
   final bool newState;
   final StorageProvider storageProvider;
   final HttpProvider httpProvider;
-  ProfilePage({this.user,this.newState, this.storageProvider, this.httpProvider});
+  final AuthService authService;
+  ProfilePage({this.user,this.newState, this.storageProvider, this.httpProvider, this.authService});
 
 
   @override
@@ -144,7 +145,7 @@ class ProfileState extends State<ProfilePage>{
             FlatButton(
               key:Key('friends'),
                 onPressed: () async{
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user)));
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user, authService: widget.authService,)));
                 },
                 child: Text(
                   'Friends',

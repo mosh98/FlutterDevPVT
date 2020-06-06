@@ -57,7 +57,7 @@ class HomePageState extends State<PlaceHolderApp> {
       return DefaultLoader();
     }else{
       mapPage = MapPage();
-      profilePage = ProfilePage(user:user,storageProvider: widget.storageProvider, httpProvider: widget.httpProvider);
+      profilePage = ProfilePage(user:user,storageProvider: widget.storageProvider, httpProvider: widget.httpProvider, authService: widget.authService,);
       messages = Messages(user: user,);
       search = FindFriends(user: user,);
       pages = [profilePage, mapPage, search, messages];

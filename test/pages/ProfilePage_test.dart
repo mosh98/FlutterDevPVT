@@ -2,9 +2,12 @@
 import 'package:dog_prototype/dialogs/DogDialog.dart';
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
+import 'package:dog_prototype/pages/FriendPage.dart';
 import 'package:dog_prototype/pages/ProfilePage.dart';
+import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/HttpProvider.dart';
 import 'package:dog_prototype/services/StorageProvider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
@@ -33,6 +36,44 @@ class MockHttpProvider extends Mock implements HttpProvider{
   }
 }
 
+class MockIdTokenResult extends Mock implements IdTokenResult{
+  @override
+  String get token => "token";
+}
+
+class MockFirebaseUser extends Mock implements FirebaseUser{
+  @override
+  Future<IdTokenResult> getIdToken({bool refresh = false}) async{
+    MockIdTokenResult tokenResult = MockIdTokenResult();
+    return tokenResult;
+  }
+}
+
+class MockAuthService extends Mock implements AuthService{
+
+  @override
+  Future<FirebaseUser> getCurrentFirebaseUser() async{
+    MockFirebaseUser mockFirebaseUser = MockFirebaseUser();
+    return mockFirebaseUser;
+  }
+
+  @override
+  Future<User> createUserModel(Future<IdTokenResult> token) async{
+    const String DEFAULT_USER_ID = '1';
+    const String DEFAULT_USERNAME = 'username';
+    const String DEFAULT_DATE_OF_BIRTH = '2020-01-01';
+    const String DEFAULT_GENDER = 'MALE';
+    const String DEFAULT_DESC = 'desc';
+    const String DEFAULT_CREATED_DATE = '2020-01-01';
+    const String DEFAULT_PHOTO_URL = 'URL';
+    const String DEFAULT_BUCKET = 'BUCKET';
+    final Dog defaultDogOne = Dog(name:'dog1',uuid: "1");
+    final Dog defaultDogTwo = Dog(name:'dog2', uuid: '2');
+    final List<Dog> fakeUserDogList = [defaultDogOne, defaultDogTwo];
+    return User(userId: DEFAULT_USER_ID, username: DEFAULT_USERNAME, dateOfBirth: DEFAULT_DATE_OF_BIRTH, gender: DEFAULT_GENDER, desc: DEFAULT_DESC, createdDate: DEFAULT_CREATED_DATE, dogs: fakeUserDogList,photoUrl: DEFAULT_PHOTO_URL, bucket: DEFAULT_BUCKET, friends: [User(userId: '5', username: "friend1"),User(userId: '6', username:"friend2")]);
+  }
+}
+
 class MockNavigatorObserver extends Mock implements NavigatorObserver{}
 
 void main() {
@@ -45,13 +86,17 @@ void main() {
   const String DEFAULT_CREATED_DATE = '2020-01-01';
   const String DEFAULT_PHOTO_URL = 'URL';
   const String DEFAULT_BUCKET = 'BUCKET';
-  final User fakeUser = User(userId: DEFAULT_USER_ID, username: DEFAULT_USERNAME, dateOfBirth: DEFAULT_DATE_OF_BIRTH, gender: DEFAULT_GENDER, desc: DEFAULT_DESC, createdDate: DEFAULT_CREATED_DATE, dogs: [Dog(uuid: '1', name: "dog1"),Dog(uuid: '2', name: "dog2")],photoUrl: DEFAULT_PHOTO_URL, bucket: DEFAULT_BUCKET, friends: [User(userId: '5'),User(userId: '6')]);
+  final Dog defaultDogOne = Dog(name:'dog1',uuid: "1");
+  final Dog defaultDogTwo = Dog(name:'dog2', uuid: '2');
+  final List<Dog> fakeUserDogList = [defaultDogOne, defaultDogTwo];
+  final User fakeUser = User(userId: DEFAULT_USER_ID, username: DEFAULT_USERNAME, dateOfBirth: DEFAULT_DATE_OF_BIRTH, gender: DEFAULT_GENDER, desc: DEFAULT_DESC, createdDate: DEFAULT_CREATED_DATE, dogs: fakeUserDogList,photoUrl: DEFAULT_PHOTO_URL, bucket: DEFAULT_BUCKET, friends: [User(userId: '5'),User(userId: '6')]);
 
   MockStorageProvider storageProvider = MockStorageProvider();
   MockHttpProvider httpProvider = MockHttpProvider();
   MockNavigatorObserver mockObserver = MockNavigatorObserver();
+  MockAuthService mockAuthService = MockAuthService();
 
-  final ProfilePage profilePage = ProfilePage(user: fakeUser, storageProvider: storageProvider, httpProvider: httpProvider,);
+  final ProfilePage profilePage = ProfilePage(user: fakeUser, storageProvider: storageProvider, httpProvider: httpProvider,authService: mockAuthService,);
 
   final Widget page = new MediaQuery(
     data: new MediaQueryData(),
@@ -79,10 +124,18 @@ void main() {
   });
 
 
-  testWidgets('Rendering page', (tester) async{
+  testWidgets('Find information about user', (tester) async{
     await tester.pumpWidget(page);
     await tester.pumpAndSettle();
-    expect(find.byType(ProfilePage), findsOneWidget);
+
+    Finder username = find.text(DEFAULT_USERNAME);
+    Finder desc = find.text(DEFAULT_DESC);
+    fakeUserDogList.forEach((element) {
+      Finder name = find.text(element.getName());
+      expect(name, findsOneWidget);
+    });
+    expect(username, findsOneWidget);
+    expect(desc, findsOneWidget);
   });
 
   testWidgets('Find widgets', (tester) async{
@@ -113,6 +166,9 @@ void main() {
     await tester.tap(friendsButton);
 
     verify(mockObserver.didPush(any, any));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FriendPage), findsOneWidget);
   });
 
   testWidgets('Navigation: EditButton -> PUSH', (tester) async{
