@@ -153,6 +153,26 @@ class HttpProvider{
     }
   }
 
+  Future<String> getUsers(String input)async{
+    try{
+      String token = await refreshToken();
+      final response = await http.get('https://dogsonfire.herokuapp.com/users?search=$input', headers: {
+        'Authorization': 'Bearer $token',
+      });
+
+      if(response.statusCode == 200){
+        print('Getting list of users was succesful. Response code: ${response.statusCode}');
+        return response.body;
+      }
+      print('Could not get list of users. Response code: ${response.statusCode}');
+      print(response.body);
+      return null;
+    }catch(e){
+      print('Could not get list of users. Exception: $e');
+      return null;
+    }
+  }
+
   Future<String> refreshToken()async{
     String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
     return token;

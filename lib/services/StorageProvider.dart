@@ -15,6 +15,26 @@ class StorageProvider{
     try{
       final url = await http.get('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
       if(url.statusCode==200){
+        print('Fetching user profile image was succcesful. Response Code: ${url.statusCode}');
+        return url.body;
+      }
+      print('Could not fetch users profile image. Response Code: ${url.statusCode}');
+      print(url.body);
+      return null;
+    }catch(e){
+      print(e);
+      print('Could not fetch users profile image. Exception: $e');
+      return null;
+    }
+  }
+
+  getOtherProfileImage(User user) async{
+    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
+    try{
+      final url = await http.get('https://dogsonfire.herokuapp.com/images/profiles/${user.userId}',
+          headers:{'Authorization': 'Bearer $token'});
+
+      if(url.statusCode==200){
         return url.body;
       }
       return null;
