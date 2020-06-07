@@ -145,7 +145,7 @@ class ProfileState extends State<ProfilePage>{
             FlatButton(
               key:Key('friends'),
                 onPressed: () async{
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user, authService: widget.authService,)));
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => FriendPage(user: user, authService: widget.authService,storageProvider: widget.storageProvider,httpProvider: widget.httpProvider,)));
                 },
                 child: Text(
                   'Friends',
@@ -245,7 +245,7 @@ class ProfileState extends State<ProfilePage>{
                   ),
               onTap: (){
                 Dog dog = user.dogs[index];
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog)));
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog,httpProvider: widget.httpProvider,storageProvider: widget.storageProvider,)));
               });
         },
       ),

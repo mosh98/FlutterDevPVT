@@ -67,10 +67,20 @@ class MockAuthService extends Mock implements AuthService{
     const String DEFAULT_CREATED_DATE = '2020-01-01';
     const String DEFAULT_PHOTO_URL = 'URL';
     const String DEFAULT_BUCKET = 'BUCKET';
+
     final Dog defaultDogOne = Dog(name:'dog1',uuid: "1");
     final Dog defaultDogTwo = Dog(name:'dog2', uuid: '2');
     final List<Dog> fakeUserDogList = [defaultDogOne, defaultDogTwo];
-    return User(userId: DEFAULT_USER_ID, username: DEFAULT_USERNAME, dateOfBirth: DEFAULT_DATE_OF_BIRTH, gender: DEFAULT_GENDER, desc: DEFAULT_DESC, createdDate: DEFAULT_CREATED_DATE, dogs: fakeUserDogList,photoUrl: DEFAULT_PHOTO_URL, bucket: DEFAULT_BUCKET, friends: [User(userId: '5', username: "friend1"),User(userId: '6', username:"friend2")]);
+
+    const String FRIEND_ONE_ID = '5';
+    const String FRIEND_TWO_ID = '6';
+    const String FRIEND_ONE_NAME = 'friend1';
+    const String FRIEND_TWO_NAME = 'friend2';
+    final User defaultFriendOne = User(userId: FRIEND_ONE_ID, username: FRIEND_ONE_NAME);
+    final User defaultFriendTwo = User(userId: FRIEND_TWO_ID, username: FRIEND_TWO_NAME);
+    final List<User> fakeUserFriendList = [defaultFriendOne, defaultFriendTwo];
+
+    return User(userId: DEFAULT_USER_ID, username: DEFAULT_USERNAME, dateOfBirth: DEFAULT_DATE_OF_BIRTH, gender: DEFAULT_GENDER, desc: DEFAULT_DESC, createdDate: DEFAULT_CREATED_DATE, dogs: fakeUserDogList,photoUrl: DEFAULT_PHOTO_URL, bucket: DEFAULT_BUCKET, friends: fakeUserFriendList);
   }
 }
 
@@ -89,7 +99,16 @@ void main() {
   final Dog defaultDogOne = Dog(name:'dog1',uuid: "1");
   final Dog defaultDogTwo = Dog(name:'dog2', uuid: '2');
   final List<Dog> fakeUserDogList = [defaultDogOne, defaultDogTwo];
-  final User fakeUser = User(userId: DEFAULT_USER_ID, username: DEFAULT_USERNAME, dateOfBirth: DEFAULT_DATE_OF_BIRTH, gender: DEFAULT_GENDER, desc: DEFAULT_DESC, createdDate: DEFAULT_CREATED_DATE, dogs: fakeUserDogList,photoUrl: DEFAULT_PHOTO_URL, bucket: DEFAULT_BUCKET, friends: [User(userId: '5'),User(userId: '6')]);
+
+  const String FRIEND_ONE_ID = '5';
+  const String FRIEND_TWO_ID = '6';
+  const String FRIEND_ONE_NAME = 'friend1';
+  const String FRIEND_TWO_NAME = 'friend2';
+  final User defaultFriendOne = User(userId: FRIEND_ONE_ID, username: FRIEND_ONE_NAME);
+  final User defaultFriendTwo = User(userId: FRIEND_TWO_ID, username: FRIEND_TWO_NAME);
+  final List<User> fakeUserFriendList = [defaultFriendOne, defaultFriendTwo];
+
+  final User fakeUser = User(userId: DEFAULT_USER_ID, username: DEFAULT_USERNAME, dateOfBirth: DEFAULT_DATE_OF_BIRTH, gender: DEFAULT_GENDER, desc: DEFAULT_DESC, createdDate: DEFAULT_CREATED_DATE, dogs: fakeUserDogList,photoUrl: DEFAULT_PHOTO_URL, bucket: DEFAULT_BUCKET, friends: fakeUserFriendList);
 
   MockStorageProvider storageProvider = MockStorageProvider();
   MockHttpProvider httpProvider = MockHttpProvider();
@@ -170,6 +189,60 @@ void main() {
 
     expect(find.byType(FriendPage), findsOneWidget);
   });
+
+  testWidgets('Find FriendPage widgets', (tester)async{
+    await tester.pumpWidget(page);
+    await tester.pumpAndSettle();
+    await tester.tap(friendsButton);
+    verify(mockObserver.didPush(any, any));
+    await tester.pumpAndSettle();
+
+    Finder searchField = find.byKey(Key('search'));
+    Finder listViewBuilder = find.byKey(Key('builder'));
+
+    expect(searchField, findsOneWidget);
+    expect(listViewBuilder, findsOneWidget);
+  });
+
+  testWidgets('Find FriendPage actually shows friends', (tester)async{
+    await tester.pumpWidget(page);
+    await tester.pumpAndSettle();
+    await tester.tap(friendsButton);
+    verify(mockObserver.didPush(any, any));
+    await tester.pumpAndSettle();
+
+    fakeUser.friends.forEach((element) {
+      expect(find.text(element.getName()),findsOneWidget);
+    });
+  });
+
+  testWidgets('Find FriendPage -SEARCH- actually searches for friend', (tester)async{
+    await tester.pumpWidget(page);
+    await tester.pumpAndSettle();
+    await tester.tap(friendsButton);
+    verify(mockObserver.didPush(any, any));
+    await tester.pumpAndSettle();
+
+    Finder searchField = find.byKey(Key('search'));
+    await tester.enterText(searchField, "1"); // SUB-STRING OF FRIEND ONE
+    await tester.pumpAndSettle();
+
+    expect(find.text(FRIEND_ONE_NAME), findsOneWidget);
+    expect(find.text(FRIEND_TWO_NAME), findsNothing);
+
+    await tester.enterText(searchField, "2"); // SUB-STRING OF FRIEND TWO
+    await tester.pumpAndSettle();
+
+    expect(find.text(FRIEND_TWO_NAME), findsOneWidget);
+    expect(find.text(FRIEND_ONE_NAME), findsNothing);
+
+    await tester.enterText(searchField, "friend"); //SUB-STRING OF BOTH FRIENDS
+    await tester.pumpAndSettle();
+    expect(find.text(FRIEND_ONE_NAME), findsOneWidget);
+    expect(find.text(FRIEND_TWO_NAME), findsOneWidget);
+  });
+
+
 
   testWidgets('Navigation: EditButton -> PUSH', (tester) async{
     await tester.pumpWidget(page);
