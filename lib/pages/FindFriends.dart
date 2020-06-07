@@ -45,6 +45,7 @@ class FindFriendsState extends State<FindFriends> {
           Container(
             padding: const EdgeInsets.all(20.0),
             child: TextField(
+              key: Key('search'),
                 decoration: InputDecoration(hintText: "Search"),
                 keyboardType: TextInputType.text,
                 controller: textFieldController,
@@ -67,13 +68,14 @@ class FindFriendsState extends State<FindFriends> {
                   return GestureDetector(
                     onTap: (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));},
                     child: Card(
-                      key: ValueKey(index),
+                      key: Key('${user.userId}'),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Row(
                             children: <Widget>[
                               Container(
+                                key: (Key('image')),
                                   height:25,
                                   width:25,
                                   child:
@@ -92,15 +94,14 @@ class FindFriendsState extends State<FindFriends> {
                                       )
                                   )
                               ),
-                              Padding(padding: EdgeInsets.only(left:5),child: Text(user.getName())),
+                              Padding(padding: EdgeInsets.only(left:5),child: Text(user.getName(),key:Key('username'))),
                             ],
                           ),
                           Row(
                             children: <Widget>[
                               FlatButton.icon(
+                                key: (Key('chat')),
                                 onPressed: (){
-                                  print(currentUser);
-                                   print(User);
                                   Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessengerHandler(user: currentUser,peer: user)));
                                   //Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessengerX( currentUser, user)));
                                 },
@@ -114,6 +115,7 @@ class FindFriendsState extends State<FindFriends> {
                               ),
 
                               FlatButton.icon(
+                                key: (Key('profileviewer')),
                                 onPressed: (){
                                   Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));
                                 },
