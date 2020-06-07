@@ -61,6 +61,7 @@ class _FriendPageState extends State<FriendPage> {
     return Expanded(
       flex: 1,
       child: TextFormField(
+        key: Key('search'),
         decoration: InputDecoration(
             hintText: 'Search',
           prefixIcon: Icon(Icons.search),
@@ -83,6 +84,7 @@ class _FriendPageState extends State<FriendPage> {
       Center(child: Text('You have no friends yet. Go back and use the find friends feature!'))
           :
       ListView.builder(
+          key: Key('builder'),
           itemCount: friends.length,
           itemBuilder: (context,index){
             User friend = friends[index];

@@ -68,18 +68,19 @@ class HomePageState extends State<PlaceHolderApp> {
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-              icon: Icon(Icons.person_pin_circle), title: Text('Profile')),
+              icon: Icon(Icons.person_pin_circle),
+              title: Text('Profile',key: Key('profile'),)),
           BottomNavigationBarItem(
             icon: Icon(Icons.location_on),
-            title: Text('Maps'),
+            title: Text('Maps', key:Key('maps')),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
-            title: Text('Find friends'),
+            title: Text('Find friends', key:Key('findfriends')),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.message),
-            title: Text('Messages'),
+            title: Text('Messages', key:Key('messages')),
           ),
         ],
         currentIndex: selectedIndex,
