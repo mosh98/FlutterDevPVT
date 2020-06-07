@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dog_prototype/models/Dog.dart';
+import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
@@ -170,6 +171,44 @@ class HttpProvider{
     }catch(e){
       print('Could not get list of users. Exception: $e');
       return null;
+    }
+  }
+
+  Future<bool> addFriend(User friend)async{
+    String token = await refreshToken();
+    try {
+      final response = await http.post(
+          'https://dogsonfire.herokuapp.com/friends/${friend
+              .userId}', headers: {'Authorization': 'Bearer $token'});
+      if (response.statusCode == 200) {
+        print('Succesfully added friend. Response code: ${response.statusCode}');
+        return true;
+      }
+      print('Could not add friend. Response code: ${response.statusCode}');
+      print(response.body);
+      return false;
+    } catch (e) {
+      print('Could not add friend. Exception: $e');
+      return false;
+    }
+  }
+
+  Future<bool> removeFriend(User friend) async{
+    String token = await refreshToken();
+    try {
+      final response = await http.delete(
+          'https://dogsonfire.herokuapp.com/friends/${friend
+              .userId}', headers: {'Authorization': 'Bearer $token'});
+      if (response.statusCode == 200) {
+        print('Succesfully deleted friend. Response code: ${response.statusCode}');
+        return true;
+      }
+      print('Could not remove friend. Response code: ${response.statusCode}');
+      print(response.body);
+      return false;
+    } catch (e) {
+      print('Could not remove friend. Exception: $e');
+      return false;
     }
   }
 

@@ -4,17 +4,21 @@ import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/pages/DogProfileViewer.dart';
+import 'package:dog_prototype/services/HttpProvider.dart';
+import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class ProfileViewer extends StatefulWidget{
 
   @override
   ProfileState createState() => ProfileState();
 
-    ProfileViewer({@required this.otherUser});
+    ProfileViewer({@required this.otherUser, @required this.currentUser,this.storageProvider, this.httpProvider});
     final User otherUser;
+    final User currentUser;
+    final StorageProvider storageProvider;
+    final HttpProvider httpProvider;
 }
 
 class ProfileState extends State<ProfileViewer> {
@@ -22,8 +26,6 @@ class ProfileState extends State<ProfileViewer> {
   Widget _loading = DefaultLoader();
   String profileImage;
   bool _loadingImage = false;
-
-//
   bool _isFriends;
 
   @override
@@ -34,8 +36,7 @@ class ProfileState extends State<ProfileViewer> {
   }
 
   _getIsFriends() async{
-    User currentUser = await AuthService().createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
-    if(currentUser.friends.contains(widget.otherUser)){
+    if(widget.currentUser.friends.contains(widget.otherUser)){
       setState(() {
         _isFriends = true;
       });
@@ -47,26 +48,15 @@ class ProfileState extends State<ProfileViewer> {
   }
 
   _getProfileImage() async {
-    String token = await AuthService().getCurrentFirebaseUser().then((value) =>
-        value.getIdToken().then((value) => value.token));
-    try {
-      final url = await http.get(
-          'https://dogsonfire.herokuapp.com/images/profiles/${widget.otherUser
-              .userId}', headers: {'Authorization': 'Bearer $token'});
-      if (url.statusCode == 200) {
-        setState(() {
-          profileImage = url.body;
-        });
-      }
+    final result = await widget.storageProvider.getOtherProfileImage(widget.otherUser);
+
+    if(result != null){
       setState(() {
-        _loadingImage = false;
-      });
-    } catch (e) {
-      print(e);
-      setState(() {
-        _loadingImage = false;
+        profileImage = result;
       });
     }
+
+    setState(() {_loadingImage = false;});
   }
 
   @override
@@ -214,7 +204,6 @@ class ProfileState extends State<ProfileViewer> {
           return ListTile(
               leading: Icon(Icons.pets),
               title: Text(widget.otherUser.dogs[index].getName()),
-              //TODO: IMAGE URL
               onTap: () {
                 Dog dog = widget.otherUser.dogs[index];
                 Navigator.of(context).push(MaterialPageRoute(
@@ -227,54 +216,18 @@ class ProfileState extends State<ProfileViewer> {
   }
 
   Future<bool> _addFriend() async{
-    String token = await AuthService().getCurrentFirebaseUser().then((value) =>
-        value.getIdToken().then((value) => value.token));
-    try {
-      final url = await http.post(
-          'https://dogsonfire.herokuapp.com/friends/${widget.otherUser
-              .userId}', headers: {'Authorization': 'Bearer $token'});
-      if (url.statusCode == 200) {
-        return true;
-      }
-      return false;
-    } catch (e) {
-      print(e);
-      return false;
+    bool addedFriend = await widget.httpProvider.addFriend(widget.otherUser);
+    if(addedFriend){
+      widget.currentUser.addFriend(widget.otherUser);
     }
+    return addedFriend;
   }
 
   Future<bool> _removeFriend() async{
-    String token = await AuthService().getCurrentFirebaseUser().then((value) =>
-        value.getIdToken().then((value) => value.token));
-    try {
-      final url = await http.delete(
-          'https://dogsonfire.herokuapp.com/friends/${widget.otherUser
-              .userId}', headers: {'Authorization': 'Bearer $token'});
-      if (url.statusCode == 200) {
-        return true;
-      }
-      return false;
-    } catch (e) {
-      print(e);
-      return false;
+    bool removedFriend = await widget.httpProvider.removeFriend(widget.otherUser);
+    if(removedFriend){
+      widget.currentUser.removeFriend(widget.otherUser);
     }
-  }
-}
-
-class ImageDialog extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      child: Container(
-        width: 400,
-        height: 400,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: ExactAssetImage('assets/pernilla.jpg'),
-            fit: BoxFit.cover
-          )
-        ),
-      ),
-    );
+    return removedFriend;
   }
 }

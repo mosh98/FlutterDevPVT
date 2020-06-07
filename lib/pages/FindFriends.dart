@@ -6,7 +6,6 @@ import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/HttpProvider.dart';
 import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/cupertino.dart';
 import 'package:dog_prototype/models/User.dart';
 
@@ -17,7 +16,8 @@ class FindFriends extends StatefulWidget {
   final User user;
   final StorageProvider storageProvider;
   final HttpProvider httpProvider;
-  FindFriends({this.user, this.storageProvider, this.httpProvider});
+  final AuthService authService;
+  FindFriends({this.user, this.storageProvider, this.httpProvider,this.authService});
 
   @override
   FindFriendsState createState() => FindFriendsState(currentUser:this.user);
@@ -66,7 +66,7 @@ class FindFriendsState extends State<FindFriends> {
                   User user = users.keys.elementAt(index);
 
                   return GestureDetector(
-                    onTap: (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));},
+                    onTap: (){Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user, currentUser:widget.user,storageProvider: widget.storageProvider,httpProvider: widget.httpProvider)));},
                     child: Card(
                       key: Key('${user.userId}'),
                       child: Row(
@@ -117,7 +117,7 @@ class FindFriendsState extends State<FindFriends> {
                               FlatButton.icon(
                                 key: (Key('profileviewer')),
                                 onPressed: (){
-                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user)));
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user, currentUser: widget.user,storageProvider: widget.storageProvider,httpProvider: widget.httpProvider)));
                                 },
                                 icon: Icon(
                                   Icons.keyboard_arrow_right,

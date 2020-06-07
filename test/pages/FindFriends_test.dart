@@ -46,7 +46,9 @@ void main(){
   final MockHttpProvider mockHttpProvider = MockHttpProvider();
   final MockStorageProvider mockStorageProvider = MockStorageProvider();
 
-  final FindFriends findFriends = FindFriends(httpProvider: mockHttpProvider,storageProvider: mockStorageProvider,);
+  User fakeUser = User();
+
+  final FindFriends findFriends = FindFriends(user: fakeUser,httpProvider: mockHttpProvider,storageProvider: mockStorageProvider,);
 
   final Finder searchBar = find.byKey(Key('search'));
 
@@ -129,7 +131,7 @@ void main(){
 
     await tester.tap(listBuilderCardOne);
     verify(mockNavigatorObserver.didPush(any, any));
-//    await tester.pumpAndSettle();
-//    expect(find.byType(ProfileViewer), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileViewer), findsOneWidget);
   });
 }
