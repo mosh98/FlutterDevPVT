@@ -15,10 +15,10 @@ class MockEmailAuthProvider extends Mock implements EmailAuthProvider{}
 
 void main(){
 
-  LoginPage widget = LoginPage();
+  LoginPage loginPage = LoginPage();
 
   Widget page = MaterialApp(
-      home: widget
+      home: loginPage
   );
 
   Finder emailField = find.byKey(Key('Email'));
@@ -27,22 +27,20 @@ void main(){
   Finder facebookButton = find.byKey(Key('facebook'));
   Finder forgotButton = find.byKey(Key('forgot'));
 
-  testWidgets('Testing finding all widgets on screen', (WidgetTester tester) async{
+  group('defaults', () {
+    testWidgets('Rendering page', (tester)async{
+      await tester.pumpWidget(page);
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginPage),findsOneWidget);
+    });
 
-    await tester.pumpWidget(page);
-    expect(emailField, findsOneWidget);
-    expect(passwordField, findsOneWidget);
-    expect(loginButton, findsOneWidget);
-    expect(facebookButton, findsOneWidget);
-    expect(forgotButton, findsOneWidget);
+    testWidgets('Testing finding all widgets on screen', (WidgetTester tester) async{
+      await tester.pumpWidget(page);
+      expect(emailField, findsOneWidget);
+      expect(passwordField, findsOneWidget);
+      expect(loginButton, findsOneWidget);
+      expect(facebookButton, findsOneWidget);
+      expect(forgotButton, findsOneWidget);
+    });
   });
-
-  group(
-      "Testing error-messages UI LoginPage",
-          (){
-            testWidgets('Route: Sign-in -> ProfilePage', (WidgetTester tester) async{
-
-        });
-      }
-  );
 }
