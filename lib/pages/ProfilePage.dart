@@ -245,7 +245,7 @@ class ProfileState extends State<ProfilePage>{
                   ),
               onTap: (){
                 Dog dog = user.dogs[index];
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog)));
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => DogProfile(dog:dog,httpProvider: widget.httpProvider,storageProvider: widget.storageProvider,)));
               });
         },
       ),

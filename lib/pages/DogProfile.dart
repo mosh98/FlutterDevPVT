@@ -1,21 +1,21 @@
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
-import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/HttpProvider.dart';
+import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 class DogProfile extends StatefulWidget {
 
   final Dog dog;
-  DogProfile({this.dog});
+  final HttpProvider httpProvider;
+  final StorageProvider storageProvider;
+  DogProfile({this.dog, this.httpProvider, this.storageProvider});
 
   @override
   _DogProfileState createState() => _DogProfileState();
@@ -23,11 +23,12 @@ class DogProfile extends StatefulWidget {
 
 class _DogProfileState extends State<DogProfile> {
 
-  ProfileState _state = ProfileState.About;
   Dog dog;
   bool _loading = false;
-  bool _loadingImage = false;
+  bool _loadingImage = true;
   String profileImage;
+  String snackText = "";
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
 
   @override
@@ -41,10 +42,8 @@ class _DogProfileState extends State<DogProfile> {
 
   @override
   Widget build(BuildContext context) {
-    if(profileImage == null){
-      return DefaultLoader();
-    }
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
         title: Text('Dog Profile'),
@@ -84,46 +83,18 @@ class _DogProfileState extends State<DogProfile> {
                     child: _loadingImage == true ?
                     DefaultLoader()
                         :
+                    profileImage == null ?
+                    CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
+                    :
                     CachedNetworkImage(
                         imageUrl: profileImage,
                         placeholder: (context, url) => DefaultLoader(),
-                        errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey))
+                        errorWidget: (context, url, error) => CircleAvatar(radius: 60, child: Icon(Icons.add_a_photo, color: Colors.white), backgroundColor:Colors.grey)
+                    )
                 )
             )
         ),
       ),
-    );
-  }
-
-  Widget _stateSection(){
-    return DefaultTabController(
-        length: 2,
-        child: TabBar(
-            labelColor: Colors.black,
-            onTap: (value){
-              if(value==0){
-                setState(() {
-                  _state = ProfileState.About;
-                });
-              }else{
-                setState(() {
-                  _state = ProfileState.Awards;
-                });
-              }
-            },
-            indicatorWeight: 0.1,
-            unselectedLabelColor: Colors.grey,
-            tabs: <Widget>[
-              Tab(
-                  icon: Icon(Icons.person),
-                  child:Text('About')
-              ),
-              Tab(
-                  icon: Icon(Icons.star),
-                  child:Text('Awards')
-              )
-            ]
-        )
     );
   }
 
@@ -134,12 +105,9 @@ class _DogProfileState extends State<DogProfile> {
        children: [
          Expanded(
            flex: 7,
-           child: _state == ProfileState.About ?
-           aboutSection()
-               :
-           awardsSection(),
+           child: aboutSection()
          ),
-         Expanded( //TODO
+         Expanded(
            flex: 3,
              child: _descriptionSection()
          ),
@@ -206,14 +174,6 @@ class _DogProfileState extends State<DogProfile> {
     );
   }
 
-  Widget awardsSection(){
-    return Column(
-      children: [
-        Text('IF WE HAVE TIME TO IMPLEMENT THIS')
-      ],
-    );
-  }
-
   Widget _descriptionSection(){
     return ListView(
       children: [
@@ -247,60 +207,20 @@ class _DogProfileState extends State<DogProfile> {
   }
 
   Future<bool> _uploadImage(File image) async{
-    try{
-      String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
-
-      final response = await http.put('https://dogsonfire.herokuapp.com/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
-
-      if(response != null){
-        print('First put of picture-upload went through :' + response.statusCode.toString());
-        print('Response body :' + response.body);
-        try{
-          final nextResponse = await http.put(response.body,
-              body: image.readAsBytesSync());
-          if(nextResponse.statusCode == 200){
-            print('Second put of picture-upload went through :' + response.statusCode.toString());
-
-            return true;
-          }else{
-            print('Something went wrong with uploading picture, second put: ' + response.statusCode.toString());
-            //TODO: POPUP USER
-            return false;
-          }
-        }catch(e){
-          print(e);
-          return false;
-        }
-      }else{
-        print('Something went wrong with first put of profilepicture: ' + response.statusCode.toString());
-        print(response.body);
-        return false;
-      }
-    }catch(e){
-      print(e);
-      return false;
+    dynamic result = await widget.storageProvider.uploadImageDog(widget.dog, image);
+    if(result != null){
+      return result;
     }
   }
 
 
   _getProfileImage() async{
-    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
-    try{
-      final url = await http.get('https://dogsonfire.herokuapp.com/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
-      if(url.statusCode==200){
-        setState(() {
-          profileImage = url.body;
-        });
-      }
-      setState(() {
-        _loadingImage = false;
-      });
-    }catch(e){
-      print(e);
-      setState(() {
-        _loadingImage = false;
-      });
+    dynamic result = await widget.storageProvider.getProfileImageDog(widget.dog);
+
+    if(result != null){
+      setState(() {profileImage = result;});
     }
+    setState(() {_loadingImage = false;});
   }
 
   _editDescription() async{
@@ -383,30 +303,16 @@ class _DogProfileState extends State<DogProfile> {
   }
 
   _updateName(String name) async{
-    try{
-      final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
-          headers:<String, String>{
-            "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
-          },
-          body: jsonEncode(<String,String>{
-            "name": name,
-          })
-      );
-
-      if(response.statusCode==200){ // Successfully created database account
-        print("Updated name, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setName(name); _loading = false;});
-      }else{ //Something went wrong
-        print("Something went wrong with updating name: " + response.statusCode.toString());
-        print(response.body);
-        setState(() {_loading = false;});
+    dynamic result = await widget.httpProvider.setNameDog(widget.dog, name);
+    if(result != null){
+      if(result == true){
+        setState(() {widget.dog.setName(name);});
+      }else{
+        snackText = "Something went wrong with updating name.";
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
       }
-    }catch(e){
-      print(e);
     }
+    setState(() {_loading = false;});
   }
 
   void _setBreed() async{
@@ -445,34 +351,19 @@ class _DogProfileState extends State<DogProfile> {
   }
 
   _updateBreed(String breed) async{
-    try{
-      final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
-          headers:<String, String>{
-            "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
-          },
-          body: jsonEncode(<String,String>{
-            "name": widget.dog.name,
-            "breed": breed,
-          })
-      );
-
-      if(response.statusCode==200){ // Successfully created database account
-        print("Updated breed, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setBreed(breed); _loading=false;});
-      }else{ //Something went wrong
-        print("Something went wrong with updating breed: " + response.statusCode.toString());
-        print(response.body);
-        setState(() {_loading=false;});
+    dynamic result = await widget.httpProvider.setBreed(widget.dog, breed);
+    if(result != null){
+      if(result == true){
+        setState(() {widget.dog.setBreed(breed);});
+    }else{
+        snackText = "Something went wrong with updating breed.";
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
       }
-    }catch(e){
-      print(e);
     }
+    setState(() {_loading = false;});
   }
 
-  _setDateOfBirth() async{ //TODO: FACTOR
+  _setDateOfBirth() async{
 
     String dateOfBirth = "";
 
@@ -529,32 +420,16 @@ class _DogProfileState extends State<DogProfile> {
   }
 
   _updateDateOfBirth(String dateOfBirth)async{
-    try{
-
-      final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
-          headers:<String, String>{
-            "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
-          },
-          body: jsonEncode(<String,String>{
-            "name":widget.dog.name,
-            "dateOfBirth": dateOfBirth,
-          })
-      );
-
-      if(response.statusCode==200){ // Successfully created database account
-        print("Updated date of birth, response code: " + response.statusCode.toString());
-        setState(() {dog.setDateOfBirth(dateOfBirth); _loading = false;});
-      }else{ //Something went wrong
-        print("Something went wrong with updating date of birth, response code: " + response.statusCode.toString());
-        print(response.body);
-        setState(() {_loading = false;});
+    dynamic result = await widget.httpProvider.setDateOfBirthDog(widget.dog, dateOfBirth);
+    if(result != null){
+      if(result == true){
+        setState(() {widget.dog.setDateOfBirth(dateOfBirth);});
+      }else{
+        snackText = "Something went wrong with updating date of birth.";
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
       }
-    }catch(e){
-      print(e);
     }
+    setState(() {_loading = false;});
   }
 
   void _updateNeutered(String neutered) async{
@@ -568,95 +443,47 @@ class _DogProfileState extends State<DogProfile> {
 
     setState(() {_loading=true;});
 
-    try{
+    dynamic result = await widget.httpProvider.updateNeutered(widget.dog, neut);
 
-      final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
-          headers:<String, String>{
-            "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
-          },
-          body: jsonEncode(<String,String>{
-            "name":widget.dog.name,
-            "neutered":neut.toString(),
-          })
-      );
-
-      if(response.statusCode==200){ // Successfully created database account
-        print("Updated neutered, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setNeutered(neut); _loading = false;});
-      }else{ //Something went wrong
-        print("Something went wrong with updating neutered, response code: " + response.statusCode.toString());
-        print(response.body);
-        setState(() {_loading = false;});
+    if(result != null){
+      if(result == true){
+        setState(() {widget.dog.setNeutered(neut);});
+      }else{
+        snackText = "Something went wrong with the update.";
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
       }
-    }catch(e){
-      print(e);
     }
+    setState(() {_loading = false;});
   }
 
   void _updateGender(String gender) async{
 
     setState(() {_loading = true;});
 
-    try{
+    dynamic result = await widget.httpProvider.setGenderDog(widget.dog, gender);
 
-      final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
-          headers:<String, String>{
-            "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
-          },
-          body: jsonEncode(<String,String>{
-            "name":widget.dog.name,
-            "gender":gender,
-          })
-      );
-
-      if(response.statusCode==200){ // Successfully created database account
-        print("Updated gender, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setGender(gender); _loading = false;});
-      }else{ //Something went wrong
-        print("Something went wrong with updating gender, response code: " + response.statusCode.toString());
-        print(response.body);
-        setState(() {_loading=false;});
+    if(result != null){
+      if(result == true){
+        setState(() {widget.dog.setGender(gender);});
+      }else{
+        snackText = "Something went wrong with updating gender.";
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
       }
-    }catch(e){
-      print(e);
     }
+    setState(() {_loading = false;});
   }
 
   void _updateDescription(String desc) async{
-    try{
+    dynamic result = await widget.httpProvider.setDescriptionDog(widget.dog, desc);
 
-      final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
-          headers:<String, String>{
-            "Accept": "application/json",
-            'Content-Type' : 'application/json; charset=UTF-8',
-            'Authorization': 'Bearer ${await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token))}'
-          },
-          body: jsonEncode(<String,String>{
-            "name":widget.dog.name,
-            "description":desc,
-          })
-      );
-
-      if(response.statusCode==200){ // Successfully created database account
-        print("Updated desc, response code: " + response.statusCode.toString());
-        setState(() {widget.dog.setDescription(desc); _loading = false;});
-      }else{ //Something went wrong
-        print("Something went wrong with updating desc, response code: " + response.statusCode.toString());
-        print(response.body);
-        setState(() {_loading = false;});
+    if(result != null){
+      if(result == true){
+        setState(() {widget.dog.setDescription(desc);});
+      }else{
+        snackText = "Something went wrong with updating description.";
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
       }
-    }catch(e){
-      print(e);
     }
+    setState(() {_loading = false;});
   }
-
 }
-
-enum ProfileState{About, Awards}
