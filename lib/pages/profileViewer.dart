@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
-import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/pages/DogProfileViewer.dart';
 import 'package:dog_prototype/services/HttpProvider.dart';
 import 'package:dog_prototype/services/StorageProvider.dart';
@@ -25,7 +24,7 @@ class ProfileState extends State<ProfileViewer> {
 
   Widget _loading = DefaultLoader();
   String profileImage;
-  bool _loadingImage = false;
+  bool _loadingImage = true;
   bool _isFriends;
 
   @override
@@ -50,18 +49,16 @@ class ProfileState extends State<ProfileViewer> {
   _getProfileImage() async {
     final result = await widget.storageProvider.getOtherProfileImage(widget.otherUser);
 
-    if(result != null){
-      setState(() {
-        profileImage = result;
-      });
-    }
+    setState(() {
+      profileImage = result;
+    });
 
     setState(() {_loadingImage = false;});
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.otherUser == null || profileImage == null || _isFriends == null) {
+    if (widget.otherUser == null || _isFriends == null) {
       return _loading;
     } else {
       return _profile();
@@ -152,6 +149,13 @@ class ProfileState extends State<ProfileViewer> {
                     child: _loadingImage == true ?
                     DefaultLoader()
                         :
+                    profileImage == null ?
+                    CircleAvatar(radius: 60,
+                        child: Icon(
+                          Icons.person, color: Colors.white, size: 60,),
+                        backgroundColor: Colors.grey
+                    )
+                        :
                     CachedNetworkImage(
                         imageUrl: profileImage,
                         placeholder: (context, url) => DefaultLoader(),
@@ -159,7 +163,9 @@ class ProfileState extends State<ProfileViewer> {
                             CircleAvatar(radius: 60,
                                 child: Icon(
                                   Icons.person, color: Colors.white, size: 60,),
-                                backgroundColor: Colors.grey))
+                                backgroundColor: Colors.grey
+                            )
+                    )
                 )
             ),
             Padding(padding: EdgeInsets.only(left: 10),),

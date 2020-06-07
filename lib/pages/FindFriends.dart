@@ -75,7 +75,7 @@ class FindFriendsState extends State<FindFriends> {
                           Row(
                             children: <Widget>[
                               Container(
-                                key: (Key('image')),
+                                key: (Key('image${user.userId}')),
                                   height:25,
                                   width:25,
                                   child:
@@ -94,13 +94,13 @@ class FindFriendsState extends State<FindFriends> {
                                       )
                                   )
                               ),
-                              Padding(padding: EdgeInsets.only(left:5),child: Text(user.getName(),key:Key('username'))),
+                              Padding(padding: EdgeInsets.only(left:5),child: Text(user.getName(),key:Key('username${user.userId}'))),
                             ],
                           ),
                           Row(
                             children: <Widget>[
                               FlatButton.icon(
-                                key: (Key('chat')),
+                                key: (Key('chat${user.userId}')),
                                 onPressed: (){
                                   Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessengerHandler(user: currentUser,peer: user)));
                                   //Navigator.of(context).push(MaterialPageRoute(builder: (context) => MessengerX( currentUser, user)));
@@ -115,7 +115,7 @@ class FindFriendsState extends State<FindFriends> {
                               ),
 
                               FlatButton.icon(
-                                key: (Key('profileviewer')),
+                                key: (Key('profileviewer${user.userId}')),
                                 onPressed: (){
                                   Navigator.of(context).push(MaterialPageRoute(builder: (context) => ProfileViewer(otherUser: user, currentUser: widget.user,storageProvider: widget.storageProvider,httpProvider: widget.httpProvider)));
                                 },
