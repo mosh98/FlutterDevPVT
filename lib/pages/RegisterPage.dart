@@ -318,35 +318,6 @@ class MyCustomFormState extends State<MyCustomForm> {
     }
   }
 
-//  try {
-//  final http.Response response = await http.post( //register to database
-//  'https://dogsonfire.herokuapp.com/users/register',
-//  headers:<String, String>{
-//  "Accept": "application/json",
-//  'Content-Type' : 'application/json; charset=UTF-8', //ISO-8859-1
-//  },
-//  body: jsonEncode(<String,String>{
-//  "username": username,
-//  "email": email,
-//  "dateOfBirth": dateOfBirth,
-//  "gender": gender,
-//  "password":password
-//  })
-//  );
-//
-//  if(response.statusCode==200){
-//  print(response.statusCode);
-//  await signInWithEmailAndPassword(email, password);
-//  return response.statusCode.toString();
-//  }else{
-//  print(response.statusCode);
-//  print(response.body);
-//  return json.decode(response.body)['message'];
-//  }
-//  } catch (e) {
-//  print("catch: " + e.message);
-//  return null;
-//  }
   Future<http.Response> createAndSaveToken(
       String username, String email) async {
     String token;

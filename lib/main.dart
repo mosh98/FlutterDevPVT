@@ -61,7 +61,7 @@ class _RedirectState extends State<Redirect> {
 
   @override
   void initState() {
-    _init();
+    //_init();
     super.initState();
   }
 
@@ -82,9 +82,14 @@ class _RedirectState extends State<Redirect> {
     return FutureBuilder(
       future: _isRegisteredToDatabase(),
       builder: (context, snapshot) {
-        if(snapshot.hasData && hasInit){
+        if(snapshot.hasData){
           if(snapshot.data == true){
-            return PlaceHolderApp(user:user,storageProvider: storageProvider, httpProvider: httpProvider, authService: authService,);
+            if(hasInit){
+              return PlaceHolderApp(user:user,storageProvider: storageProvider, httpProvider: httpProvider, authService: authService,);
+            }else{
+              _init();
+            }
+            return DefaultLoader();
           }else{
             return FacebookForm();
           }
@@ -98,7 +103,9 @@ class _RedirectState extends State<Redirect> {
   }
 
   _isRegisteredToDatabase() async{
+    print('isregistered to database?');
     _registeredToDatabase = await AuthService().isRegisteredToDatabase();
+    print('isregistered to database? return with result: $_registeredToDatabase');
     return _registeredToDatabase;
   }
 }

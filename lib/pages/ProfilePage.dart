@@ -104,6 +104,8 @@ class ProfileState extends State<ProfilePage>{
           _headerSection(),
           Divider(thickness: 1.0,),
           _infoSection(),
+          Divider(thickness: 1.0,),
+          _dogSection(),
         ],
       ),
     );
@@ -164,12 +166,11 @@ class ProfileState extends State<ProfilePage>{
 
   Widget _infoSection(){
     return Expanded(
-        flex: 7,
+        flex: 4,
         child: Container(
-          padding: EdgeInsets.all(15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
+          padding: EdgeInsets.all(10),
+          child: ListView(
+            children: [
               ListTile(
                 key: Key('about'),
                 title: Text('About', style: TextStyle(fontSize: 16)),
@@ -177,22 +178,35 @@ class ProfileState extends State<ProfilePage>{
                     key: Key('edit'),
                     icon:Icon(Icons.edit),
                     onPressed: (){_setDescription();}
-                    ),
+                ),
               ),
 
-              Padding(padding: EdgeInsets.only(top:10),),
+              Padding(padding: EdgeInsets.only(top:8),),
               GestureDetector(
-                key: Key('aboutgesture'),
-                child: ListTile(title: Text(user.desc ?? 'Add a description of yourself')),
-                onTap: (){_setDescription();}
+                  key: Key('aboutgesture'),
+                  child: ListTile(title: Text(user.desc ?? 'Add a description of yourself')),
+                  onTap: (){_setDescription();}
               ),
-              Divider(thickness: 1.0,),
-              Padding(padding: EdgeInsets.only(top:10),),
+              Padding(padding: EdgeInsets.only(top:8),),
+            ],
+          ),
+        )
+    );
+  }
+
+  Widget _dogSection(){
+    return Expanded(
+        flex: 3,
+        child: Container(
+          padding: EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
               Row(
                 children: <Widget>[
                   Text('My dogs:', style: TextStyle(fontSize: 17), key: Key('mydogs'),),
                   IconButton(
-                    key: Key('addog'),
+                      key: Key('addog'),
                       icon: Icon(Icons.add),
                       onPressed: () async{
                         dynamic result = await showDialog(context: context, barrierDismissible: false, child: DogDialog(context,widget.httpProvider));
@@ -218,14 +232,14 @@ class ProfileState extends State<ProfilePage>{
                   )
                 ],
               ),
-              _dogSection()
+              _dogList()
             ],
           ),
         )
     );
   }
 
-  Widget _dogSection(){
+  Widget _dogList(){
     return Expanded(
       flex: 7,
       child: ListView.builder(

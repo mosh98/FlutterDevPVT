@@ -172,7 +172,7 @@ class AuthService{
       //firebase cloud messaging token
       dynamic zz = await createAndSaveToken(username, melj );
 
-        final http.Response response = await http.post( //register to database
+      final http.Response response = await http.post( //register to database
           'https://dogsonfire.herokuapp.com/users/register',
           headers:<String, String>{
             "Accept": "application/json",
@@ -195,12 +195,6 @@ class AuthService{
         print(response.body);
         return null;
       }
-
-
-
-
-
-
     }catch(e){
       print(e);
       return null;
@@ -232,6 +226,7 @@ class AuthService{
       return isRegistered;
     }catch(e){
       print(e);
+      return isRegistered;
     }
   }
 
