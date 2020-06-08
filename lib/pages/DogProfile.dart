@@ -389,7 +389,6 @@ class _DogProfileState extends State<DogProfile> {
       builder: (BuildContext context) {
         return _buildBottomPicker(
           CupertinoDatePicker(
-            key: Key('dateofbirthpicker'),
             mode: CupertinoDatePickerMode.date,
             initialDateTime: DateTime.now(),
             maximumDate: DateTime.now(),

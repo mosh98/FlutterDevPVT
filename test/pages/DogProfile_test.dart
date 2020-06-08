@@ -122,7 +122,7 @@ void main(){
 
       await tester.tap(breedField);
       await tester.pumpAndSettle();
-      
+
       expect(editBreedDialog, findsOneWidget);
       expect(breedTextField, findsOneWidget);
       expect(submitButton, findsOneWidget);
@@ -158,38 +158,6 @@ void main(){
       await tester.pumpAndSettle();
 
       expect(find.byType(DogProfile),findsOneWidget);
-    });
-  });
-
-  group('Testing - Edit Date Of Birth Field', () {
-
-    Finder dateOfBirthPicker = find.byKey(Key('dateofbirthpicker'));
-
-    testWidgets('Finding widgets', (tester)async{
-      await tester.pumpWidget(page);
-      await tester.pumpAndSettle();
-
-      await tester.tap(dateOfBirthField);
-      await tester.pumpAndSettle();
-
-      expect(dateOfBirthPicker, findsOneWidget);
-    });
-
-    testWidgets('Changing date of birth actually changes date of birth', (tester)async{
-      await tester.pumpWidget(page);
-      await tester.pumpAndSettle();;
-
-      await tester.tap(dateOfBirthField);
-      await tester.pumpAndSettle();
-
-      await tester.drag(dateOfBirthPicker, Offset(0.0,70.0));
-      await tester.tap(find.text('Name:'));
-      verify(mockObserver.didPop(any, any));
-      await tester.pumpAndSettle();
-
-      expect(dateOfBirthPicker,findsNothing);
-      expect(find.byType(DogProfile),findsOneWidget);
-      expect(find.text("2020-04-08"),findsOneWidget); //new chosen date from above
     });
   });
 
