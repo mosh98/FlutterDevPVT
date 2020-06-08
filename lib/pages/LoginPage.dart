@@ -61,7 +61,7 @@ class LoginPageState extends State<LoginPage> {
               hintText: "Email* ",
               icon: Icon(Icons.person),
             ),
-            validator: Validator.usernameValidator,
+            validator: Validator.emailValidator,
             keyboardType: TextInputType.text,
             onChanged: (emailValue){
               setState(() => email = emailValue);

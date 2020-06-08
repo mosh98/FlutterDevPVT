@@ -226,7 +226,6 @@ class ProfileState extends State<ProfilePage>{
                           snackText = "Your dog was added to your profile!";
                           _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText)));
                         }
-
                       },
                       iconSize: 16
                   )
@@ -243,10 +242,13 @@ class ProfileState extends State<ProfilePage>{
     return Expanded(
       flex: 7,
       child: ListView.builder(
+        shrinkWrap: true,
         key: Key('doglistview'),
         itemCount: user.dogs.length,
         itemBuilder: (context, index) {
+          print(index);
           return ListTile(
+            key: Key('${user.dogs[index].name}' + '${index}'),
               leading: Icon(Icons.pets),
               title: Text(user.dogs[index].getName()),
               trailing: IconButton(
