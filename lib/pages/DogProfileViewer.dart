@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
@@ -12,7 +11,8 @@ import 'package:http/http.dart' as http;
 class DogProfileViewer extends StatefulWidget {
 
   final Dog dog;
-  DogProfileViewer({this.dog});
+  final StorageProvider storageProvider;
+  DogProfileViewer({this.dog, this.storageProvider});
 
   @override
   _DogProfileViewerState createState() => _DogProfileViewerState();
@@ -21,7 +21,7 @@ class DogProfileViewer extends StatefulWidget {
 class _DogProfileViewerState extends State<DogProfileViewer> {
   Dog dog;
   String profileImage;
-  bool _loadingImage = false;
+  bool _loadingImage = true;
 
   @override
   void initState() {
@@ -36,7 +36,7 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
 
   @override
   Widget build(BuildContext context) {
-    if(profileImage == null){
+    if(_loadingImage == true){
       return DefaultLoader();
     }
     return Scaffold(
@@ -76,13 +76,17 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
                 width: 80,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10000.0),
-                  child: CachedNetworkImage(
+                  child: profileImage == null ?
+                  CircleAvatar(radius: 40, child: Icon(Icons.image, color: Colors.white), backgroundColor:Colors.grey)
+                      :
+                  CachedNetworkImage(
                       imageUrl: profileImage,
                       placeholder: (context, url) => DefaultLoader(),
-                      errorWidget: (context, url, error) => CircleAvatar(radius: 40, child: Icon(Icons.image, color: Colors.white), backgroundColor:Colors.grey)),
+                      errorWidget: (context, url, error) => CircleAvatar(radius: 40, child: Icon(Icons.image, color: Colors.white), backgroundColor:Colors.grey)
+                  ),
                 ),
               ),
-              Padding(padding: EdgeInsets.only(top:25.0)),
+              Padding(padding: EdgeInsets.only(top:20.0)),
             ],
         ),
       )
@@ -176,23 +180,11 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
   }
 
   _getProfileImage() async{
-    String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
-    try{
-      final url = await http.get('https://dogsonfire.herokuapp.com/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
-      if(url.statusCode==200){
-        setState(() {
-          profileImage = url.body;
-        });
-      }
-      setState(() {
-        _loadingImage = false;
-      });
-    }catch(e){
-      print(e);
-      setState(() {
-        _loadingImage = false;
-      });
+    dynamic result = await widget.storageProvider.getProfileImageDog(widget.dog);
+    if(result != null){
+      setState(() {profileImage = result;});
     }
+    setState(() {_loadingImage = false;});
   }
 
 }
