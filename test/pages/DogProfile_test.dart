@@ -122,7 +122,7 @@ void main(){
 
       await tester.tap(breedField);
       await tester.pumpAndSettle();
-
+      
       expect(editBreedDialog, findsOneWidget);
       expect(breedTextField, findsOneWidget);
       expect(submitButton, findsOneWidget);
