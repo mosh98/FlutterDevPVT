@@ -404,6 +404,7 @@ class _DogProfileState extends State<DogProfile> {
       },
     );
 
+    print(dateOfBirth);
     dateOfBirth = '${f.format(_dateTime)}';
 
     setState(() {_loading = true;});

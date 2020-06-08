@@ -184,11 +184,12 @@ void main(){
 
       await tester.drag(dateOfBirthPicker, Offset(0.0,70.0));
       await tester.tap(find.text('Name:'));
+      verify(mockObserver.didPop(any, any));
       await tester.pumpAndSettle();
 
       expect(dateOfBirthPicker,findsNothing);
       expect(find.byType(DogProfile),findsOneWidget);
-      expect(find.text("2020-04-07"),findsOneWidget); //new chosen date from above
+      expect(find.text("2020-04-08"),findsOneWidget); //new chosen date from above
     });
   });
 
