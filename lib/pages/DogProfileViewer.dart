@@ -1,12 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/Dog.dart';
-import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
-import 'package:http/http.dart' as http;
 
 class DogProfileViewer extends StatefulWidget {
 
@@ -118,23 +116,28 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
         context: context,
           tiles: [
             ListTile(
+              key: Key('name'),
                 title: Text('Name:'),
                 trailing: Text(dog.name ?? 'No name specified.'),
             ),
             ListTile(
+              key: Key('breed'),
                 title: Text('Breed:'),
                 trailing: Text(dog.breed ?? 'No breed specified.'),
             ),
             ListTile(
+              key: Key('dateofbirth'),
                 title: Text('Date of birth:'),
                 trailing: Text(dog.dateOfBirth ?? 'No date of birth specified.'),
             ),
             
             ListTile(
+                key: Key('neutered'),
                 title: Text('Neutered:'),
                 trailing: Text((dog.getNeutered()),
             )),
             ListTile(
+                key: Key('gender'),
                 title: Text('Gender:'),
                 trailing: Text(dog.gender)
             ),
@@ -147,18 +150,22 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
         context: context,
           tiles: [
             ListTile(
+              key: Key('name'),
                 title: Text('Name:'),
                 trailing: Text(dog.name ?? 'No name specified.'),
             ),
             ListTile(
+              key: Key('breed'),
                 title: Text('Breed:'),
                 trailing: Text(dog.breed ?? 'No breed specified.'),
             ),
             ListTile(
+              key: Key('dateofbirth'),
                 title: Text('Date of birth:'),
                 trailing: Text(dog.dateOfBirth ?? 'No date of birth specified.'),
             ),
             ListTile(
+                key: Key('gender'),
                 title: Text('Gender:'),
                 trailing: Text(dog.gender)
             ),
@@ -172,6 +179,7 @@ class _DogProfileViewerState extends State<DogProfileViewer> {
     return ListView(
       children: [
         ListTile(
+          key: Key('description'),
           title: Text('Description', style: TextStyle(fontSize: 20)),
         ),
         Text(dog.description ?? 'This dog does not seem to have a description yet' ),
