@@ -129,7 +129,7 @@ class User{
   bool operator ==(other) {
     if(other is! User)
       return false;
-    return userId == (other as User).userId;
+    return other is User && this.userId == other.userId;
   }
 
   int _hash;

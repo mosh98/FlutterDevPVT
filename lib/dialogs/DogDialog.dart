@@ -1,11 +1,7 @@
-import 'dart:convert';
-
-import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/HttpProvider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http;
 
 class DogDialog extends StatefulWidget{
 

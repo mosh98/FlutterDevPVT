@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/Validator.dart';
 import 'package:flutter/material.dart';
-import 'RegisterPage.dart';
 
 class LoginPage extends StatefulWidget{
   @override

@@ -1,20 +1,13 @@
 import 'dart:convert';
 
 import 'package:dog_prototype/loaders/CustomLoader.dart';
-import 'package:dog_prototype/pages/mapPage.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/Validator.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
-import 'package:gender_selector/gender_selector.dart';
-
-import 'ProfilePage.dart';
-import 'placeHolderHome.dart';
 
 class RegisterPage extends StatelessWidget {
   @override

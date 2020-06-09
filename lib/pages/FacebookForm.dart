@@ -124,7 +124,6 @@ class _FacebookFormState extends State<FacebookForm> {
                                 setState(() => _dateTime = newDateTime
 
                                 );
-                                print("You Selected Date: ${newDateTime}");
                                 dateOfBirth = '${f.format(_dateTime)}';
                               }
                             },

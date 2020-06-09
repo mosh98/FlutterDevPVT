@@ -64,10 +64,10 @@ class _RedirectState extends State<Redirect> {
   }
 
   _init() async{
-    authService = await AuthService();
+    authService = AuthService();
     user = await authService.createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
-    storageProvider = await StorageProvider(user:user);
-    httpProvider = await HttpProvider.instance(userToken: await authService.getToken());
+    storageProvider = StorageProvider(user:user);
+    httpProvider = HttpProvider.instance(userToken: await authService.getToken());
     if(authService != null && user != null && storageProvider != null && httpProvider != null){
       setState(() {
         hasInit = true;

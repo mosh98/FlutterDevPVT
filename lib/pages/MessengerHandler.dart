@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,7 +6,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_app_badger/flutter_app_badger.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -106,9 +103,6 @@ class _Messenger extends State<MessengerHandler> {
        // print("onResume: $message");
       },
     );
-
-
-
 
   }
 
