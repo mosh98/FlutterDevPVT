@@ -157,7 +157,7 @@ class HttpProvider{
   Future<String> getUsers(String input)async{
     try{
       String token = await refreshToken();
-      final response = await http.get('https://dogsonfire.herokuapp.com/users?search=$input', headers: {
+      final response = await http.get('$_SERVER/users?search=$input', headers: {
         'Authorization': 'Bearer $token',
       });
 
@@ -178,7 +178,7 @@ class HttpProvider{
     String token = await refreshToken();
     try {
       final response = await http.post(
-          'https://dogsonfire.herokuapp.com/friends/${friend
+          '$_SERVER/friends/${friend
               .userId}', headers: {'Authorization': 'Bearer $token'});
       if (response.statusCode == 200) {
         print('Succesfully added friend. Response code: ${response.statusCode}');
@@ -197,7 +197,7 @@ class HttpProvider{
     String token = await refreshToken();
     try {
       final response = await http.delete(
-          'https://dogsonfire.herokuapp.com/friends/${friend
+          '$_SERVER/friends/${friend
               .userId}', headers: {'Authorization': 'Bearer $token'});
       if (response.statusCode == 200) {
         print('Succesfully deleted friend. Response code: ${response.statusCode}');
@@ -216,7 +216,7 @@ class HttpProvider{
     String token = await refreshToken();
     try{
       final http.Response response = await http.put(
-          'https://dogsonfire.herokuapp.com/dogs',
+          '$_SERVER/dogs',
           headers:<String, String>{
             "Accept": "application/json",
             'Content-Type' : 'application/json; charset=UTF-8',
@@ -244,7 +244,7 @@ class HttpProvider{
     String token = await refreshToken();
     try{
       final http.Response response = await http.put(
-          'https://dogsonfire.herokuapp.com/dogs',
+          '$_SERVER/dogs',
           headers:<String, String>{
             "Accept": "application/json",
             'Content-Type' : 'application/json; charset=UTF-8',
@@ -274,7 +274,7 @@ class HttpProvider{
     String token = await refreshToken();
     try{
       final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
+          '$_SERVER/dogs',
           headers:<String, String>{
             "Accept": "application/json",
             'Content-Type' : 'application/json; charset=UTF-8',
@@ -304,7 +304,7 @@ class HttpProvider{
     String token = await refreshToken();
     try{
       final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
+          '$_SERVER/dogs',
           headers:<String, String>{
             "Accept": "application/json",
             'Content-Type' : 'application/json; charset=UTF-8',
@@ -334,7 +334,7 @@ class HttpProvider{
     String token = await refreshToken();
     try{
       final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
+          '$_SERVER/dogs',
           headers:<String, String>{
             "Accept": "application/json",
             'Content-Type' : 'application/json; charset=UTF-8',
@@ -364,7 +364,7 @@ class HttpProvider{
     String token = await refreshToken();
     try{
       final http.Response response = await http.put( //register to database
-          'https://dogsonfire.herokuapp.com/dogs',
+          '$_SERVER/dogs',
           headers:<String, String>{
             "Accept": "application/json",
             'Content-Type' : 'application/json; charset=UTF-8',

@@ -36,8 +36,4 @@ class WasteBin {
     String toString() {
         return "WasteBin: $_distance\t" + _position.toString();
     }
-
-
-
-
 }

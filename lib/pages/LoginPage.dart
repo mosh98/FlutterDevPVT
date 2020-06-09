@@ -188,7 +188,7 @@ class LoginPageState extends State<LoginPage> {
 
 
   Widget _wrongCredentials(){
-    return wrongCredent ? Text('Wrong username or password',style: TextStyle(color:Colors.red),) : Text('');
+    return wrongCredent ? Text('Wrong email or password',style: TextStyle(color:Colors.red),) : Text('');
   }
 
   _login(String email, String password) async{

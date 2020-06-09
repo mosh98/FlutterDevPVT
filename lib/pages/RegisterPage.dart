@@ -220,7 +220,6 @@ class MyCustomFormState extends State<MyCustomForm> {
                                         setState(() => _dateTime = newDateTime
 
                                         );
-                                        print("You Selected Date: ${newDateTime}");
                                         date_of_birth = '${f.format(_dateTime)}';
 
 
@@ -325,7 +324,6 @@ class MyCustomFormState extends State<MyCustomForm> {
 
     await Fcm.getToken().then((value) => token = value);
 
-    print("FCM TEKEN"+ token);
     try {
       final http.Response response = await http.post(
         'https://fcm-token.herokuapp.com/user/saveFcm',

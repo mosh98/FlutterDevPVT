@@ -1,3 +1,4 @@
+import 'package:dog_prototype/loaders/CustomLoader.dart';
 import 'package:dog_prototype/main.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/Validator.dart';
@@ -19,12 +20,20 @@ class _FacebookFormState extends State<FacebookForm> {
   final f = new DateFormat('yyyy-MM-dd');
   final _formKey = GlobalKey<FormState>();
   String snackText = "";
+  CustomLoader loader = CustomLoader(textWidget: Text('Processing data..'),);
+  bool _loading = false;
 
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return _loading == true ?
+    Scaffold(
+      key: _scaffoldKey,
+      body: loader,
+    )
+        :
+   Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
           title: Text('Add information to finish registration'),
@@ -203,6 +212,8 @@ class _FacebookFormState extends State<FacebookForm> {
 
   register(String username, String dateOfBirth, String gender) async{
 
+    setState(() {_loading = true;});
+
     if(gender == '-'){
       gender = "UNKNOWN";
     }
@@ -219,6 +230,7 @@ class _FacebookFormState extends State<FacebookForm> {
           builder: (context) => Wrapper()
       ));
     }else{
+      setState(() {_loading = false;});
       snackText = 'Something went wrong with adding your information.';
       _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(snackText),));
     }

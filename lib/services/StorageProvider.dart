@@ -11,10 +11,12 @@ class StorageProvider{
   final User user;
   StorageProvider({@required this.user});
 
+  static const String _SERVER = "https://dogsonfire.herokuapp.com";
+
   getProfileImage() async{
     String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
     try{
-      final url = await http.get('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
+      final url = await http.get('$_SERVER/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
       if(url.statusCode==200){
         print('Fetching user profile image was succcesful. Response Code: ${url.statusCode}');
         return url.body;
@@ -32,7 +34,7 @@ class StorageProvider{
   Future<String> getProfileImageDog(Dog dog) async{
     String token = await refreshToken();
     try{
-      final url = await http.get('https://dogsonfire.herokuapp.com/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
+      final url = await http.get('$_SERVER/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
       if(url.statusCode==200){
         print('Fetching dog profile image was succcesful. Response Code: ${url.statusCode}');
         return url.body;
@@ -50,7 +52,7 @@ class StorageProvider{
   getOtherProfileImage(User user) async{
     String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
     try{
-      final url = await http.get('https://dogsonfire.herokuapp.com/images/profiles/${user.userId}',
+      final url = await http.get('$_SERVER/images/profiles/${user.userId}',
           headers:{'Authorization': 'Bearer $token'});
 
       if(url.statusCode==200){
@@ -67,7 +69,7 @@ class StorageProvider{
     try{
       String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
 
-      final response = await http.put('https://dogsonfire.herokuapp.com/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
+      final response = await http.put('$_SERVER/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
 
       if(response != null){
         print('1/2 of picture-upload went through :' + response.statusCode.toString());
@@ -102,7 +104,7 @@ class StorageProvider{
     try{
       String token = await refreshToken();
 
-      final response = await http.put('https://dogsonfire.herokuapp.com/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
+      final response = await http.put('$_SERVER/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
 
       if(response != null){
         print('1/2 of picture-upload went through :' + response.statusCode.toString());

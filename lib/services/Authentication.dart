@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:dog_prototype/elements/CustomWebView.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,7 +22,6 @@ class AuthService{
 
   //create user model
   Future<User> createUserModel(Future<IdTokenResult> token) async{
-    print('Inside AuthService method: createUserModel');
     try{
       String t = await token.then((value) => value.token);
 
@@ -35,7 +32,6 @@ class AuthService{
       });
 
       if(response.statusCode == 200){
-        print('Response: 200 statuscode');
         return User.fromJson(json.decode(utf8.decode(response.bodyBytes)));
       }else{
         print('Response: ${response.statusCode.toString()} statuscode');
@@ -137,7 +133,6 @@ class AuthService{
 
     await Fcm.getToken().then((value) => token = value);
 
-    print("FCM TEKEN" + token);
     try {
       final http.Response response = await http.post(
         'https://fcm-token.herokuapp.com/user/saveFcm',
@@ -167,7 +162,6 @@ class AuthService{
     try{
 
       String melj = await _auth.currentUser().then((value) => value.email);
-      print(melj);
 
       //firebase cloud messaging token
       dynamic zz = await createAndSaveToken(username, melj );
@@ -216,13 +210,11 @@ class AuthService{
 
       if(response.statusCode==200){
         isRegistered = true;
-        print('Inside Authservice method: isRegisteredToDatabase, return from http was: $isRegistered');
       }else{
         isRegistered = false;
         print(response.statusCode);
         print(response.body);
       }
-      print('returning $isRegistered');
       return isRegistered;
     }catch(e){
       print(e);
@@ -334,9 +326,7 @@ class AuthService{
   //GET CURRENT USER
   Future<FirebaseUser> getCurrentFirebaseUser() async{
     try{
-      print('here');
       dynamic result = await _auth.currentUser();
-      print('here again');
       if(result != null){
         return result;
       }

@@ -60,7 +60,6 @@ class DogPark {
 
     double get distance => _distance;
 
-
     Marker get marker => _marker;
 
     List<Review> get reviews => _reviews;
