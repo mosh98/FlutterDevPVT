@@ -1,9 +1,12 @@
 
+import 'dart:convert';
+
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-
+import 'package:mockito/mockito.dart';
+import 'package:dog_prototype/services/Authentication.dart';
 
 void main(){
 
@@ -91,6 +94,71 @@ void main(){
       bool sameHash = hashCodeFirst == hashCodeSecond;
       expect(sameHash, true);
     });
+
+    test('Parsing User from json returns correct data',(){
+      final String fakeJSONData = '{"userId":"$DEFAULT_USER_ID","username":"$DEFAULT_USERNAME","dateOfBirth":"$DEFAULT_DATE_OF_BIRTH","gender":"$DEFAULT_GENDER",'
+          '"description":"$DEFAULT_DESC","dogs":[],"photoUrl":"$DEFAULT_PHOTO_URL","bucket":"$DEFAULT_BUCKET","friends":[]}';
+      User user = User.fromJson(json.decode(fakeJSONData));
+
+      String userId = user.getId();
+      String username = user.getName();
+      String dateOfBirth = user.getDateOfBirth();
+      String gender = user.getGender();
+      String desc = user.getDesc();
+      List<Dog> dogs = user.getDogs();
+      String photoUrl = user.getPhotoUrl();
+      String bucket = user.getBucket();
+      List<User> friends = user.getFriends();
+
+      expect(userId, DEFAULT_USER_ID);
+      expect(username, DEFAULT_USERNAME);
+      expect(dateOfBirth, DEFAULT_DATE_OF_BIRTH);
+      expect(gender, DEFAULT_GENDER);
+      expect(desc, DEFAULT_DESC);
+      expect(dogs.isEmpty, true);
+      expect(photoUrl, DEFAULT_PHOTO_URL);
+      expect(bucket, DEFAULT_BUCKET);
+      expect(friends.isEmpty, true);
+    });
+
+    test('Parsing -friends- from json returns a converted list of Users',(){
+      final String fakeFriend1JsonData = '{"userId":"5", "username":"friend1"}';
+      User friend1 = User.fromJson(json.decode(fakeFriend1JsonData));
+      final String fakeFriend2JsonData = '{"userId":"6", "username":"friend2"}';
+      User friend2 = User.fromJson(json.decode(fakeFriend1JsonData));
+
+      final String fakeJsonDataFriendList = '[$fakeFriend1JsonData,$fakeFriend2JsonData]';
+
+      final String fakeJSONData = '{"userId":"$DEFAULT_USER_ID","username":"$DEFAULT_USERNAME", "friends":$fakeJsonDataFriendList}';
+      User user = User.fromJson(json.decode(fakeJSONData));
+
+      List<User> friends = user.getFriends();
+      expect(friends.contains(friend1),true);
+      expect(friends.contains(friend2),true);
+    });
+
+    test('Parsing -dogs- from json returns a converted list of Dogs',(){
+      final String fakeDog1JsonData = '{"uuid":"5", "name":"dog1"}';
+      Dog dog1 = Dog.fromJson(json.decode(fakeDog1JsonData));
+      final String fakeDog2JsonData = '{"uuid":"6", "name":"dog2"}';
+      Dog dog2 = Dog.fromJson(json.decode(fakeDog2JsonData));
+
+      final String fakeDogListJsondata = '[$fakeDog1JsonData,$fakeDog2JsonData]';
+
+      final String fakeJSONData = '{"userId":"$DEFAULT_USER_ID","username":"$DEFAULT_USERNAME", "dogs":$fakeDogListJsondata}';
+      User user = User.fromJson(json.decode(fakeJSONData));
+
+      List<Dog> dogs = user.getDogs();
+      expect(dogs.contains(dog1),true);
+      expect(dogs.contains(dog2),true);
+    });
+
+    test('toString actually prints what it should print',(){
+      User user = createStaticUser();
+      String toString = user.toString();
+      String howItShouldLook = "Name: $DEFAULT_USERNAME Date of birth: $DEFAULT_DATE_OF_BIRTH Gender: $DEFAULT_GENDER Description: $DEFAULT_DESC Created at: $DEFAULT_CREATED_DATE";
+      expect(toString == howItShouldLook, true);
+});
   });
 
   group('User - get methods', () {

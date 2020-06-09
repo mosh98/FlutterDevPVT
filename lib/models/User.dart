@@ -143,6 +143,6 @@ class User{
 
   @override
   String toString() {
-    return "Name: $username Date of birth: $dateOfBirth Gender: $gender Description: $desc Created at: $createdDate Dogs: $dogs";
+    return "Name: $username Date of birth: $dateOfBirth Gender: $gender Description: $desc Created at: $createdDate";
   }
 }

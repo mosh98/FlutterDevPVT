@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:dog_prototype/models/Dog.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -17,9 +19,31 @@ void main(){
   }
 
   group('Dog - default tests', () {
-    test('create dog', (){
+    test('create dog does not result in null', (){
       Dog dog = new Dog();
       expect(dog, isNot(null));
+    });
+
+    test('create dog with parsed json does result in correct data', (){
+      final String fakeJsonData = '{"name":"parsename","breed":"parsebreed",'
+          '"dateOfBirth":"parsedateofbirth","gender":"parsegender", "neutered":${false},"description":"parsedesc","uuid":"parseuuid"}';
+      Dog dog = Dog.fromJson(json.decode(fakeJsonData));
+
+      String name = dog.getName();
+      String breed = dog.getBreed();
+      String dateOfBirth = dog.getDateOfBirth();
+      String gender = dog.getGender();
+      String neutered = dog.getNeutered();
+      String description = dog.getDescription();
+      String uuid = dog.getUUID();
+
+      expect(name, 'parsename');
+      expect(breed, 'parsebreed');
+      expect(dateOfBirth, 'parsedateofbirth');
+      expect(gender, 'parsegender');
+      expect(neutered, 'No'); //Because neutered was set to false. See Dog model.
+      expect(description, 'parsedesc');
+      expect(uuid, 'parseuuid');
     });
 
     test('equals: null should return false', (){
