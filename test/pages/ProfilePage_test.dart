@@ -365,6 +365,18 @@ void main() {
   });
 
   testWidgets('Add dog actually adds dog', (tester) async{
+
+    final User fakeUserEmptyDogList = User(userId: DEFAULT_USER_ID, username: DEFAULT_USERNAME, dateOfBirth: DEFAULT_DATE_OF_BIRTH, gender: DEFAULT_GENDER, desc: DEFAULT_DESC, createdDate: DEFAULT_CREATED_DATE, dogs: [],photoUrl: DEFAULT_PHOTO_URL, bucket: DEFAULT_BUCKET, friends: fakeUserFriendList);
+    final ProfilePage profilePage = ProfilePage(user: fakeUserEmptyDogList,httpProvider: httpProvider,storageProvider: storageProvider,authService: mockAuthService,);
+
+    final Widget page = new MediaQuery(
+        data: new MediaQueryData(),
+        child: MaterialApp(
+          home:profilePage,
+          navigatorObservers: [mockObserver],
+        )
+    );
+
     await tester.pumpWidget(page);
     await tester.pumpAndSettle();
     await tester.tap(addDogButton);
@@ -387,7 +399,7 @@ void main() {
 
     expect(find.byType(ProfilePage),findsOneWidget);
 
-    Finder dog = find.text("testnewdog");
+    Finder dog = find.text('testnewdog');
 
     expect(dog,findsOneWidget);
   });

@@ -30,14 +30,14 @@ class _DogParkScreenState extends State<DogParkScreen> {
 
         return Scaffold(
             appBar: AppBar(
-                title: Text(widget.dogPark.name),
+                title: Text(widget.dogPark.getName()),
                 centerTitle: true,
             ),
             body: (_isInLoadingState == false)
                 ? Column(
 
                 children: <Widget>[
-                    (widget.dogPark.imgURLs.isEmpty == false)
+                    (widget.dogPark.getImageAddresses().isEmpty == false)
                         ? Flexible(
                         fit: FlexFit.tight,
                         flex: 1,
@@ -65,17 +65,17 @@ class _DogParkScreenState extends State<DogParkScreen> {
                                 children: <Widget>[
                                     widget.dataHandler.getStarRow(
                                         context,
-                                        widget.dogPark.calulateRating(),
+                                        widget.dogPark.calculateRating(),
                                         widget.dataHandler.settingsHandler.defaultIconSize, widget.dataHandler
                                         .settingsHandler
                                         .reviewStarIconColor),
 
                                     Text(widget.dogPark
-                                        .calulateRating()
+                                        .calculateRating()
                                         .toStringAsFixed(1)
                                         .toString()),
                                     Text("(" +
-                                        widget.dogPark.reviews.length
+                                        widget.dogPark.getReviews().length
                                             .toString() +
                                         " st)"),
                                 ],
@@ -174,12 +174,12 @@ class _DogParkScreenState extends State<DogParkScreen> {
     }
 
     Widget _reviewList(BuildContext context) {
-        if (widget.dogPark.reviews.isEmpty == true) {
+        if (widget.dogPark.getReviews().isEmpty == true) {
             return Center(child: Text('Inga recensioner än'));
         } else {
             return ListView.builder(
                 padding: EdgeInsets.all(widget.dataHandler.settingsHandler.defaultPaddingBetweenRows),
-                itemCount: widget.dogPark.reviews.length,
+                itemCount: widget.dogPark.getReviews().length,
                 shrinkWrap: true,
 
                 itemBuilder: (context, index) {
@@ -203,15 +203,14 @@ class _DogParkScreenState extends State<DogParkScreen> {
 
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: <Widget>[
-                                    // _starRow(context, widget.dogPark.reviews[index]),
                                     widget.dataHandler.getStarRow(
                                         context,
-                                        widget.dogPark.reviews[index].rating
+                                        widget.dogPark.getReviews()[index].getRating()
                                             .toDouble(), widget.dataHandler.settingsHandler.defaultIconSize / 2,
                                         widget.dataHandler
                                             .settingsHandler
                                             .reviewStarIconColor),
-                                    Text(widget.dogPark.reviews[index].comment),
+                                    Text(widget.dogPark.getReviews()[index].getComment()),
                                 ],
 
                             ),
@@ -231,6 +230,7 @@ class _DogParkScreenState extends State<DogParkScreen> {
         await _getReviews();
 
         await _getImages();
+
         setState(() {
             _isInLoadingState = false;
         });
@@ -243,27 +243,27 @@ class _DogParkScreenState extends State<DogParkScreen> {
     }
 
     Future<void> _getReviews() async {
-        widget.dogPark.reviews.clear();
+        widget.dogPark.getReviews().clear();
 
         http.Response response =
-        await widget.dataHandler.downloadReviews(widget.dogPark.id);
+        await widget.dataHandler.downloadReviews(widget.dogPark.getID());
         if (response.statusCode == 200) {
             try {
                 String jsonData = utf8.decode(response.bodyBytes);
                 List decodedJson = jsonDecode(jsonData);
                 for (int i = 0; i < decodedJson.length; i++) {
                     Review tempReview = Review.fromJson(decodedJson[i]);
-                    widget.dogPark.reviews.add(tempReview);
+                    widget.dogPark.getReviews().add(tempReview);
                 }
             } catch (error) {}
         } else {}
     }
 
     Future<void> _getImages() async {
-        widget.dogPark.imgURLs.clear();
+        widget.dogPark.getImageAddresses().clear();
 
         http.Response response =
-        await widget.dataHandler.downloadImageURLs(widget.dogPark.id);
+        await widget.dataHandler.downloadImageURLs(widget.dogPark.getID());
         if (response.statusCode == 200) {
             try {
                 String result = utf8.decode(response.bodyBytes);
@@ -275,7 +275,7 @@ class _DogParkScreenState extends State<DogParkScreen> {
 
                     List<String> urls = result.split(', ');
                     if (urls.isEmpty == false) {
-                        widget.dogPark.imgURLs = urls;
+                        widget.dogPark.getImageAddresses().addAll(urls);
                     }
                 }
             } catch (error) {}
@@ -285,7 +285,7 @@ class _DogParkScreenState extends State<DogParkScreen> {
     Widget _imageList(BuildContext context) {
         return ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: widget.dogPark.imgURLs.length,
+            itemCount: widget.dogPark.getImageAddresses().length,
             itemBuilder: (BuildContext context, int index) =>
                 Padding
                     (
@@ -309,7 +309,7 @@ class _DogParkScreenState extends State<DogParkScreen> {
                                                     Navigator.pop(context);
                                                 },
                                                 child: Image.network(widget
-                                                    .dogPark.imgURLs[index]),
+                                                    .dogPark.getImageAddresses()[index]),
                                             ),
                                             actions: <Widget>[],
                                         );
@@ -319,7 +319,7 @@ class _DogParkScreenState extends State<DogParkScreen> {
                             child: Container(
                                 padding: EdgeInsets.all(12),
                                 child: Image.network(
-                                    widget.dogPark.imgURLs[index]),
+                                    widget.dogPark.getImageAddresses()[index]),
                             ),
                         )),
                 ),
@@ -327,7 +327,7 @@ class _DogParkScreenState extends State<DogParkScreen> {
     }
 
     Future<http.StreamedResponse> _uploadImage(var image) async {
-        int _dogParkID = widget.dogPark.id;
+        int _dogParkID = widget.dogPark.getID();
 
         final String url =
             'https://dog-park-micro.herokuapp.com/image/addImage?id=$_dogParkID';

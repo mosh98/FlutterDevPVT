@@ -18,14 +18,21 @@ class DogPark {
     List<String> _imgURLs = new List<String>();
 
 
-    List<String> get imgURLs => _imgURLs;
+    int getID() { return _id; }
+    LatLng getPosition()  { return _position; }
+    String getName() { return _name; }
+    String getDescription() { return _description; }
+    double getDistance() { return _distance; }
+    Marker getMarker() { return _marker; }
+    List<Review> getReviews() { return _reviews; }
+    List<String> getImageAddresses() { return _imgURLs; }
 
 
-    set imgURLs(List<String> value) {
-    _imgURLs = value;
-  }
+    void setMarker(Marker marker) { _marker = marker; }
+    void setDistance(double distance) { _distance = distance; }
 
-  int get id => _id;
+
+
 
     DogPark(
         {int id, double latitude, double longitude, String name, String description}) {
@@ -51,36 +58,13 @@ class DogPark {
             _position.toString();
     }
 
-
-    LatLng get position => _position;
-
-    String get name => _name;
-
-    String get description => _description;
-
-    double get distance => _distance;
-
-
-    Marker get marker => _marker;
-
-    List<Review> get reviews => _reviews;
-
-    set marker(Marker value) {
-        _marker = value;
-    }
-
-    set distance(double value) {
-        _distance = value;
-    }
-
-
-    double calulateRating() {
+    double calculateRating() {
       double rating = 0;
       if (_reviews.isEmpty == true) {
         return 0;
       }
       _reviews.forEach((review) {
-        rating += review.rating;
+        rating += review.getRating();
       });
       rating /= _reviews.length;
       return rating;

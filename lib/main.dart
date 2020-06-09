@@ -1,7 +1,5 @@
-import 'package:dog_prototype/models/Dog.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/FacebookForm.dart';
-import 'package:dog_prototype/pages/SettingsPage.dart';
 import 'package:dog_prototype/pages/placeHolderHome.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/HttpProvider.dart';
@@ -61,15 +59,15 @@ class _RedirectState extends State<Redirect> {
 
   @override
   void initState() {
-    _init();
+    //_init();
     super.initState();
   }
 
   _init() async{
-    authService = await AuthService();
+    authService = AuthService();
     user = await authService.createUserModel(AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken()));
-    storageProvider = await StorageProvider(user:user);
-    httpProvider = await HttpProvider.instance(userToken: await authService.getToken());
+    storageProvider = StorageProvider(user:user);
+    httpProvider = HttpProvider.instance(userToken: await authService.getToken());
     if(authService != null && user != null && storageProvider != null && httpProvider != null){
       setState(() {
         hasInit = true;
@@ -82,9 +80,14 @@ class _RedirectState extends State<Redirect> {
     return FutureBuilder(
       future: _isRegisteredToDatabase(),
       builder: (context, snapshot) {
-        if(snapshot.hasData && hasInit){
+        if(snapshot.hasData){
           if(snapshot.data == true){
-            return PlaceHolderApp(user:user,storageProvider: storageProvider, httpProvider: httpProvider, authService: authService,);
+            if(hasInit){
+              return PlaceHolderApp(user:user,storageProvider: storageProvider, httpProvider: httpProvider, authService: authService,);
+            }else{
+              _init();
+            }
+            return DefaultLoader();
           }else{
             return FacebookForm();
           }

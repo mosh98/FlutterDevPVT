@@ -99,7 +99,7 @@ class Dog{
   bool operator ==(other) {
     if(other is! Dog)
       return false;
-    return uuid == (other as Dog).uuid;
+    return other is Dog && this.uuid == other.uuid;
   }
 
   int _hash;

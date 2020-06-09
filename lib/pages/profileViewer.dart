@@ -69,11 +69,12 @@ class ProfileState extends State<ProfileViewer> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.grey[850],
-        title: Text(widget.otherUser.username),
+        title: Text(widget.otherUser.username,  key: Key('usernamebar'),),
         centerTitle: true,
         actions: <Widget>[
           _isFriends == true ?
           FlatButton.icon(
+            key: Key('removefriend'),
             onPressed: () async{
               setState(() {
                 _isFriends = false;
@@ -98,6 +99,7 @@ class ProfileState extends State<ProfileViewer> {
           )
           :
           FlatButton.icon(
+            key: Key('addfriend'),
             onPressed: () async{
               setState(() {
                 _isFriends = true;
@@ -169,7 +171,7 @@ class ProfileState extends State<ProfileViewer> {
                 )
             ),
             Padding(padding: EdgeInsets.only(left: 10),),
-            Text(widget.otherUser.username, style: TextStyle(fontSize: 16),)
+            Text(widget.otherUser.username, style: TextStyle(fontSize: 16), key: Key('username'),)
           ],
         ),
       ),
@@ -186,7 +188,7 @@ class ProfileState extends State<ProfileViewer> {
             children: <Widget>[
               Text('About', style: TextStyle(fontSize: 16)),
               Padding(padding: EdgeInsets.only(top: 10),),
-              Text(widget.otherUser.desc ?? ''),
+              Text(widget.otherUser.desc ?? '', key: Key('description'),),
               Padding(padding: EdgeInsets.only(top: 10),),
               Row(
                 children: <Widget>[
@@ -205,16 +207,18 @@ class ProfileState extends State<ProfileViewer> {
     return Expanded(
       flex: 7,
       child: ListView.builder(
+        key: Key('dogs'),
         itemCount: widget.otherUser.dogs.length,
         itemBuilder: (context, index) {
           return ListTile(
+            key:(Key('${widget.otherUser.dogs[index].uuid}')),
               leading: Icon(Icons.pets),
               title: Text(widget.otherUser.dogs[index].getName()),
               onTap: () {
                 Dog dog = widget.otherUser.dogs[index];
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) =>
-                        DogProfileViewer(dog: dog)));
+                        DogProfileViewer(dog: dog, storageProvider: widget.storageProvider,)));
               });
         },
       ),

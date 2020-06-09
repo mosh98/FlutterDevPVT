@@ -10,23 +10,39 @@ class MockNavigatorObserver extends Mock implements NavigatorObserver{}
 
 void main(){
 
+  final mockObserver = MockNavigatorObserver();
+  Widget page = MaterialApp(
+    home: StartPage(),
+    navigatorObservers: [mockObserver],
+  );
+
+  Finder loginButton = find.byKey(Key('login'));
+  Finder viewMapButton = find.byKey(Key('viewmap'));
+  Finder registerButton = find.byKey(Key('register'));
+
+  group('defaults', () {
+    testWidgets('Rendering page', (tester)async{
+      await tester.pumpWidget(page);
+      expect(find.byType(StartPage),findsOneWidget);
+    });
+
+    testWidgets('Finding widgets', (tester)async{
+      await tester.pumpWidget(page);
+      await tester.pumpAndSettle();
+      expect(loginButton, findsOneWidget);
+      expect(viewMapButton, findsOneWidget);
+      expect(registerButton, findsOneWidget);
+    });
+  });
+
   group(
     "Tests of routing on start-page",
       (){
-        final mockObserver = MockNavigatorObserver();
 
         testWidgets('Route: Loginbutton -> LoginPage', (WidgetTester tester) async{
-          await tester.pumpWidget(
-              MaterialApp(
-                home: StartPage(),
-                navigatorObservers: [mockObserver],
-              )
-          );
+          await tester.pumpWidget(page);
 
           await tester.pumpAndSettle();
-
-          Finder loginButton = find.byKey(Key('login'));
-          expect(loginButton, findsOneWidget);
 
           await tester.tap(loginButton);
           await tester.pumpAndSettle();
@@ -37,17 +53,9 @@ void main(){
         });
 
         testWidgets('Route: viewMapButton -> Map', (WidgetTester tester) async{
-          await tester.pumpWidget(
-              MaterialApp(
-                home: StartPage(),
-                navigatorObservers: [mockObserver],
-              )
-          );
+          await tester.pumpWidget(page);
 
           await tester.pumpAndSettle();
-
-          Finder viewMapButton = find.byKey(Key('viewmap'));
-          expect(viewMapButton, findsOneWidget);
 
           await tester.tap(viewMapButton);
           await tester.pumpAndSettle();
@@ -58,17 +66,9 @@ void main(){
         });
 
         testWidgets('Route: registerButton -> Register', (WidgetTester tester) async{
-          await tester.pumpWidget(
-              MaterialApp(
-                home: StartPage(),
-                navigatorObservers: [mockObserver],
-              )
-          );
+          await tester.pumpWidget(page);
 
           await tester.pumpAndSettle();
-
-          Finder registerButton = find.byKey(Key('register'));
-          expect(registerButton, findsOneWidget);
 
           await tester.tap(registerButton);
           await tester.pumpAndSettle();

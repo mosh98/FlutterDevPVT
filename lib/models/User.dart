@@ -129,7 +129,7 @@ class User{
   bool operator ==(other) {
     if(other is! User)
       return false;
-    return userId == (other as User).userId;
+    return other is User && this.userId == other.userId;
   }
 
   int _hash;
@@ -143,6 +143,6 @@ class User{
 
   @override
   String toString() {
-    return "Name: $username Date of birth: $dateOfBirth Gender: $gender Description: $desc Created at: $createdDate Dogs: $dogs";
+    return "Name: $username Date of birth: $dateOfBirth Gender: $gender Description: $desc Created at: $createdDate";
   }
 }

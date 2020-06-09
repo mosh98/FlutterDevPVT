@@ -1,20 +1,13 @@
 import 'dart:convert';
 
 import 'package:dog_prototype/loaders/CustomLoader.dart';
-import 'package:dog_prototype/pages/mapPage.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/Validator.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:email_validator/email_validator.dart';
 import 'package:http/http.dart' as http;
-import 'package:gender_selector/gender_selector.dart';
-
-import 'ProfilePage.dart';
-import 'placeHolderHome.dart';
 
 class RegisterPage extends StatelessWidget {
   @override
@@ -220,7 +213,6 @@ class MyCustomFormState extends State<MyCustomForm> {
                                         setState(() => _dateTime = newDateTime
 
                                         );
-                                        print("You Selected Date: ${newDateTime}");
                                         date_of_birth = '${f.format(_dateTime)}';
 
 
@@ -318,35 +310,6 @@ class MyCustomFormState extends State<MyCustomForm> {
     }
   }
 
-//  try {
-//  final http.Response response = await http.post( //register to database
-//  'https://dogsonfire.herokuapp.com/users/register',
-//  headers:<String, String>{
-//  "Accept": "application/json",
-//  'Content-Type' : 'application/json; charset=UTF-8', //ISO-8859-1
-//  },
-//  body: jsonEncode(<String,String>{
-//  "username": username,
-//  "email": email,
-//  "dateOfBirth": dateOfBirth,
-//  "gender": gender,
-//  "password":password
-//  })
-//  );
-//
-//  if(response.statusCode==200){
-//  print(response.statusCode);
-//  await signInWithEmailAndPassword(email, password);
-//  return response.statusCode.toString();
-//  }else{
-//  print(response.statusCode);
-//  print(response.body);
-//  return json.decode(response.body)['message'];
-//  }
-//  } catch (e) {
-//  print("catch: " + e.message);
-//  return null;
-//  }
   Future<http.Response> createAndSaveToken(
       String username, String email) async {
     String token;
@@ -354,7 +317,6 @@ class MyCustomFormState extends State<MyCustomForm> {
 
     await Fcm.getToken().then((value) => token = value);
 
-    print("FCM TEKEN"+ token);
     try {
       final http.Response response = await http.post(
         'https://fcm-token.herokuapp.com/user/saveFcm',

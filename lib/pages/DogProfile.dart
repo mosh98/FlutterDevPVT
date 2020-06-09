@@ -75,6 +75,7 @@ class _DogProfileState extends State<DogProfile> {
         child: GestureDetector(
             onTap: getImage,
             child: Container(
+              key: Key('picture'),
                 height:100,
                 width:100,
                 child:
@@ -122,24 +123,29 @@ class _DogProfileState extends State<DogProfile> {
         context: context,
           tiles: [
             ListTile(
+              key: Key('name'),
                 title: Text('Name:'),
                 trailing: Text(dog.name ?? 'No name specified.'),
                 onTap: (){_setName();},
             ),
             ListTile(
+              key: Key('breed'),
                 title: Text('Breed:'),
                 trailing: Text(dog.breed ?? 'No breed specified.'),
                 onTap: (){_setBreed();},
             ),
             ListTile(
+              key: Key('dateofbirth'),
                 title: Text('Date of birth:'),
                 trailing: Text(dog.dateOfBirth ?? 'No date of birth specified.'),
                 onTap: (){_setDateOfBirth();},
             ),
             dog.gender == 'MALE' ?
             ListTile(
+                key: Key('neutered'),
                 title: Text('Neutered:'),
                 trailing: DropdownButton<String>(
+                  key: Key('dropdownneutered'),
                   value: dog.getNeutered(),
                   onChanged: (String newValue){_updateNeutered(newValue); },
                   items: <String>[
@@ -147,7 +153,7 @@ class _DogProfileState extends State<DogProfile> {
                   ].map<DropdownMenuItem<String>>((String value){
                     return DropdownMenuItem<String>(
                       value:value,
-                      child:Text(value, style: TextStyle(fontSize: 15.0),),
+                      child:Text(value, key: Key('$value'),style: TextStyle(fontSize: 15.0),),
                     );
                   }).toList(),
                 )
@@ -155,8 +161,10 @@ class _DogProfileState extends State<DogProfile> {
                 :
             Text(''),
             ListTile(
+                key: Key('gender'),
                 title: Text('Gender:'),
                 trailing: DropdownButton<String>(
+                  key: Key('dropdowngender'),
                   value: dog.gender ?? 'MALE',
                   onChanged: (String newValue){_updateGender(newValue);},
                   items: <String>[
@@ -164,7 +172,7 @@ class _DogProfileState extends State<DogProfile> {
                   ].map<DropdownMenuItem<String>>((String value){
                     return DropdownMenuItem<String>(
                       value:value,
-                      child:Text(value, style: TextStyle(fontSize: 15.0),),
+                      child:Text(value, key: Key('$value'),style: TextStyle(fontSize: 15.0),),
                     );
                   }).toList(),
                 )
@@ -178,8 +186,9 @@ class _DogProfileState extends State<DogProfile> {
     return ListView(
       children: [
         ListTile(
+          key: Key('description'),
           title: Text('Description', style: TextStyle(fontSize: 20)),
-          trailing: IconButton(icon:Icon(Icons.edit), onPressed: (){_editDescription();}),
+          trailing: IconButton( key: Key('editdesc'),icon:Icon(Icons.edit), onPressed: (){_editDescription();}),
         ),
         Text(dog.description ?? 'Add a description to your dog!'),
       ],
@@ -240,6 +249,7 @@ class _DogProfileState extends State<DogProfile> {
                 shrinkWrap: true,
                 children: [
                   TextField(
+                    key: Key('textfielddesc'),
                     keyboardType: TextInputType.multiline,
                     maxLines: 7,
                     maxLength: 100,
@@ -249,10 +259,12 @@ class _DogProfileState extends State<DogProfile> {
                   ),
                   ListTile(
                     leading: IconButton(
+                      key: Key('done'),
                       icon: Icon(Icons.done),
                       onPressed: (){_updateDescription(desc); setState(() {_loading = true;}); Navigator.pop(context);},
                     ),
                     trailing: IconButton(
+                      key: Key('cancel'),
                       icon: Icon(Icons.close),
                       onPressed: (){Navigator.pop(context);},
                     ),
@@ -323,11 +335,13 @@ class _DogProfileState extends State<DogProfile> {
         context: context,
         builder: (BuildContext context){
       return Dialog(
+        key: Key('editbreeddialog'),
         child: Row(
           children: [
             Padding(padding:EdgeInsets.only(right:10.0)),
             Expanded(
               child:TextFormField(
+                key:Key('breedtextfield'),
                 decoration: InputDecoration(
                     hintText: 'What is the breed of your dog?'
                 ),
@@ -335,6 +349,7 @@ class _DogProfileState extends State<DogProfile> {
               ),
             ),
             IconButton(icon: Icon(Icons.done),
+                key: Key('submit'),
                 onPressed: () async{
                   setState(() {
                     _loading = true;
@@ -342,7 +357,7 @@ class _DogProfileState extends State<DogProfile> {
                   await _updateBreed(breed);
                   Navigator.pop(context);
                 }),
-            IconButton(icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
+            IconButton(key: Key('cancel'),icon: Icon(Icons.close), onPressed: (){Navigator.pop(context);})
           ],
         ),
       );

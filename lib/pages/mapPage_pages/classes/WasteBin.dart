@@ -8,19 +8,18 @@ class WasteBin {
     Marker _marker;
 
 
-    double get distance => _distance;
-    LatLng get position => _position;
-    Marker get marker => _marker;
+    double getDistance() { return _distance; }
+    LatLng getPosition() { return _position; }
+    Marker getMarker() { return _marker; }
 
 
-    set distance(double value) {
+    void setDistance(double value) {
         _distance = value;
     }
 
-    set marker(Marker value) {
-        _marker = value;
+    void setMarker(Marker marker) {
+        this._marker = marker;
     }
-
 
 
     WasteBin({double latitude, double longitude}) {
@@ -36,8 +35,4 @@ class WasteBin {
     String toString() {
         return "WasteBin: $_distance\t" + _position.toString();
     }
-
-
-
-
 }

@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/Validator.dart';
 import 'package:flutter/material.dart';
-import 'RegisterPage.dart';
 
 class LoginPage extends StatefulWidget{
   @override
@@ -61,7 +58,7 @@ class LoginPageState extends State<LoginPage> {
               hintText: "Email* ",
               icon: Icon(Icons.person),
             ),
-            validator: Validator.usernameValidator,
+            validator: Validator.emailValidator,
             keyboardType: TextInputType.text,
             onChanged: (emailValue){
               setState(() => email = emailValue);
@@ -188,7 +185,7 @@ class LoginPageState extends State<LoginPage> {
 
 
   Widget _wrongCredentials(){
-    return wrongCredent ? Text('Wrong username or password',style: TextStyle(color:Colors.red),) : Text('');
+    return wrongCredent ? Text('Wrong email or password',style: TextStyle(color:Colors.red),) : Text('');
   }
 
   _login(String email, String password) async{
