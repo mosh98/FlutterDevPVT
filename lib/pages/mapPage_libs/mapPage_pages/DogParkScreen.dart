@@ -7,9 +7,9 @@ import 'package:http/http.dart' as http;
 import 'CommentScreen.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../classes/DogPark.dart';
-import '../classes/Review.dart';
-import '../singletons/DataHandler.dart';
+import '../mapPage_models/DogPark.dart';
+import '../mapPage_models/Review.dart';
+import '../mapPage_handlers/DataHandler.dart';
 
 class DogParkScreen extends StatefulWidget {
     final DogPark dogPark;

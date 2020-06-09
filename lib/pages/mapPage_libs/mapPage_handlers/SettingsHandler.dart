@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../classes/SearchSettings.dart';
+import '../mapPage_models/SearchSettings.dart';
 
 class SettingsHandler {
 

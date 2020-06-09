@@ -1,5 +1,7 @@
 
 
+import 'package:flutter/material.dart';
+
 class SearchSettings {
 
     double _minValue;
@@ -16,20 +18,29 @@ class SearchSettings {
     double getMaxValue() { return _maxValue; }
 
 
-    void setMinValue(double value) {
-        _minValue = value;
+    setMinValue(double value) {
+        if (value > _maxValue)
+            return false;
+        return _minValue = value;
     }
 
-    void setMaxValue(double value) {
-        _maxValue = value;
+     setMaxValue(double value) {
+        if (value < _minValue)
+            return false;
+        return _maxValue = value;
     }
 
-    void setCurrentValue(double value) {
-        _currentValue = value;
+     setCurrentValue(double value) {
+        if (!(value >= _minValue && value <= _maxValue))
+            return false;
+        return _currentValue = value;
+
     }
 
-    void setDivisions(double value) {
-        _divisions = value;
+     setDivisions(double value) {
+        if (value == null)
+            return false;
+        return _divisions = value;
     }
 
 
