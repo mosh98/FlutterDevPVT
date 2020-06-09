@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:dog_prototype/services/Authentication.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -95,6 +96,10 @@ class DataHandler {
     Completer<GoogleMapController> get googleMapController =>
         _googleMapController;
 
+
+    set googleMapController(Completer<GoogleMapController> value) {
+        _googleMapController = value;
+    }
 
     void print_debug(String str) {
         if (_showLogMessages == true) {
@@ -228,9 +233,9 @@ class DataHandler {
             .toString();
         String lon = _selectedLocation.longitude
             .toString();
-        String dist = _settingsHandler.searchDogParkDistance.currentValue.toInt().toString();
+        String dist = _settingsHandler.searchDogParkDistance.getCurrentValue().toInt().toString();
         String url = "https://dog-park-micro.herokuapp.com/api/v1/dog_park/find?latitude=$lat&longitude=$lon&distance=$dist";
-        print(url);
+
         final http.Response response = await http.get(url);
         return response;
     }
@@ -241,10 +246,24 @@ class DataHandler {
             .toString();
         String lon = _selectedLocation.longitude
             .toString();
-        String dist = _settingsHandler.searchWasteBinDistance.currentValue.toInt().toString();
-        String url = 'https://dogsonfire.herokuapp.com/wastebin?latitude=$lat&longitude=$lon&distance=$dist';
+        String dist = _settingsHandler.searchWasteBinDistance.getCurrentValue().toInt().toString();
+        String url = 'https://dogsonfire.herokuapp.com/wastebins?latitude=$lat&longitude=$lon&distance=$dist';
         print(url);
+        print('https://dogsonfire.herokuapp.com/wastebins?latitude=$lon&longitude=$lat&distance=$dist');
+
+        String token = await AuthService().getCurrentFirebaseUser().then((value) =>
+            value.getIdToken().then((value) => value.token));
+
+        print_debug('TOKEN: $token');
+
+
+    print_debug(url);
         final http.Response response = await http.get(url);
+            //headers: {'Authorization': 'Bearer $token'});
+        print_debug(response.body.toString());
+        print_debug(response.statusCode.toString());
+
+
         return response;
     }
 

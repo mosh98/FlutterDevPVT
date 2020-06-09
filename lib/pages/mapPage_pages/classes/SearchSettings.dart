@@ -9,29 +9,30 @@ class SearchSettings {
 
     SearchSettings(this._minValue, this._maxValue, this._currentValue, this._divisions);
 
-    double get currentValue => _currentValue;
 
-    set currentValue(double value) {
-        _currentValue = value;
-    }
+    double getCurrentValue() { return _currentValue; }
+    double getDivisions() { return _divisions; }
+    double getMinValue() { return _minValue; }
+    double getMaxValue() { return _maxValue; }
 
-    double get maxValue => _maxValue;
 
-    set maxValue(double value) {
-        _maxValue = value;
-    }
-
-    double get minValue => _minValue;
-
-    set minValue(double value) {
+    void setMinValue(double value) {
         _minValue = value;
     }
 
-    double get divisions => _divisions;
+    void setMaxValue(double value) {
+        _maxValue = value;
+    }
 
-    set divisions(double value) {
+    void setCurrentValue(double value) {
+        _currentValue = value;
+    }
+
+    void setDivisions(double value) {
         _divisions = value;
     }
+
+
 
     @override
     String toString() {
