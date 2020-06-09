@@ -1,6 +1,6 @@
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/pages/FacebookForm.dart';
-import 'package:dog_prototype/pages/placeHolderHome.dart';
+import 'package:dog_prototype/pages/Home.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/HttpProvider.dart';
 import 'package:dog_prototype/services/StorageProvider.dart';
@@ -83,7 +83,7 @@ class _RedirectState extends State<Redirect> {
         if(snapshot.hasData){
           if(snapshot.data == true){
             if(hasInit){
-              return PlaceHolderApp(user:user,storageProvider: storageProvider, httpProvider: httpProvider, authService: authService,);
+              return App(user:user,storageProvider: storageProvider, httpProvider: httpProvider, authService: authService,);
             }else{
               _init();
             }

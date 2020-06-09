@@ -5,7 +5,7 @@ import 'package:dog_prototype/pages/FindFriends.dart';
 import 'package:dog_prototype/pages/ProfilePage.dart';
 import 'package:dog_prototype/pages/mapPage.dart';
 import 'package:dog_prototype/pages/messages.dart';
-import 'package:dog_prototype/pages/placeHolderHome.dart';
+import 'package:dog_prototype/pages/Home.dart';
 import 'package:dog_prototype/services/Authentication.dart';
 import 'package:dog_prototype/services/HttpProvider.dart';
 import 'package:dog_prototype/services/StorageProvider.dart';
@@ -34,7 +34,7 @@ void main(){
 
   final Widget page = MediaQuery(
     child: MaterialApp(
-    home: PlaceHolderApp(user: fakeUser,storageProvider: mockStorageProvider,httpProvider: mockHttpProvider,authService: mockAuthService,),
+    home: App(user: fakeUser,storageProvider: mockStorageProvider,httpProvider: mockHttpProvider,authService: mockAuthService,),
     navigatorObservers: [mockNavigatorObserver],
     ),
     data: MediaQueryData(),
@@ -43,7 +43,7 @@ void main(){
   testWidgets('Rendering page', (tester) async{
     await tester.pumpWidget(page);
     await tester.pumpAndSettle();
-    expect(find.byType(PlaceHolderApp), findsOneWidget);
+    expect(find.byType(App), findsOneWidget);
   });
 
   testWidgets('Find widgets', (tester) async{

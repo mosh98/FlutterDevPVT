@@ -1,8 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dog_prototype/elements/bottomBar.dart';
-import 'package:dog_prototype/elements/messageTile.dart';
+import 'package:dog_prototype/loaders/DefaultLoader.dart';
 import 'package:dog_prototype/models/User.dart';
 import 'package:dog_prototype/services/Authentication.dart';
+import 'package:dog_prototype/services/StorageProvider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -10,39 +11,12 @@ import 'dart:convert';
 
 import 'MessengerHandler.dart';
 
-
 class Messages extends StatelessWidget {
   User user;
   ScrollController scrollController;
+  StorageProvider storageProvider;
 
-  Messages({this.user});
-
-  Future<User> getUser(String uid) async {
-    try{
-      String token = await AuthService().getCurrentFirebaseUser().then((value) => value.getIdToken().then((value) => value.token));
-
-      final response = await http.get('https://dogsonfire.herokuapp.com/users?uid=$uid', headers: {
-        'Authorization': 'Bearer $token',
-      });
-
-
-      if (response.statusCode == 200) {
-        print(User.fromJson(json.decode(response.body)));
-        return User.fromJson(json.decode(response.body));
-
-        }
-      else {
-        print('Failed to fetch user' + response.statusCode.toString());
-        print(response.body);
-      }
-      } catch(e){
-
-    }
-
-
-
-    }
-
+  Messages({@required this.user, this.storageProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -87,23 +61,7 @@ class Messages extends StatelessWidget {
                         List<DocumentSnapshot> docs = snapshot.data.documents;
 
                         List<Widget> messages = docs
-                            .map(
-                              (doc) => ListTile(
-                                  leading: CircleAvatar(
-                                    radius: 30,
-                                    child: Icon(Icons.person),
-                                  ),
-                                title: Text(doc.data['username']),
-                                subtitle: Text(doc.data['latestMessage']),
-                                onTap:() async {
-                                    User peer = await getUser(doc.data['uid']);
-                                    print(peer);
-
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (context) =>
-                                        MessengerHandler(user: user,peer: peer)));
-                                },
-                              )
-                            )
+                            .map((doc) => PeerTile(user, doc, storageProvider))
                             .toList();
 
                         return ListView(
@@ -113,5 +71,97 @@ class Messages extends StatelessWidget {
                             ]);
                       })),
             ]));
+  }
+}
+
+class PeerTile extends StatefulWidget {
+  String profileImage;
+  User user;
+  User peer;
+  DocumentSnapshot doc;
+  StorageProvider storageProvider;
+
+  PeerTile(User user, DocumentSnapshot doc, StorageProvider storageProvider) {
+    this.user = user;
+    this.doc = doc;
+    this.storageProvider = storageProvider;
+  }
+
+  @override
+  State<StatefulWidget> createState() => PeerTileState();
+}
+
+class PeerTileState extends State<PeerTile> {
+  String profileImage;
+  bool loadingImage = true;
+  bool loadingUser = true;
+
+  @override
+  void initState() {
+    _getProfileImage();
+    super.initState();
+  }
+
+  Future<User> _getUser(String uid) async {
+    try {
+      String token = await AuthService()
+          .getCurrentFirebaseUser()
+          .then((value) => value.getIdToken().then((value) => value.token));
+      final response = await http
+          .get('https://dogsonfire.herokuapp.com/users?uid=$uid', headers: {
+        'Authorization': 'Bearer $token',
+      });
+
+      if (response.statusCode == 200) {
+        setState(() {
+          widget.peer = User.fromJson(json.decode(response.body));
+          loadingUser = false;
+          print(User.fromJson(json.decode(response.body)));
+        });
+      } else {
+        print('Failed to fetch user' + response.statusCode.toString());
+        print(response.body);
+      }
+    } catch (e) {}
+  }
+
+  Future<String> _getProfileImage() async {
+    await _getUser(widget.doc.data['uid']);
+    final result =
+        await widget.storageProvider.getOtherProfileImage(widget.peer);
+    setState(() {
+      profileImage = result;
+      loadingImage = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: loadingImage
+          ? DefaultLoader()
+          : CachedNetworkImage(
+              imageUrl: profileImage,
+
+              placeholder: (context, url) => DefaultLoader(),
+              errorWidget: (context, url, error) => CircleAvatar(
+                  radius: 30,
+                  child: Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 30,
+                  ),
+                  backgroundColor: Colors.grey)),
+      title:
+          loadingUser ? Text('Loading...') : Text(widget.doc.data['username']),
+      subtitle: loadingUser ? Text('') : Text(widget.doc.data['latestMessage']),
+      onTap: () async {
+        if (!loadingUser) {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) =>
+                  MessengerHandler(user: widget.user, peer: widget.peer)));
+        }
+      },
+    );
   }
 }

@@ -11,20 +11,20 @@ import 'ProfilePage.dart';
 import 'mapPage.dart';
 import 'messages.dart';
 
-class PlaceHolderApp extends StatefulWidget {
+class App extends StatefulWidget {
 
   final Future<User> futureUser;
   final User user;
   final StorageProvider storageProvider;
   final HttpProvider httpProvider;
   final AuthService authService;
-  PlaceHolderApp({this.futureUser, this.user, this.storageProvider, this.httpProvider, this.authService});
+  App({this.futureUser, this.user, this.storageProvider, this.httpProvider, this.authService});
 
   @override
   HomePageState createState() => HomePageState();
 }
 
-class HomePageState extends State<PlaceHolderApp> {
+class HomePageState extends State<App> {
   MapPage mapPage;
   ProfilePage profilePage;
   Messages messages;
@@ -58,7 +58,7 @@ class HomePageState extends State<PlaceHolderApp> {
     }else{
       mapPage = MapPage();
       profilePage = ProfilePage(user:user,storageProvider: widget.storageProvider, httpProvider: widget.httpProvider, authService: widget.authService,);
-      messages = Messages(user: user,);
+      messages = Messages(user: user, storageProvider: widget.storageProvider,);
       search = FindFriends(user: user,storageProvider: widget.storageProvider,httpProvider: widget.httpProvider,authService: widget.authService,);
       pages = [profilePage, mapPage, search, messages];
       currentPage = pages[selectedIndex];
