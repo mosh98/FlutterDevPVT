@@ -12,6 +12,8 @@ import '../classes/WasteBin.dart';
 import '../singletons/DataHandler.dart';
 import '../screens/DogParkScreen.dart';
 import '../screens/SearchSettingsDialog.dart';
+
+
 class MainScreen extends StatefulWidget {
     @override
     _MainScreenState createState() => _MainScreenState();
@@ -29,6 +31,8 @@ class _MainScreenState extends State<MainScreen> {
 
     bool _buttonSetMarkerIsPressed = false;
 
+
+    bool _isDownloadingData = false;
 
     @override
     Widget build(BuildContext context) {
@@ -60,6 +64,10 @@ class _MainScreenState extends State<MainScreen> {
 
 
         return new Scaffold(
+
+
+
+
             key: _scaffoldKey,
             appBar: new AppBar(
                 title: new Text('Karta'), centerTitle: true,
@@ -68,9 +76,9 @@ class _MainScreenState extends State<MainScreen> {
 
                 children: <Widget>[
                     _mapWidget(),
+                    (_isDownloadingData == true) ? Container(child: Center(child: CircularProgressIndicator())) : Container(),
                     Column(
                         children: <Widget>[
-
                             Align(
                                 alignment: Alignment.topRight,
                                 child: Column(
@@ -112,6 +120,8 @@ class _MainScreenState extends State<MainScreen> {
 
             )
         );
+
+
     }
 
     Widget _mapWidget() {
@@ -123,6 +133,7 @@ class _MainScreenState extends State<MainScreen> {
                 .settingsHandler
                 .initCamPosition,
             onMapCreated: (GoogleMapController controller) async {
+
                 _dataHandler
                     .googleMapController
                     .complete(controller);
@@ -292,6 +303,11 @@ class _MainScreenState extends State<MainScreen> {
         if (search == null || search == false) {
             return;
         } else {
+
+            setState(() {
+              _isDownloadingData = true;
+            });
+
             // the user want to do a search for dog parks
 
             // remove old markers from the map
@@ -299,9 +315,9 @@ class _MainScreenState extends State<MainScreen> {
                 .dogParks
                 .forEach((dogpark) {
                 // Maybe unnecessary to check for null
-                if (dogpark.marker != null &&
-                    _mapMarkers.contains(dogpark.marker)) {
-                    _mapMarkers.remove(dogpark.marker);
+                if (dogpark.getMarker() != null &&
+                    _mapMarkers.contains(dogpark.getMarker())) {
+                    _mapMarkers.remove(dogpark.getMarker());
                 }
             });
 
@@ -310,8 +326,8 @@ class _MainScreenState extends State<MainScreen> {
             _dataHandler
                 .dogParks
                 .forEach((park) {
-                if (_mapMarkers.contains(park.marker))
-                    _mapMarkers.remove(park.marker);
+                if (_mapMarkers.contains(park.getMarker()))
+                    _mapMarkers.remove(park.getMarker());
             });
             _dataHandler
                 .dogParks
@@ -329,24 +345,25 @@ class _MainScreenState extends State<MainScreen> {
 
                     // Calulate the distance to the park based on where we searched from
                     parsedParks.forEach((park) {
-                        park.distance =
+                        park.setDistance(
                             _dataHandler.getDistanceBetween(
-                                park.position.latitude,
-                                park.position.longitude,
+                                park.getPosition().latitude,
+                                park.getPosition().longitude,
                                 _dataHandler
                                     .selectedLocation
                                     .latitude,
                                 _dataHandler
                                     .selectedLocation
                                     .longitude
-                            );
+                            )
+                        );
                     });
 
                     // Sort the list based on distance
                     parsedParks.sort((DogPark a, DogPark b) {
-                        if (a.distance > b.distance) {
+                        if (a.getDistance() > b.getDistance()) {
                             return 1;
-                        } else if (a.distance < b.distance) {
+                        } else if (a.getDistance() < b.getDistance()) {
                             return -1;
                         } else {
                             return 0;
@@ -356,14 +373,13 @@ class _MainScreenState extends State<MainScreen> {
                     for (int i = 0; i < parsedParks.length && i < _dataHandler
                         .settingsHandler
                         .searchDogParkResults
-                        .currentValue
+                        .getCurrentValue()
                         .toInt(); i++) {
-                        parsedParks[i].marker =
-                        await _createDogParkMarker(parsedParks[i]);
+                        parsedParks[i].setMarker(await _createDogParkMarker(parsedParks[i]));
                         _dataHandler
                             .dogParks
                             .add(parsedParks[i]);
-                        _mapMarkers.add(parsedParks[i].marker);
+                        _mapMarkers.add(parsedParks[i].getMarker());
                     }
 
                     _dataHandler
@@ -373,9 +389,7 @@ class _MainScreenState extends State<MainScreen> {
                     });
 
 
-                    setState(() {
 
-                    });
                 } catch (error) {
                     // Error while parsing
                 }
@@ -384,7 +398,9 @@ class _MainScreenState extends State<MainScreen> {
             }
         }
 
-
+        setState(() {
+        _isDownloadingData = false;
+        });
 
         if (_dataHandler.dogParks.isEmpty) {
             _displaySnackBar(context, 'Hitta inga hundparker');
@@ -396,7 +412,6 @@ class _MainScreenState extends State<MainScreen> {
             _displaySnackBar(context, 'Hittade ' + _dataHandler.dogParks.length.toString() + str);
 
         }
-
 
 
     }
@@ -421,14 +436,17 @@ class _MainScreenState extends State<MainScreen> {
         if (search == null || search == false) {
             return;
         } else {
+            setState(() {
+                _isDownloadingData = true;
+            });
             // the user taped on a search button
             _dataHandler
                 .wasteBins
                 .forEach((wastebin) {
                 // Maybe unnecessary to check for null
-                if (wastebin.marker != null &&
-                    _mapMarkers.contains(wastebin.marker)) {
-                    _mapMarkers.remove(wastebin.marker);
+                if (wastebin.getMarker() != null &&
+                    _mapMarkers.contains(wastebin.getMarker())) {
+                    _mapMarkers.remove(wastebin.getMarker());
                 }
             });
 
@@ -452,24 +470,25 @@ class _MainScreenState extends State<MainScreen> {
 
                     // Calulate the distance to the park based on where we searched from
                     parsedBins.forEach((wasteBin) {
-                        wasteBin.distance =
+                        wasteBin.setDistance(
                             _dataHandler.getDistanceBetween(
-                                wasteBin.position.latitude,
-                                wasteBin.position.longitude,
+                                wasteBin.getPosition().latitude,
+                                wasteBin.getPosition().longitude,
                                 _dataHandler
                                     .selectedLocation
                                     .latitude,
                                 _dataHandler
                                     .selectedLocation
                                     .longitude
-                            );
+                            )
+                        );
                     });
 
                     // Sort the list based on distance
                     parsedBins.sort((WasteBin a, WasteBin b) {
-                        if (a.distance > b.distance) {
+                        if (a.getDistance() > b.getDistance()) {
                             return 1;
-                        } else if (a.distance < b.distance) {
+                        } else if (a.getDistance() < b.getDistance()) {
                             return -1;
                         } else {
                             return 0;
@@ -479,15 +498,14 @@ class _MainScreenState extends State<MainScreen> {
                     for (int i = 0; i < parsedBins.length && i < _dataHandler
                         .settingsHandler
                         .searchWasteBinResults
-                        .currentValue
+                        .getCurrentValue()
                         .toInt(); i++) {
 
-                        parsedBins[i].marker =
-                        await _createWasteBinMarker(parsedBins[i]);
+                        parsedBins[i].setMarker(await _createWasteBinMarker(parsedBins[i]));
                         _dataHandler
                             .wasteBins
                             .add(parsedBins[i]);
-                        _mapMarkers.add(parsedBins[i].marker);
+                        _mapMarkers.add(parsedBins[i].getMarker());
                     }
 
 
@@ -498,9 +516,6 @@ class _MainScreenState extends State<MainScreen> {
                     });
 
 
-                    setState(() {
-
-                    });
 
 
                 } catch (error) {
@@ -514,6 +529,9 @@ class _MainScreenState extends State<MainScreen> {
 
         }
 
+        setState(() {
+        _isDownloadingData = false;
+        });
         if (_dataHandler.wasteBins.isEmpty) {
             _displaySnackBar(context, 'Hitta inga papperskorgar');
         } else {
@@ -590,10 +608,10 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         return Marker(
-            markerId: MarkerId('dogpark_id_' + park.id.toString()),
+            markerId: MarkerId('dogpark_id_' + park.getID().toString()),
             icon: _dataHandler
                 .dogParkMarkerIcon,
-            position: park.position,
+            position: park.getPosition(),
             onTap: () {
                 Navigator.push(
                     context,
@@ -623,10 +641,8 @@ class _MainScreenState extends State<MainScreen> {
             markerId: MarkerId('wastebin_id_$id'),
             icon: _dataHandler
                 .wasteBinMarkerIcon,
-            position: wastebin.position,
-            onTap: () {
+            position: wastebin.getPosition(),
 
-            }
         );
     }
 
@@ -723,8 +739,10 @@ class _MainScreenState extends State<MainScreen> {
 
 
     _displaySnackBar(BuildContext context, String str) {
-        final snackBar = SnackBar(content: Text(str));
-        _scaffoldKey.currentState.showSnackBar(snackBar);
+        if (_scaffoldKey.currentState != null) {
+            final snackBar = SnackBar(content: Text(str));
+            _scaffoldKey.currentState.showSnackBar(snackBar);
+        }
     }
 
 

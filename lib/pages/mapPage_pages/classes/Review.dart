@@ -5,9 +5,9 @@ class Review {
     String _comment;
 
 
-    int get id => _id;
-    int get rating => _rating;
-    String get comment => _comment;
+    int getID() { return _id; }
+    int getRating() { return _rating; }
+    String getComment() { return _comment; }
 
 
 

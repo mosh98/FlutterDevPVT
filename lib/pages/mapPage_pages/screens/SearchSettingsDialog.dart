@@ -68,19 +68,19 @@ class _SearchSettingsDialogState extends State<SearchSettingsDialog> {
                                 children: <Widget>[
                                     Slider(
                                         value: widget.distanceSettings
-                                            .currentValue,
-                                        min: widget.distanceSettings.minValue,
-                                        max: widget.distanceSettings.maxValue,
+                                            .getCurrentValue(),
+                                        min: widget.distanceSettings.getMinValue(),
+                                        max: widget.distanceSettings.getMaxValue(),
                                         divisions: widget.distanceSettings
-                                            .divisions.toInt(),
+                                            .getDivisions().toInt(),
                                         onChanged: (value) {
                                             setState(() {
-                                                widget.distanceSettings
-                                                    .currentValue = value;
+                                                widget.distanceSettings.setCurrentValue(value);
+
                                             });
                                         },
                                     ),
-                                    Text(widget.distanceSettings.currentValue
+                                    Text(widget.distanceSettings.getCurrentValue()
                                         .toInt()
                                         .toString() + " m"),
                                 ],
@@ -90,19 +90,19 @@ class _SearchSettingsDialogState extends State<SearchSettingsDialog> {
                                 children: <Widget>[
                                     Slider(
                                         value: widget.resultsSettings
-                                            .currentValue,
-                                        min: widget.resultsSettings.minValue,
-                                        max: widget.resultsSettings.maxValue,
+                                            .getCurrentValue(),
+                                        min: widget.resultsSettings.getMinValue(),
+                                        max: widget.resultsSettings.getMaxValue(),
                                         divisions: widget.resultsSettings
-                                            .divisions.toInt(),
+                                            .getDivisions().toInt(),
                                         onChanged: (value) {
                                             setState(() {
-                                                widget.resultsSettings
-                                                    .currentValue = value;
+                                                widget.resultsSettings.setCurrentValue(value);
+
                                             });
                                         },
                                     ),
-                                    Text(widget.resultsSettings.currentValue
+                                    Text(widget.resultsSettings.getCurrentValue()
                                         .toInt()
                                         .toString() + " st"),
                                 ],

@@ -4,14 +4,7 @@ import '../classes/SearchSettings.dart';
 
 class SettingsHandler {
 
-    static SettingsHandler _instance;
 
-    static SettingsHandler getInstance() {
-        if (_instance == null) {
-            _instance = new SettingsHandler();
-        }
-        return _instance;
-    }
 
     Color _buttonBackgroundColor = Colors.lightBlueAccent;
     Color get buttonBackgroundColor => _buttonBackgroundColor;
