@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
-import '../classes/DogPark.dart';
-import '../singletons/DataHandler.dart';
+import '../mapPage_models/DogPark.dart';
+import '../mapPage_handlers/DataHandler.dart';
 
 class CommentScreen extends StatefulWidget {
     final DogPark dogPark;

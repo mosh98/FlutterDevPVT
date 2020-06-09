@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'mapPage_pages/screens/MainScreen.dart';
+import 'mapPage_libs/mapPage_pages/MainScreen.dart';
 
 
 class MapPage extends StatelessWidget {

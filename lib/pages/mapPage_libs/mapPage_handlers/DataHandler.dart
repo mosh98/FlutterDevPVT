@@ -11,8 +11,8 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'SettingsHandler.dart';
 import 'package:http/http.dart' as http;
-import '../classes/DogPark.dart';
-import '../classes/WasteBin.dart';
+import '../mapPage_models/DogPark.dart';
+import '../mapPage_models/WasteBin.dart';
 
 
 

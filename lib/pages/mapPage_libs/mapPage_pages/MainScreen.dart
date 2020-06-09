@@ -2,16 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'SearchSettingsDialog.dart';
+import '../mapPage_dialogs/SearchSettingsDialog.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:screen/screen.dart';
 
-import '../classes/DogPark.dart';
-import '../classes/WasteBin.dart';
-import '../singletons/DataHandler.dart';
-import '../screens/DogParkScreen.dart';
-import '../screens/SearchSettingsDialog.dart';
+import '../mapPage_models/DogPark.dart';
+import '../mapPage_models/WasteBin.dart';
+import '../mapPage_handlers/DataHandler.dart';
+import 'DogParkScreen.dart';
+import '../mapPage_dialogs/SearchSettingsDialog.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -64,8 +64,6 @@ class _MainScreenState extends State<MainScreen> {
 
 
         return new Scaffold(
-
-
 
 
             key: _scaffoldKey,
@@ -139,6 +137,8 @@ class _MainScreenState extends State<MainScreen> {
                     .complete(controller);
             });
     }
+
+
 
 
     void _mapWidgetTapped(LatLng tapPosition) async {
@@ -398,9 +398,10 @@ class _MainScreenState extends State<MainScreen> {
             }
         }
 
-        setState(() {
-        _isDownloadingData = false;
-        });
+            setState(() {
+                _isDownloadingData = false;
+            });
+
 
         if (_dataHandler.dogParks.isEmpty) {
             _displaySnackBar(context, 'Hitta inga hundparker');

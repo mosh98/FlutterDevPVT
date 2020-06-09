@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 
-import '../singletons/DataHandler.dart';
-import '../classes/SearchSettings.dart';
+import '../mapPage_handlers/DataHandler.dart';
+import '../mapPage_models/SearchSettings.dart';
 
 class SearchSettingsDialog extends StatefulWidget {
     final DataHandler dataHandler;
