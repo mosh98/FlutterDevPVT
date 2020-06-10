@@ -30,23 +30,7 @@ class Messages extends StatelessWidget {
         body: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Flexible(
-                  flex: 3,
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Expanded(
-                          flex: 1,
-                          child: Icon(Icons.search),
-                        ),
-                        Flexible(
-                          flex: 10,
-                          child: TextField(),
-                        )
-                      ],
-                    ),
-                  )),
+
               Expanded(
                   flex: 20,
                   child: StreamBuilder(
