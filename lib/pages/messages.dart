@@ -13,7 +13,7 @@ import 'MessengerHandler.dart';
 
 class Messages extends StatelessWidget {
   User user;
-  ScrollController scrollController;
+  ScrollController scrollController = ScrollController();
   StorageProvider storageProvider;
 
   Messages({@required this.user, this.storageProvider});
@@ -139,7 +139,11 @@ class PeerTileState extends State<PeerTile> {
   Widget build(BuildContext context) {
     return ListTile(
       leading: loadingImage
-          ? DefaultLoader()
+          ? CircleAvatar(
+        child: Icon(Icons.person, color: Colors.grey[800],),
+        radius: 30,
+        backgroundColor: Colors.white70,
+      )
           : CachedNetworkImage(
               imageUrl: profileImage,
 
