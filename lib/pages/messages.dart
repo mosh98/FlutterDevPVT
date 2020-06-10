@@ -144,18 +144,21 @@ class PeerTileState extends State<PeerTile> {
         radius: 30,
         backgroundColor: Colors.white70,
       )
-          : CachedNetworkImage(
-              imageUrl: profileImage,
+          : CircleAvatar(
+        radius: 30,
+        backgroundColor: Colors.white70,
+        child: CachedNetworkImage(
+            imageUrl: profileImage,
+            placeholder: (context, url) => DefaultLoader(),
+            errorWidget: (context, url, error) => CircleAvatar(
+                radius: 30,
+                child: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 30,
+                ),
+                backgroundColor: Colors.grey))),
 
-              placeholder: (context, url) => DefaultLoader(),
-              errorWidget: (context, url, error) => CircleAvatar(
-                  radius: 30,
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                  backgroundColor: Colors.grey)),
       title:
           loadingUser ? Text('Loading...') : Text(widget.doc.data['username']),
       subtitle: loadingUser ? Text('') : Text(widget.doc.data['latestMessage']),
