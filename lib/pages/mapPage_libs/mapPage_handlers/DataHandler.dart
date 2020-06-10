@@ -32,9 +32,6 @@ class DataHandler {
     Completer<GoogleMapController> _googleMapController = Completer();
 
 
-    // Debugging
-    final bool _showLogMessages = true;
-    final String _logMessageFilter = 'debug_msg: ';
 
 
     List<DogPark> _dogParks = new List<DogPark>();
@@ -101,11 +98,7 @@ class DataHandler {
         _googleMapController = value;
     }
 
-    void print_debug(String str) {
-        if (_showLogMessages == true) {
-            print(_logMessageFilter + str);
-        }
-    }
+
 
 
 
@@ -248,20 +241,15 @@ class DataHandler {
             .toString();
         String dist = _settingsHandler.searchWasteBinDistance.getCurrentValue().toInt().toString();
         String url = 'https://dogsonfire.herokuapp.com/wastebins?latitude=$lat&longitude=$lon&distance=$dist';
-        print(url);
-        print('https://dogsonfire.herokuapp.com/wastebins?latitude=$lon&longitude=$lat&distance=$dist');
 
         String token = await AuthService().getCurrentFirebaseUser().then((value) =>
             value.getIdToken().then((value) => value.token));
 
-        print_debug('TOKEN: $token');
 
 
-    print_debug(url);
         final http.Response response = await http.get(url);
             //headers: {'Authorization': 'Bearer $token'});
-        print_debug(response.body.toString());
-        print_debug(response.statusCode.toString());
+
 
 
         return response;
