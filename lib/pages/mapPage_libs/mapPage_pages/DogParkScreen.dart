@@ -223,7 +223,7 @@ class _DogParkScreenState extends State<DogParkScreen> {
     }
 
     void _onEnter() async {
-        widget.dataHandler.print_debug('DogParkScreen _onEnter!');
+
         setState(() {
             _isInLoadingState = true;
         });
@@ -347,8 +347,7 @@ class _DogParkScreenState extends State<DogParkScreen> {
 
             response.stream.transform(utf8.decoder).listen((event) {});
         }).catchError((e) {
-            widget.dataHandler.print_debug(
-                'ERROR _uploadImage ' + e.toString());
+
         });
 
         return resp;

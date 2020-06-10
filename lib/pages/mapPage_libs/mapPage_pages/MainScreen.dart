@@ -382,11 +382,7 @@ class _MainScreenState extends State<MainScreen> {
                         _mapMarkers.add(parsedParks[i].getMarker());
                     }
 
-                    _dataHandler
-                        .dogParks
-                        .forEach((element) {
-                        print(element.toString());
-                    });
+
 
 
 
@@ -509,12 +505,6 @@ class _MainScreenState extends State<MainScreen> {
                         _mapMarkers.add(parsedBins[i].getMarker());
                     }
 
-
-                    _dataHandler
-                        .wasteBins
-                        .forEach((element) {
-                        print(element.toString());
-                    });
 
 
 
