@@ -100,11 +100,11 @@ class PeerTileState extends State<PeerTile> {
         setState(() {
           widget.peer = User.fromJson(json.decode(response.body));
           loadingUser = false;
-          print(User.fromJson(json.decode(response.body)));
+          //print(User.fromJson(json.decode(response.body)));
         });
       } else {
-        print('Failed to fetch user' + response.statusCode.toString());
-        print(response.body);
+        //print('Failed to fetch user' + response.statusCode.toString());
+        //print(response.body);
       }
     } catch (e) {}
   }

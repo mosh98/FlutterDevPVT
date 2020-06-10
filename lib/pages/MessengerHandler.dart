@@ -135,7 +135,7 @@ class _Messenger extends State<MessengerHandler> {
 
     // update recipient token.
     await jayZ.then((value) => recipientToken = value.fcmToken);
-    print(recipientToken);
+    //print(recipientToken);
 
     await http.post(
       'https://fcm.googleapis.com/fcm/send',
