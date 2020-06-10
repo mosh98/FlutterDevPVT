@@ -246,7 +246,7 @@ class ProfileState extends State<ProfilePage>{
         key: Key('doglistview'),
         itemCount: user.dogs.length,
         itemBuilder: (context, index) {
-          print(index);
+          //print(index);
           return ListTile(
             key: Key('${user.dogs[index].name}' + '${index}'),
               leading: Icon(Icons.pets),
@@ -412,7 +412,7 @@ class ProfileState extends State<ProfilePage>{
     }else{
       snackText = 'Something went wrong with deleting ${dog.name} from your profile.';
     }
-    print(snackText);
+    //print(snackText);
     Scaffold.of(context).showSnackBar(SnackBar(content: Text(snackText)));
   }
 }

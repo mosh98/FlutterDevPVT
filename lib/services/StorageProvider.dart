@@ -18,15 +18,15 @@ class StorageProvider{
     try{
       final url = await http.get('$_SERVER/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
       if(url.statusCode==200){
-        print('Fetching user profile image was succcesful. Response Code: ${url.statusCode}');
+        //print('Fetching user profile image was succcesful. Response Code: ${url.statusCode}');
         return url.body;
       }
-      print('Could not fetch users profile image. Response Code: ${url.statusCode}');
-      print(url.body);
+      //print('Could not fetch users profile image. Response Code: ${url.statusCode}');
+      //print(url.body);
       return null;
     }catch(e){
-      print(e);
-      print('Could not fetch users profile image. Exception: $e');
+      //print(e);
+      //print('Could not fetch users profile image. Exception: $e');
       return null;
     }
   }
@@ -36,15 +36,15 @@ class StorageProvider{
     try{
       final url = await http.get('$_SERVER/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
       if(url.statusCode==200){
-        print('Fetching dog profile image was succcesful. Response Code: ${url.statusCode}');
+        //print('Fetching dog profile image was succcesful. Response Code: ${url.statusCode}');
         return url.body;
       }
-      print('Could not fetch dog profile image. Response Code: ${url.statusCode}');
-      print(url.body);
+      //print('Could not fetch dog profile image. Response Code: ${url.statusCode}');
+     // print(url.body);
       return null;
     }catch(e){
-      print(e);
-      print('Could not fetch dog profile image. Exception: $e');
+      //print(e);
+      //print('Could not fetch dog profile image. Exception: $e');
       return null;
     }
   }
@@ -60,7 +60,7 @@ class StorageProvider{
       }
       return null;
     }catch(e){
-      print(e);
+      //print(e);
       return null;
     }
   }
@@ -72,8 +72,8 @@ class StorageProvider{
       final response = await http.put('$_SERVER/images/${user.userId}', headers:{'Authorization': 'Bearer $token'});
 
       if(response != null){
-        print('1/2 of picture-upload went through :' + response.statusCode.toString());
-        print('Response body :' + response.body);
+        //print('1/2 of picture-upload went through :' + response.statusCode.toString());
+        //print('Response body :' + response.body);
         try{
           final nextResponse = await http.put(response.body,
               body: image.readAsBytesSync());
@@ -107,29 +107,29 @@ class StorageProvider{
       final response = await http.put('$_SERVER/images/${dog.uuid}', headers:{'Authorization': 'Bearer $token'});
 
       if(response != null){
-        print('1/2 of picture-upload went through :' + response.statusCode.toString());
-        print('Response body :' + response.body);
+        //print('1/2 of picture-upload went through :' + response.statusCode.toString());
+        //print('Response body :' + response.body);
         try{
           final nextResponse = await http.put(response.body,
               body: image.readAsBytesSync());
           if(nextResponse.statusCode == 200){
-            print('2/2 of picture-upload went through :' + response.statusCode.toString() + ". SUCCESS.");
+            //print('2/2 of picture-upload went through :' + response.statusCode.toString() + ". SUCCESS.");
             return true;
           }else{
-            print('Something went wrong with uploading picture, 2/2: ' + response.statusCode.toString());
+            //print('Something went wrong with uploading picture, 2/2: ' + response.statusCode.toString());
             return false;
           }
         }catch(e){
-          print(e);
+          //print(e);
           return false;
         }
       }else{
-        print('Something went wrong with uploading picture, 1/2 ' + response.statusCode.toString());
-        print(response.body);
+        //print('Something went wrong with uploading picture, 1/2 ' + response.statusCode.toString());
+        //print(response.body);
         return false;
       }
     }catch(e){
-      print(e);
+      //print(e);
       return false;
     }
   }

@@ -34,9 +34,9 @@ class AuthService{
       if(response.statusCode == 200){
         return User.fromJson(json.decode(utf8.decode(response.bodyBytes)));
       }else{
-        print('Response: ${response.statusCode.toString()} statuscode');
-        print(response.statusCode);
-        print(response.body);
+        //print('Response: ${response.statusCode.toString()} statuscode');
+        //print(response.statusCode);
+        //print(response.body);
         return null;
       }
     }catch(e){
@@ -51,7 +51,7 @@ class AuthService{
       final response = await http.delete('https://dogsonfire.herokuapp.com/users', headers:{'Authorization': 'Bearer $token'});
       if(response.statusCode == 204){
         await signOut();
-        print('Successfully deleted account: ' + response.statusCode.toString());
+        //print('Successfully deleted account: ' + response.statusCode.toString());
         return true;
       }
       return false;
@@ -100,7 +100,7 @@ class AuthService{
       );
 
       if(result != null){
-        print('Correct credentials with facebook, signing in wiht firebase..');
+        //print('Correct credentials with facebook, signing in wiht firebase..');
         _signInToFBWithFirebase(result);
       }
     }catch(e){
@@ -112,12 +112,12 @@ class AuthService{
     try{
       final facebookAuthCred = FacebookAuthProvider.getCredential(accessToken:result);
       if(facebookAuthCred != null){
-        print('Succesfully got facebook credentials, signing in..');
+        //print('Succesfully got facebook credentials, signing in..');
         final res = await _auth.signInWithCredential(facebookAuthCred);
-        print('Succesfully signed in to firebase with facebook credentials, returning user..');
+        //print('Succesfully signed in to firebase with facebook credentials, returning user..');
         return res.user;
       }else{
-        print('something went wrong with facebook log in');
+        //print('something went wrong with facebook log in');
         return null;
       }
     }catch(e){
@@ -146,10 +146,10 @@ class AuthService{
         }),
       );
       if (response.statusCode == 200) {
-        print(response.statusCode);
+        //print(response.statusCode);
       } else {
-        print(response.statusCode);
-        print(response.body);
+       // print(response.statusCode);
+        //print(response.body);
         return json.decode(response.body)['message'];
       }
     } catch (e) {
@@ -182,11 +182,11 @@ class AuthService{
       );
 
       if(response.statusCode==200){ // Successfully created database account
-        print("Added information to database. " + response.statusCode.toString());
+        //print("Added information to database. " + response.statusCode.toString());
         return true;
       }else{ //Something went wrong
-        print("Something went wrong with adding information to database. " + response.statusCode.toString());
-        print(response.body);
+       // print("Something went wrong with adding information to database. " + response.statusCode.toString());
+       // print(response.body);
         return null;
       }
     }catch(e){
@@ -212,8 +212,8 @@ class AuthService{
         isRegistered = true;
       }else{
         isRegistered = false;
-        print(response.statusCode);
-        print(response.body);
+        //print(response.statusCode);
+        //print(response.body);
       }
       return isRegistered;
     }catch(e){
@@ -258,12 +258,12 @@ class AuthService{
       );
 
       if(response.statusCode==200){
-        print(response.statusCode);
+        //print(response.statusCode);
         await signInWithEmailAndPassword(email, password);
         return response.statusCode.toString();
       }else{
-        print(response.statusCode);
-        print(response.body);
+        //print(response.statusCode);
+        //print(response.body);
         return json.decode(response.body)['message'];
       }
     } catch (e) {

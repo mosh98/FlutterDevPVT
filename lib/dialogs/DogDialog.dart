@@ -244,7 +244,7 @@ class _DialogState extends State<DogDialog>{
     }
 
     if(dogName.isEmpty || breed.isEmpty || gender.isEmpty){
-      print('wrong inputs');
+      //print('wrong inputs');
       snackText = "Please specify name and breed.";
 
       Scaffold.of(widget.context).showSnackBar(SnackBar(content: Text(snackText)));

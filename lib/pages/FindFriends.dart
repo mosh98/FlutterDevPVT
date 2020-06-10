@@ -144,7 +144,7 @@ class FindFriendsState extends State<FindFriends> {
 
   Future <String> _getProfileImage(User user) async{
     final result = await widget.storageProvider.getOtherProfileImage(user);
-    print(result);
+    //print(result);
     if(result != null){
       return result;
     }else{
